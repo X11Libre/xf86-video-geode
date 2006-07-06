@@ -1,0 +1,417 @@
+.\" $XFree86: xc/programs/Xserver/hw/xfree86/drivers/amd/amd.man,v 1.1 2002/12/10 15:12:23 alanh Exp $ 
+.\" shorthand for double quote that works everywhere.
+.ds q \N'34'
+.TH AMD __drivermansuffix__ __vendorversion__
+.SH NAME
+amd \- Amd video driver \- lx options
+.SH SYNOPSIS
+.nf
+.B "Section \*qDevice\*q"
+.BI "  Identifier \*q"  devname \*q
+.B  "  Driver \*qamd\*q"
+\ \ ...
+.B EndSection
+.fi
+.SH DESCRIPTION
+.B amd
+is an XFree86 driver for Advanced Micro Devicess GEODE processor family.
+It uses the CIMARRON kit provided by Advanced Micro Devices.
+The driver is accelerated, and provides support for the following 
+framebuffer depths: 8, 16 and 24.
+.SH SUPPORTED HARDWARE
+The 
+.B amd
+driver supports GeodeLX (5536 companion chip).
+.SH CONFIGURATION DETAILS
+Please refer to XF86Config(__filemansuffix__) for general configuration
+details.  This section only covers configuration details specific to this
+driver.
+.PP
+The driver will auto-detect the amount of video memory present.
+If actual the amount of active video memory should be changed,
+this may be specified with a 
+.B VideoRam
+entry in the config file.  The driver will attempt to allocate all
+public/free reigons from the framebuffer memory, as allocated by the
+kernel cimarron module.  All private framebuffer reservations should
+be made before starting X.  Note that X attempts to open /dev/video#
+devices during initialization, so that attached drivers may allocate
+framebuffer memory before X reserves it.  X will try to reserve
+framebuffer memory using \*q/dev/cim\*q (char device node 10,156).
+.PP
+.B \*qDevice\*q
+section.
+.PP
+The following driver 
+.B Options
+are supported:
+.TP
+.BI "Option \*qHWCursor\*q"
+.RS 0
+.BI "Option \*qSWCursor\*q"
+.RS
+Enable HW or SW cursor.  
+.br
+Default: HW cursor.  
+.RE
+.TP
+.BI "Option \*qAccel\*q"
+.RS 0
+.BI "Option \*qNoAccel\*q"
+.RS
+Disable or enable acceleration.
+.br
+Default: acceleration enabled.
+.RE
+.TP
+.BI "Option \*qCompression\*q"
+.RS 0
+.BI "Option \*qNoCompression\*q"
+.RS
+Disable or enable compression.  
+.br
+Default: compression is enabled.
+.RE
+.TP
+.BI "Option \*qShadowFB\*q"
+.RS 0
+.BI "Option \*qNoShadowFB\*q"
+.RS
+Enable or disable use of the shadow framebuffer layer.  
+.br
+Default: off.
+.RE
+.TP
+.BI "Option \*qRotate\*q \*qCW\*q"
+.RS 0
+.BI "Option \*qRotate\*q \*qInvert\*q"
+.RS 0
+.BI "Option \*qRotate\*q \*qCCW\*q"
+.RS
+The display may be "rotated" in 3 ways, ClockWise, Upside-Down and
+CounterClocwise using:
+This is accomplished using a \*qshadow\*q framebuffer, and using either 
+a hardware or software operation to transform the image to the 
+operational display buffer.
+.br
+Default: no rotation.
+.RE
+.TP
+.BI "Option \*qFPDestGeom\*q "\*qWxH\*q
+This allows the configuration to override the bios probe of the 
+.B FlatPanel
+output interface.
+Since flat-panels have fixed timing - that is, only one \*qreal\*q mode -
+the mode switch operation which normally might select a wide variety 
+of operational states must scale the mode selection to fit the 
+fixed panel timing.  This option is used to communicate that the mode
+selection is for a flat panel.  When this option is used, the bios
+probe is skipped and the specified geometry is used to derive timings.
+.br
+Default: bios.
+.RE
+.TP
+.BI "Option \*qFPActiveGeom\*q "\*qWxH\*q
+This allows the configuration of the active flatpanel display area.  This 
+area must fit into the destination geometry area.  The source (mode WxH)
+geometry will be scaled to the active geometry, and centered in the 
+destination geometry of the 
+.B FlatPanel
+output.
+.br
+Default: FPDestGeom.
+.RE
+.TP
+.BI "Option \*qFlatPanel\*q"
+.RS 0
+.BI "Option \*qNoFlatPanel\*q"
+.RS
+This allows the configuration to override the initialization probe 
+to enable or disable the 
+.B FlatPanel
+output interface.
+.br
+Default: bios.
+.RE
+.TP
+.BI "Option \*qCrtEnable\*q"
+.RS 0
+.BI "Option \*qNoCrtEnable\*q"
+.RS
+This allows the configuration to override the initialization probe 
+to enable or disable the 
+.B CRT
+output interface.
+.br
+Default: bios.
+.RE
+.TP
+.BI "Option \*qOSMImageBuffers\*q \*q" integer \*q
+This sets the number of scanline buffers to be allocated in offscreen 
+scanline memory for acceleration. This can take any value 0 will disable
+the allocation. Disabled if cannot allocate requested scanline memory.
+.br
+Default: 20.
+.TP
+.BI "Option \*qOSMColorExpBuffers\*q \*q" integer \*q
+This sets the number of scanline buffers to be allocated in offscreen 
+color expansiopn memory for acceleration. This can take any value 0
+will disable the allocation. Disabled if cannot allocate requested
+scanline memory.
+.br
+Default: 20.
+.PP
+.BI "TVOUT Options"
+.TP
+TVOUT is operated when a tv encoder has been selected by using the 
+.B TV_Encoder
+option describe below, and a tv mode name is selected as the active
+display mode.  The list of tv mode names are:
+.RS
+ ModeName     	 Geometry 	Std/Hi	Encoders
+ tv-ntsc      	  720x480 	Std   	adv7171 saa7127 adv7300
+ pnl-ntsc     	  640x480 	Std   	fs454
+ pnl-8x6_ntsc 	  800x600 	Std   	fs454
+ pnl-10x7_ntsc	 1024x768 	Std   	fs454
+ tv-pal       	  720x576 	Std   	adv7171 saa7127 adv7300
+ pnl-pal      	  640x480 	Std   	fs454
+ pnl-8x6_pal  	  800x600 	Std   	fs454
+ pnl-10x7_pal 	 1024x768 	Std   	fs454
+ tv-480p      	  720x480 	Hi    	adv7300
+ pnl-480p     	  720x480 	Hi    	fs454
+ tv-720p      	 1280x720 	Hi    	adv7300
+ pnl-720p     	 1280x720 	Hi    	fs454
+ tv-1080i     	1920x1080 	Hi    	adv7300 fs454
+.br
+Default: none - manditory parameter
+.RE
+.TP
+.BI "Option \*qTV_Encoder\*q "\*qencoder\*q
+This option is manditory for TVOUT operation.  It enables selection
+of the subset
+.B TVOUT
+modes which are permitted for the designated encoder family.  The
+encoder must be one of:
+ adv7171       	- modes for the adv7171 encoder
+ saa7127       	- modes for the saa7127 encoder
+ fs454         	- modes for the fs454 encoder
+ adv7300       	- modes for the adv7300 encoder
+.br
+Default: none - manditory parameter
+.TP
+.BI "Option \*qTV_Bus_Fmt\*q "\*qformat\*q
+This option is optional for TVOUT operation.  It selects the bus
+format of the
+.B TVOUT
+data.  The format must be one of:
+ disabled      	- VOP output is disabled
+ vip1_1        	- VIP 1.1
+ ccir656       	- CCIR 656 output
+ vip20_8bit    	- 8-bit VIP 2.0 output
+ vip20_16bit   	- 16-bit VIP 2.0 output
+ 601_yuv_8bit  	- 601 output, 8-bit YUV 4:2:2
+ 601_yuv_16bit 	- 601 output, 16-bit YUV 4:2:2
+ 601_rgb_8_8_8 	- 601 output, 24-bit RGB
+ 601_yuv_4_4_4 	- 601 output, YUV 4:4:4
+.br
+Default: vip1_1 for Std modes, vip20_16bit for Hi modes
+.TP
+.BI "Option \*qTV_Conversion\*q "\*qconversion\*q
+This option is optional for TVOUT operation.  It selects the bus
+color conversion sampling method of the
+.B TVOUT
+data.  The conversion must be one of:
+.br
+ cosited       	- color conversion cosited sampling
+ interspersed  	- color conversion interspersed sampling
+ alternating   	- color conversion alternating sampling
+.br
+Default: cosited
+.TP
+.BI "Option \*qTV_Overscan\*q "\*qX:Y\*q
+This option is optional for TVOUT operation.  It selects the image
+overscale size in pixels.  The output image is downscaled and padded
+with a blanking region such that the resulting image contains a 
+left and right margin of X pixels, and a top and bottom margin of Y
+pixels.
+.br
+Default: 0:0
+.TP
+.BI "Option \*qTV_Flags\*q "\*qflags\*q
+This option is optional for TVOUT operation.  It selects standard
+features of the 
+.B TVOUT
+data.  The flags may be a \*q:\*q seperated list of:
+.br
+ disabled      	- VOP output is disabled
+ singlechipcompat	- Enables SCx2xx compatibility mode..
+ extendedsav   	- Enables extended SAV/EAV codes.
+ vbi           	- Use the task bit to indicate VBI data.
+ task          	- Set Task Bit to 1in VIP 2.0 mode.
+ swap_uv       	- Swap the U and V data prior to output.
+ swap_vbi      	- Swap the VBI bytes prior to output.
+.br
+Default: no active flags
+.TP
+.BI "Option \*qTV_601_Flags\*q "\*q601_flags\*q
+This option is optional for TVOUT operation.  It selects 601
+features of the 
+.B TVOUT
+data.  The 601_flags may be a \*q:\*q seperated list of:
+.br
+ inv_de_pol    	- Invert the polarity of display enable
+ inv_hs_pol    	- Invert the polarity of hsync
+ inv_vs_pol    	- Invert the polarity of vsync
+ vsync-4       	- The VSync occurs 4 clocks earlier
+ vsync-2       	- The VSync occurs 2 clocks earlier
+ vsync+0       	- The VSync is not shifted at all
+ vsync+2       	- The Vsync occurs 2 clocks later 
+.br
+Default: vsync+0
+.TP
+.BI "Option \*qTV_Vsync_Select\*q "\*qsync_select\*q
+This option is optional for TVOUT operation.  It selects the source
+for the 
+.B VIP
+vsync output pin (not the
+.B VOP
+sync).  This normally may be used to generate \*qgenlock\*q timing.
+The sync_select may one of:
+.br
+ disabled     	- VSync out disabled
+ vg           	- The VSync signal from the VG (video generator)
+ vg_inv       	- The VSync signal from the VG (inverted)
+ statreg17    	- 1 written to VIP status[17] toggles vsync
+ statreg17_inv	- 1 written to VIP status[17] toggles vsync
+.br
+Default: disabled
+.SH NAME
+amd \- Amd video driver \- gx options
+.SH SYNOPSIS
+.nf
+.B "Section \*qDevice\*q"
+.BI "  Identifier \*q"  devname \*q
+.B  "  Driver \*qamd\*q"
+\ \ ...
+.B EndSection
+.fi
+.SH DESCRIPTION
+.B amd
+is an XFree86 driver for Advanced Micro Devices GEODE processor family.
+It uses the DURANGO kit provided by Advanced Micro Devices.
+The driver is accelerated, and provides support for the following 
+framebuffer depths: 8, 16 and 24.
+.SH SUPPORTED HARDWARE
+The
+.B amd
+driver supports GXLV (5530 companion chip), SC1200, SC1400 and
+GX (5535 companion chip).
+.SH CONFIGURATION DETAILS
+Please refer to XF86Config(__filemansuffix__) for general configuration
+details.  This section only covers configuration details specific to this
+driver.
+.PP
+The driver will auto-detect the amount of video memory present for all
+chips. If the amount of memory is detected incorrectly, the actual amount
+of video memory should be specified with a
+.B VideoRam
+entry in the config file
+.B \*qDevice\*q
+section.
+.PP
+The following driver
+.B Options
+are supported:
+.TP
+.BI "Option \*qSWCursor\*q \*q" boolean \*q
+Enable or disable the SW cursor.  
+Default: off.
+.TP
+.BI "Option \*qHWCursor\*q \*q" boolean \*q
+Enable or disable the HW cursor.  
+Default: on.
+.TP
+.BI "Option \*qNoAccel\*q \*q" boolean \*q
+Disable or enable acceleration.  
+Default: acceleration is enabled.
+.TP
+.BI "Option \*qNoCompression\*q \*q" boolean \*q
+Disable or enable compression.  
+Default: compression is enabled.
+.TP
+.BI "Option \*qShadowFB\*q \*q" boolean \*q
+Enable or disable use of the shadow framebuffer layer.  
+Default: off.
+.TP
+.BI "Option \*qRotate\*q \*qCW\*q"
+Rotate the display clockwise. This mode is unaccelerated, and uses
+the Shadow Frame Buffer layer.
+Default: no rotation.
+.TP
+.BI "Option \*qRotate\*q \*qCCW\*q"
+Rotate the display counterclockwise. This mode is unaccelerated, and
+uses the Shadow Frame Buffer layer.
+Default: no rotation.
+.TP
+.BI "Option \*qFlatPanel\*q \*q" boolean \*q
+This enables the FlatPanel display unit. The FlatPanel depends on the 
+BIOS to do the Pnale h/w initialization.
+In GX based platforms with TFT part Flatpanel is enabled, and on CRT
+part is disabled.
+Default: off.
+.TP
+.BI "Option \*qOSMImageBuffers\*q \*q" integer \*q
+This sets the number of scanline buffers to be allocated in offscreen 
+memory for acceleration. This can take any value 0 will disable the 
+allocation. Disabled if cannot alocate requested scanline memory.
+Default: 20.
+.TP
+.BI "Option \*qColorKey\*q \*q" integer \*q
+This sets the default pixel value for the YUV video overlay key.
+Default: 0.
+.PP
+The following 
+.B Options
+are supported only on SC1200 based platforms:
+.TP
+.BI "Option \*qTV\*q \*qPAL-768x576\*q"
+Selects the PAL TV display mode 768x576 and the depth is forced to 16 bpp.
+Default: no TV.
+.TP
+.BI "Option \*qTV\*q \*qPAL-720x576\*q"
+Selects the PAL TV display mode 720x576 and the depth is forced to 16 bpp.
+Default: no TV.
+.TP
+.BI "Option \*qTV\*q \*qNTSC-720x480\*q"
+Selects the NTSC TV display mode 720x480 and the depth is forced to 16 bpp.
+Default: no TV.
+.TP
+.BI "Option \*qTV\*q \*qNTSC-640x480\*q"
+Selects the NTSC TV display mode 640x480 and the depth is forced to 16 bpp.
+Default: no TV.
+.TP
+.BI "Option \*qTV_Output\*q \*qCOMPOSITE\*q"
+The selected TV mode output is coded for Composite signal.
+Default: no TV.
+.TP
+.BI "Option \*qTV_Output\*q \*qSVIDEO\*q"
+The selected TV mode output is coded for SVIDEO signal.
+Default: no TV.
+.TP
+.BI "Option \*qTV_Output\*q \*qYUV\*q"
+The selected TV mode output is coded for YUV signal.
+Default: no TV.
+.TP
+.BI "Option \*qTV_Output\*q \*qSCART\*q"
+The selected TV mode output is coded for SCART signal.
+Default: no TV.
+.TP
+.BI "Option \*qTVOverscan\*q \*xx:yy:ww:hh\*q"
+This option will let only the viewable display area smaller to be able to 
+view on TV. The parameters xx: X-offset, yy: Y-offset, ww: Viewable width,
+hh: Viewable height.
+Default: no TV.
+.SH "SEE ALSO"
+XFree86(1), XF86Config(__filemansuffix__), xf86config(1), Xserver(1), X(__miscmansuffix__)
+.SH AUTHOR
+Author: William Morrow
