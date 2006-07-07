@@ -611,21 +611,21 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
      if (!xf86LoadSubModule(pScrni, "int10"))
        return FALSE;
      xf86LoaderReqSymLists(amdInt10Symbols, NULL);
-     
+
     pVesa = pGeode->vesa;
 
-     if ((pVesa->pInt = xf86InitInt10(pGeode->pEnt->index)) == NULL) 
-       DEBUGMSG(1, (pScrni->scrnIndex, X_ERROR, 
-		    "Unable to initialize INT10 support\n"));
-     return FALSE;
+     if ((pVesa->pInt = xf86InitInt10(pGeode->pEnt->index)) == NULL) {
+         DEBUGMSG(1, (pScrni->scrnIndex, X_ERROR,
+                  "Unable to initialize INT10 support\n"));
+         return FALSE;
+     }
 #endif
 
      if (!xf86LoadSubModule(pScrni, "vgahw"))
-       return FALSE;
-     
+         return FALSE;
+
      xf86LoaderReqSymLists(amdVgahwSymbols, NULL);
-     
-     pGeode->FBVGAActive = gu2_get_vga_active();
+
      pGeode->FBAvail = gfx_get_frame_buffer_size();
    }
    else {
@@ -636,6 +636,11 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
 
    if (!GXMapMem(pScrni))
       return FALSE;
+
+   pGeode->FBVGAActive = FALSE;
+
+   if (pGeode->useVGA)
+       pGeode->FBVGAActive = gu2_get_vga_active();
 
     /*Set the bits per RGB for 8bpp mode */
 
