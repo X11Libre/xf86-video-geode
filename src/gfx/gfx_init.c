@@ -46,8 +46,6 @@
 #define PCI_VENDOR_DEVICE_GXM	         0x00011078
 #define PCI_VENDOR_DEVICE_REDCLOUD       0x0028100B
 #define REDCLOUD_VIDEO_PCI_VENDOR_DEVICE 0x0030100B
-#define PCI_VENDOR_DEVICE_CASTLE         0x20801022
-#define CASTLE_VIDEO_PCI_VENDOR_DEVICE   0x20811022
 
 #define GXM_CONFIG_GCR			0xB8
 #define GXM_CONFIG_CCR3			0xC3
@@ -76,12 +74,6 @@ ChipType gfx_detect_chip(void);
 
 #if GFX_INIT_GU2
 #include "init_gu2.c"
-#endif
-
-/* INCLUDE SUPPORT FOR THIRD GENERATION, IF SPECIFIED. */
-
-#if GFX_INIT_GU3
-#include "init_gu3.c"
 #endif
 
 /* THE FOLLOWING ROUTINES ARE NEVER DYNAMIC              */
@@ -364,8 +356,12 @@ gfx_detect_cpu(void)
                     ((msr_value.low & 0x0F) << 16);     /* MINOR */
 
                 /* READ THE CORE FREQUENCY  */
+				/* I can't find GX implementations that need
+				 * this - we're trying to avoid virtual reads
+				 * anyway, so bail on it
+				 */
 
-                gfx_cpu_frequency = gfx_get_core_freq();
+				/* gfx_cpu_frequency = gfx_get_core_freq(); */
 
                 /* SET THE GP SCRATCH AREA */
                 /* Color bitmap BLTs use the last 16K of frame buffer space */
@@ -374,100 +370,7 @@ gfx_detect_cpu(void)
             }
         }
     }
-#endif
 
-#if GFX_INIT_GU3
-
-    value = gfx_pci_config_read(0x80000800);
-
-    if (value == PCI_VENDOR_DEVICE_CASTLE) {
-        Q_WORD msr_value;
-        int valid, i;
-
-        /* CHECK FOR SOFT VG */
-        /* If SoftVG is not present, the base addresses for all devices */
-
-        /* will not be allocated.  Essentially, it is as if no Redcloud */
-        /* video hardware is present.                                   */
-
-        value = gfx_pci_config_read(0x80000900);
-
-        if (value == CASTLE_VIDEO_PCI_VENDOR_DEVICE) {
-            valid = 1;
-
-            /* BAR0 - BAR3 HOLD THE PERIPHERAL BASE ADDRESSES */
-
-            for (i = 0; i < 4; i++) {
-                value = gfx_pci_config_read(0x80000910 + (i << 2));
-                if (value == 0x00000000 || value == 0xFFFFFFFF) {
-                    valid = 0;
-                    break;
-                }
-            }
-
-            if (valid) {
-                /* REDCLOUD INTEGRATED VIDEO             */
-
-#if GFX_VIDEO_DYNAMIC
-                gfx_video_type = GFX_VIDEO_TYPE_CASTLE;
-#endif
-
-                /* CURRENTLY, ALWAYS GPIO FOR I2C ACCESS */
-
-#if GFX_I2C_DYNAMIC
-                gfx_i2c_type = GFX_I2C_TYPE_GPIO;
-#endif
-
-                /* THIRD-GENERATION DISPLAY CONTROLLER  */
-
-#if GFX_DISPLAY_DYNAMIC
-                gfx_display_type = GFX_DISPLAY_TYPE_GU3;
-#endif
-
-                /* SECOND-GENERATION GRAPHICS UNIT       */
-
-#if GFX_2DACCEL_DYNAMIC
-                gfx_2daccel_type = GFX_2DACCEL_TYPE_GU2;
-#endif
-
-                /* THIRD-GENERATION INITIALIZATION      */
-
-#if GFX_INIT_DYNAMIC
-                gfx_init_type = GFX_INIT_TYPE_GU3;
-#endif
-
-                /* MBUS MSR ACCESSES                     */
-
-#if GFX_MSR_DYNAMIC
-                gfx_msr_type = GFX_MSR_TYPE_REDCLOUD;
-#endif
-
-                /* READ VERSION */
-
-                gfx_msr_init();
-
-                gfx_msr_read(RC_ID_MCP, MCP_RC_REVID, &msr_value);
-
-                version = GFX_CPU_CASTLE | ((msr_value.low & 0xF0) << 4) |      /* MAJOR */
-                    ((msr_value.low & 0x0F) << 16);     /* MINOR */
-
-                /* READ THE CORE FREQUENCY  */
-
-                gfx_cpu_frequency = gfx_get_core_freq();
-
-                /* SET THE GP SCRATCH AREA */
-                /* Color bitmap BLTs use the last 16K of frame buffer space */
-
-                gfx_gx2_scratch_base = gfx_get_frame_buffer_size() - 0x4000;
-
-                /* CAP AT 16MB */
-
-                if (gfx_gx2_scratch_base > 0xFFC000)
-                    gfx_gx2_scratch_base = 0xFFC000;
-            }
-
-        }
-    }
 #endif
 
     if (!version) {
@@ -521,8 +424,6 @@ gfx_detect_video(void)
         version = GFX_VID_SC1200;
     else if ((gfx_cpu_version & 0xFF) == GFX_CPU_REDCLOUD)
         version = GFX_VID_REDCLOUD;
-    else if ((gfx_cpu_version & 0xFF) == GFX_CPU_CASTLE)
-        version = GFX_VID_CASTLE;
     gfx_vid_version = version;
     return (version);
 }
@@ -581,10 +482,7 @@ gfx_get_core_freq(void)
     if (gfx_init_type & GFX_INIT_TYPE_GU2)
         freq = gu2_get_core_freq();
 #endif
-#if GFX_INIT_GU3
-    if (gfx_init_type & GFX_INIT_TYPE_GU3)
-        freq = gu3_get_core_freq();
-#endif
+
     return freq;
 }
 
@@ -605,10 +503,6 @@ gfx_get_cpu_register_base(void)
     if (gfx_init_type & GFX_INIT_TYPE_GU2)
         base = gu2_get_cpu_register_base();
 #endif
-#if GFX_INIT_GU3
-    if (gfx_init_type & GFX_INIT_TYPE_GU3)
-        base = gu3_get_cpu_register_base();
-#endif
 
     return (base);
 }
@@ -625,10 +519,6 @@ gfx_get_graphics_register_base(void)
 #if GFX_INIT_GU2
     if (gfx_init_type & GFX_INIT_TYPE_GU2)
         base = gu2_get_graphics_register_base();
-#endif
-#if GFX_INIT_GU3
-    if (gfx_init_type & GFX_INIT_TYPE_GU3)
-        base = gu3_get_graphics_register_base();
 #endif
 
     return (base);
@@ -651,10 +541,6 @@ gfx_get_frame_buffer_base(void)
     if (gfx_init_type & GFX_INIT_TYPE_GU2)
         base = gu2_get_frame_buffer_base();
 #endif
-#if GFX_INIT_GU3
-    if (gfx_init_type & GFX_INIT_TYPE_GU3)
-        base = gu3_get_frame_buffer_base();
-#endif
 
     return (base);
 }
@@ -676,10 +562,6 @@ gfx_get_frame_buffer_size(void)
     if (gfx_init_type & GFX_INIT_TYPE_GU2)
         size = gu2_get_frame_buffer_size();
 #endif
-#if GFX_INIT_GU3
-    if (gfx_init_type & GFX_INIT_TYPE_GU3)
-        size = gu3_get_frame_buffer_size();
-#endif
 
     return size;
 }
@@ -700,10 +582,6 @@ gfx_get_vid_register_base(void)
 #if GFX_INIT_GU2
     if (gfx_init_type & GFX_INIT_TYPE_GU2)
         base = gu2_get_vid_register_base();
-#endif
-#if GFX_INIT_GU3
-    if (gfx_init_type & GFX_INIT_TYPE_GU3)
-        base = gu3_get_vid_register_base();
 #endif
 
     return (base);

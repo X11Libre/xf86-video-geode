@@ -27,9 +27,12 @@ DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir) \
   -I$(top_srcdir)/src/cim -I$(top_srcdir)/src/gfx \
   -I$(top_srcdir)/src/panel -I$(top_srcdir)/linux_v26
 
+# -DPNL_SUP is now provided by AMD_CFLAGS
+#
 AM_CFLAGS = @XORG_CFLAGS@ \
    -DHAVE_GX -DHAVE_LX -DAMD_V4L2_VIDEO -DOPT_ACCEL \
-   -DPNL_SUP -DLINUX_2_6
+   -DLINUX_2_6 @AMD_CFLAGS@
+
 AM_CCASFLAGS = @XORG_CFLAGS@
 amd_drv_la_LTLIBRARIES = amd_drv.la
 amd_drv_la_LDFLAGS = -module -avoid-version
@@ -74,7 +77,6 @@ EXTRA_DIST = \
   \
         gfx/disp_gu1.c \
         gfx/disp_gu2.c \
-        gfx/disp_gu3.c \
         gfx/durango.c \
         gfx/gfx_dcdr.c \
         gfx/gfx_defs.h \
@@ -97,7 +99,6 @@ EXTRA_DIST = \
         gfx/i2c_gpio.c \
         gfx/init_gu1.c \
         gfx/init_gu2.c \
-        gfx/init_gu3.c \
         gfx/msr_rdcl.c \
         gfx/release.txt \
         gfx/rndr_gu1.c \
@@ -109,7 +110,6 @@ EXTRA_DIST = \
         gfx/vga_gu1.c \
         gfx/vid_1200.c \
         gfx/vid_5530.c \
-        gfx/vid_cstl.c \
         gfx/vid_rdcl.c \
         gfx/vip_1200.c \
   \

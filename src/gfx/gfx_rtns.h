@@ -69,12 +69,10 @@ extern "C"
     extern int gfx_display_type;
 #define GFX_DISPLAY_TYPE_GU1		0x0001
 #define GFX_DISPLAY_TYPE_GU2		0x0002
-#define GFX_DISPLAY_TYPE_GU3		0x0004
 
     extern int gfx_init_type;
 #define GFX_INIT_TYPE_GU1           0x0001
 #define GFX_INIT_TYPE_GU2           0x0002
-#define GFX_INIT_TYPE_GU3           0x0004
 
     extern int gfx_msr_type;
 #define GFX_MSR_TYPE_REDCLOUD       0x0001
@@ -87,7 +85,6 @@ extern "C"
 #define GFX_VIDEO_TYPE_CS5530		0x0001
 #define GFX_VIDEO_TYPE_SC1200		0x0002
 #define GFX_VIDEO_TYPE_REDCLOUD     0x0004
-#define GFX_VIDEO_TYPE_CASTLE       0x0008
 
     extern int gfx_vip_type;
 #define GFX_VIP_TYPE_SC1200			0x0001

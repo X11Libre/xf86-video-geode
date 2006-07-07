@@ -304,13 +304,11 @@ typedef struct
 #define GFX_CPU_GXLV		1
 #define GFX_CPU_SC1200		2
 #define GFX_CPU_REDCLOUD    3
-#define GFX_CPU_CASTLE      4
 #define GFX_CPU_PYRAMID		0x20801
 
 #define GFX_VID_CS5530		1
 #define GFX_VID_SC1200		2
 #define GFX_VID_REDCLOUD    3
-#define GFX_VID_CASTLE      4
 
 /* CHIP NAME AND REVISION */
 

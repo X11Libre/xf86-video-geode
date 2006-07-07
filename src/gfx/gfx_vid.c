@@ -165,12 +165,6 @@ int gfx_set_screen_enable(int enable); /* forward declaration                   
 #include "vid_rdcl.c"
 #endif
 
-/* INLUDE SUPPORT FOR CASTLE, IF SPECIFIED. */
-
-#if GFX_VIDEO_CASTLE
-#include "vid_cstl.c"
-#endif
-
 /*---------------------------------------------------------------------------
  * gfx_select_alpha_region
  * 
@@ -216,10 +210,6 @@ gfx_reset_video(void)
     if (gfx_video_type == GFX_VIDEO_TYPE_REDCLOUD)
         redcloud_reset_video();
 #endif
-#if GFX_VIDEO_CASTLE
-    if (gfx_video_type == GFX_VIDEO_TYPE_CASTLE)
-        castle_reset_video();
-#endif
 }
 
 /*---------------------------------------------------------------------------
@@ -245,10 +235,6 @@ gfx_set_display_control(int sync_polarities)
     if (gfx_video_type == GFX_VIDEO_TYPE_REDCLOUD)
         status = redcloud_set_display_control(sync_polarities);
 #endif
-#if GFX_VIDEO_CASTLE
-    if (gfx_video_type == GFX_VIDEO_TYPE_CASTLE)
-        status = castle_set_display_control(sync_polarities);
-#endif
     return (status);
 }
 
@@ -270,10 +256,6 @@ gfx_set_clock_frequency(unsigned long frequency)
 #if GFX_VIDEO_REDCLOUD
     if (gfx_video_type == GFX_VIDEO_TYPE_REDCLOUD)
         redcloud_set_clock_frequency(frequency);
-#endif
-#if GFX_VIDEO_CASTLE
-    if (gfx_video_type == GFX_VIDEO_TYPE_CASTLE)
-        castle_set_clock_frequency(frequency);
 #endif
 }
 
@@ -298,10 +280,6 @@ gfx_set_crt_enable(int enable)
     if (gfx_video_type == GFX_VIDEO_TYPE_REDCLOUD)
         status = redcloud_set_crt_enable(enable);
 #endif
-#if GFX_VIDEO_CASTLE
-    if (gfx_video_type == GFX_VIDEO_TYPE_CASTLE)
-        status = castle_set_crt_enable(enable);
-#endif
     return (status);
 }
 
@@ -325,10 +303,6 @@ gfx_set_video_enable(int enable)
 #if GFX_VIDEO_REDCLOUD
     if (gfx_video_type == GFX_VIDEO_TYPE_REDCLOUD)
         status = redcloud_set_video_enable(enable);
-#endif
-#if GFX_VIDEO_CASTLE
-    if (gfx_video_type == GFX_VIDEO_TYPE_CASTLE)
-        status = castle_set_video_enable(enable);
 #endif
     return (status);
 }
@@ -373,10 +347,6 @@ gfx_set_video_format(unsigned long format)
     if (gfx_video_type == GFX_VIDEO_TYPE_REDCLOUD)
         status = redcloud_set_video_format(format);
 #endif
-#if GFX_VIDEO_CASTLE
-    if (gfx_video_type == GFX_VIDEO_TYPE_CASTLE)
-        status = castle_set_video_format(format);
-#endif
     return (status);
 }
 
@@ -401,10 +371,6 @@ gfx_set_video_size(unsigned short width, unsigned short height)
     if (gfx_video_type == GFX_VIDEO_TYPE_REDCLOUD)
         status = redcloud_set_video_size(width, height);
 #endif
-#if GFX_VIDEO_CASTLE
-    if (gfx_video_type == GFX_VIDEO_TYPE_CASTLE)
-        status = castle_set_video_size(width, height);
-#endif
     return (status);
 }
 
@@ -420,10 +386,6 @@ gfx_set_video_yuv_pitch(unsigned long ypitch, unsigned long uvpitch)
 #if GFX_VIDEO_REDCLOUD
     if (gfx_video_type == GFX_VIDEO_TYPE_REDCLOUD)
         status = redcloud_set_video_yuv_pitch(ypitch, uvpitch);
-#endif
-#if GFX_VIDEO_CASTLE
-    if (gfx_video_type == GFX_VIDEO_TYPE_CASTLE)
-        status = castle_set_video_yuv_pitch(ypitch, uvpitch);
 #endif
     return (status);
 }
@@ -449,10 +411,6 @@ gfx_set_video_offset(unsigned long offset)
     if (gfx_video_type == GFX_VIDEO_TYPE_REDCLOUD)
         status = redcloud_set_video_offset(offset);
 #endif
-#if GFX_VIDEO_CASTLE
-    if (gfx_video_type == GFX_VIDEO_TYPE_CASTLE)
-        status = castle_set_video_offset(offset);
-#endif
     return (status);
 }
 
@@ -469,10 +427,6 @@ gfx_set_video_yuv_offsets(unsigned long yoffset, unsigned long uoffset,
 #if GFX_VIDEO_REDCLOUD
     if (gfx_video_type == GFX_VIDEO_TYPE_REDCLOUD)
         status = redcloud_set_video_yuv_offsets(yoffset, uoffset, voffset);
-#endif
-#if GFX_VIDEO_CASTLE
-    if (gfx_video_type == GFX_VIDEO_TYPE_CASTLE)
-        status = castle_set_video_yuv_offsets(yoffset, uoffset, voffset);
 #endif
     return (status);
 }
@@ -498,10 +452,6 @@ gfx_set_video_scale(unsigned short srcw, unsigned short srch,
 #if GFX_VIDEO_REDCLOUD
     if (gfx_video_type == GFX_VIDEO_TYPE_REDCLOUD)
         status = redcloud_set_video_scale(srcw, srch, dstw, dsth);
-#endif
-#if GFX_VIDEO_CASTLE
-    if (gfx_video_type == GFX_VIDEO_TYPE_CASTLE)
-        status = castle_set_video_scale(srcw, srch, dstw, dsth);
 #endif
     return (status);
 }
@@ -638,10 +588,6 @@ gfx_set_video_window(short x, short y, unsigned short w, unsigned short h)
     if (gfx_video_type == GFX_VIDEO_TYPE_REDCLOUD)
         status = redcloud_set_video_window(x, y, w, h);
 #endif
-#if GFX_VIDEO_CASTLE
-    if (gfx_video_type == GFX_VIDEO_TYPE_CASTLE)
-        status = castle_set_video_window(x, y, w, h);
-#endif
     return (status);
 }
 
@@ -666,10 +612,6 @@ gfx_set_video_left_crop(unsigned short x)
     if (gfx_video_type == GFX_VIDEO_TYPE_REDCLOUD)
         status = redcloud_set_video_left_crop(x);
 #endif
-#if GFX_VIDEO_CASTLE
-    if (gfx_video_type == GFX_VIDEO_TYPE_CASTLE)
-        status = castle_set_video_left_crop(x);
-#endif
     return (status);
 }
 
@@ -693,10 +635,6 @@ gfx_set_video_color_key(unsigned long key, unsigned long mask, int graphics)
 #if GFX_VIDEO_REDCLOUD
     if (gfx_video_type == GFX_VIDEO_TYPE_REDCLOUD)
         status = redcloud_set_video_color_key(key, mask, graphics);
-#endif
-#if GFX_VIDEO_CASTLE
-    if (gfx_video_type == GFX_VIDEO_TYPE_CASTLE)
-        status = castle_set_video_color_key(key, mask, graphics);
 #endif
     return (status);
 }
@@ -746,10 +684,6 @@ gfx_set_video_palette(unsigned long *palette)
     if (gfx_video_type == GFX_VIDEO_TYPE_REDCLOUD)
         status = redcloud_set_video_palette(palette);
 #endif
-#if GFX_VIDEO_CASTLE
-    if (gfx_video_type == GFX_VIDEO_TYPE_CASTLE)
-        status = castle_set_video_palette(palette);
-#endif
     return (status);
 }
 
@@ -790,10 +724,6 @@ gfx_set_video_palette_entry(unsigned long index, unsigned long palette)
 #if GFX_VIDEO_REDCLOUD
     if (gfx_video_type == GFX_VIDEO_TYPE_REDCLOUD)
         status = redcloud_set_video_palette_entry(index, palette);
-#endif
-#if GFX_VIDEO_CASTLE
-    if (gfx_video_type == GFX_VIDEO_TYPE_CASTLE)
-        status = castle_set_video_palette_entry(index, palette);
 #endif
     return (status);
 }
@@ -851,10 +781,6 @@ gfx_set_video_request(short x, short y)
 #if GFX_VIDEO_REDCLOUD
     if (gfx_video_type == GFX_VIDEO_TYPE_REDCLOUD)
         status = redcloud_set_video_request(x, y);
-#endif
-#if GFX_VIDEO_CASTLE
-    if (gfx_video_type == GFX_VIDEO_TYPE_CASTLE)
-        status = castle_set_video_request(x, y);
 #endif
     return (status);
 }
@@ -1040,11 +966,6 @@ gfx_set_video_cursor(unsigned long key, unsigned long mask,
             redcloud_set_video_cursor(key, mask, select_color2, color1,
             color2);
 #endif
-#if GFX_VIDEO_CASTLE
-    if (gfx_video_type == GFX_VIDEO_TYPE_CASTLE)
-        status =
-            castle_set_video_cursor(key, mask, select_color2, color1, color2);
-#endif
     return (status);
 }
 
@@ -1060,10 +981,6 @@ gfx_set_video_cursor_enable(int enable)
 #if GFX_VIDEO_REDCLOUD
     if (gfx_video_type == GFX_VIDEO_TYPE_REDCLOUD)
         status = redcloud_set_video_cursor_enable(enable);
-#endif
-#if GFX_VIDEO_CASTLE
-    if (gfx_video_type == GFX_VIDEO_TYPE_CASTLE)
-        status = castle_set_video_cursor_enable(enable);
 #endif
     return (status);
 }
@@ -1084,10 +1001,6 @@ gfx_set_alpha_enable(int enable)
 #if GFX_VIDEO_REDCLOUD
     if (gfx_video_type == GFX_VIDEO_TYPE_REDCLOUD)
         status = redcloud_set_alpha_enable(enable);
-#endif
-#if GFX_VIDEO_CASTLE
-    if (gfx_video_type == GFX_VIDEO_TYPE_CASTLE)
-        status = castle_set_alpha_enable(enable);
 #endif
     return (status);
 }
@@ -1110,10 +1023,6 @@ gfx_set_alpha_window(short x, short y,
     if (gfx_video_type == GFX_VIDEO_TYPE_REDCLOUD)
         status = redcloud_set_alpha_window(x, y, width, height);
 #endif
-#if GFX_VIDEO_CASTLE
-    if (gfx_video_type == GFX_VIDEO_TYPE_CASTLE)
-        status = castle_set_alpha_window(x, y, width, height);
-#endif
     return (status);
 }
 
@@ -1133,10 +1042,6 @@ gfx_set_alpha_value(unsigned char alpha, char delta)
 #if GFX_VIDEO_REDCLOUD
     if (gfx_video_type == GFX_VIDEO_TYPE_REDCLOUD)
         status = redcloud_set_alpha_value(alpha, delta);
-#endif
-#if GFX_VIDEO_CASTLE
-    if (gfx_video_type == GFX_VIDEO_TYPE_CASTLE)
-        status = castle_set_alpha_value(alpha, delta);
 #endif
     return (status);
 }
@@ -1158,10 +1063,6 @@ gfx_set_alpha_priority(int priority)
     if (gfx_video_type == GFX_VIDEO_TYPE_REDCLOUD)
         status = redcloud_set_alpha_priority(priority);
 #endif
-#if GFX_VIDEO_CASTLE
-    if (gfx_video_type == GFX_VIDEO_TYPE_CASTLE)
-        status = castle_set_alpha_priority(priority);
-#endif
     return (status);
 }
 
@@ -1181,10 +1082,6 @@ gfx_set_alpha_color(unsigned long color)
 #if GFX_VIDEO_REDCLOUD
     if (gfx_video_type == GFX_VIDEO_TYPE_REDCLOUD)
         status = redcloud_set_alpha_color(color);
-#endif
-#if GFX_VIDEO_CASTLE
-    if (gfx_video_type == GFX_VIDEO_TYPE_CASTLE)
-        status = castle_set_alpha_color(color);
 #endif
     return (status);
 }
@@ -1206,10 +1103,6 @@ gfx_set_alpha_color_enable(int enable)
     if (gfx_video_type == GFX_VIDEO_TYPE_REDCLOUD)
         status = redcloud_set_alpha_color_enable(enable);
 #endif
-#if GFX_VIDEO_CASTLE
-    if (gfx_video_type == GFX_VIDEO_TYPE_CASTLE)
-        status = castle_set_alpha_color_enable(enable);
-#endif
     return (status);
 }
 
@@ -1229,10 +1122,6 @@ gfx_set_no_ck_outside_alpha(int enable)
 #if GFX_VIDEO_REDCLOUD
     if (gfx_video_type == GFX_VIDEO_TYPE_REDCLOUD)
         status = redcloud_set_no_ck_outside_alpha(enable);
-#endif
-#if GFX_VIDEO_CASTLE
-    if (gfx_video_type == GFX_VIDEO_TYPE_CASTLE)
-        status = castle_set_no_ck_outside_alpha(enable);
 #endif
     return (status);
 }
@@ -1314,10 +1203,6 @@ gfx_get_clock_frequency(void)
     if (gfx_video_type == GFX_VIDEO_TYPE_REDCLOUD)
         frequency = redcloud_get_clock_frequency();
 #endif
-#if GFX_VIDEO_CASTLE
-    if (gfx_video_type == GFX_VIDEO_TYPE_CASTLE)
-        frequency = castle_get_clock_frequency();
-#endif
     return (frequency);
 }
 
@@ -1389,10 +1274,6 @@ gfx_get_sync_polarities(void)
     if (gfx_video_type == GFX_VIDEO_TYPE_REDCLOUD)
         polarities = redcloud_get_sync_polarities();
 #endif
-#if GFX_VIDEO_CASTLE
-    if (gfx_video_type == GFX_VIDEO_TYPE_CASTLE)
-        polarities = castle_get_sync_polarities();
-#endif
     return (polarities);
 }
 
@@ -1416,10 +1297,6 @@ gfx_get_video_palette_entry(unsigned long index, unsigned long *palette)
 #if GFX_VIDEO_REDCLOUD
     if (gfx_video_type == GFX_VIDEO_TYPE_REDCLOUD)
         status = redcloud_get_video_palette_entry(index, palette);
-#endif
-#if GFX_VIDEO_CASTLE
-    if (gfx_video_type == GFX_VIDEO_TYPE_CASTLE)
-        status = castle_get_video_palette_entry(index, palette);
 #endif
     return (status);
 }
@@ -1445,10 +1322,6 @@ gfx_get_video_enable(void)
     if (gfx_video_type == GFX_VIDEO_TYPE_REDCLOUD)
         enable = redcloud_get_video_enable();
 #endif
-#if GFX_VIDEO_CASTLE
-    if (gfx_video_type == GFX_VIDEO_TYPE_CASTLE)
-        enable = castle_get_video_enable();
-#endif
     return (enable);
 }
 
@@ -1472,10 +1345,6 @@ gfx_get_video_format(void)
 #if GFX_VIDEO_REDCLOUD
     if (gfx_video_type == GFX_VIDEO_TYPE_REDCLOUD)
         format = redcloud_get_video_format();
-#endif
-#if GFX_VIDEO_CASTLE
-    if (gfx_video_type == GFX_VIDEO_TYPE_CASTLE)
-        format = castle_get_video_format();
 #endif
     return (format);
 }
@@ -1501,10 +1370,6 @@ gfx_get_video_src_size(void)
     if (gfx_video_type == GFX_VIDEO_TYPE_REDCLOUD)
         size = redcloud_get_video_src_size();
 #endif
-#if GFX_VIDEO_CASTLE
-    if (gfx_video_type == GFX_VIDEO_TYPE_CASTLE)
-        size = castle_get_video_src_size();
-#endif
     return (size);
 }
 
@@ -1528,10 +1393,6 @@ gfx_get_video_line_size(void)
 #if GFX_VIDEO_REDCLOUD
     if (gfx_video_type == GFX_VIDEO_TYPE_REDCLOUD)
         size = redcloud_get_video_line_size();
-#endif
-#if GFX_VIDEO_CASTLE
-    if (gfx_video_type == GFX_VIDEO_TYPE_CASTLE)
-        size = castle_get_video_line_size();
 #endif
     return (size);
 }
@@ -1557,10 +1418,6 @@ gfx_get_video_xclip(void)
     if (gfx_video_type == GFX_VIDEO_TYPE_REDCLOUD)
         size = redcloud_get_video_xclip();
 #endif
-#if GFX_VIDEO_CASTLE
-    if (gfx_video_type == GFX_VIDEO_TYPE_CASTLE)
-        size = castle_get_video_xclip();
-#endif
     return (size);
 }
 
@@ -1585,10 +1442,6 @@ gfx_get_video_offset(void)
     if (gfx_video_type == GFX_VIDEO_TYPE_REDCLOUD)
         offset = redcloud_get_video_offset();
 #endif
-#if GFX_VIDEO_CASTLE
-    if (gfx_video_type == GFX_VIDEO_TYPE_CASTLE)
-        offset = castle_get_video_offset();
-#endif
     return (offset);
 }
 
@@ -1604,10 +1457,6 @@ gfx_get_video_yuv_offsets(unsigned long *yoffset, unsigned long *uoffset,
     if (gfx_video_type == GFX_VIDEO_TYPE_REDCLOUD)
         redcloud_get_video_yuv_offsets(yoffset, uoffset, voffset);
 #endif
-#if GFX_VIDEO_CASTLE
-    if (gfx_video_type == GFX_VIDEO_TYPE_CASTLE)
-        castle_get_video_yuv_offsets(yoffset, uoffset, voffset);
-#endif
 }
 
 /*----------------------------------------------------------------------------
@@ -1620,10 +1469,6 @@ gfx_get_video_yuv_pitch(unsigned long *ypitch, unsigned long *uvpitch)
 #if GFX_VIDEO_REDCLOUD
     if (gfx_video_type == GFX_VIDEO_TYPE_REDCLOUD)
         redcloud_get_video_yuv_pitch(ypitch, uvpitch);
-#endif
-#if GFX_VIDEO_CASTLE
-    if (gfx_video_type == GFX_VIDEO_TYPE_CASTLE)
-        castle_get_video_yuv_pitch(ypitch, uvpitch);
 #endif
 }
 
@@ -1775,10 +1620,6 @@ gfx_get_video_dst_size(void)
     if (gfx_video_type == GFX_VIDEO_TYPE_REDCLOUD)
         size = redcloud_get_video_dst_size();
 #endif
-#if GFX_VIDEO_CASTLE
-    if (gfx_video_type == GFX_VIDEO_TYPE_CASTLE)
-        size = castle_get_video_dst_size();
-#endif
     return (size);
 }
 
@@ -1802,10 +1643,6 @@ gfx_get_video_position(void)
 #if GFX_VIDEO_REDCLOUD
     if (gfx_video_type == GFX_VIDEO_TYPE_REDCLOUD)
         position = redcloud_get_video_position();
-#endif
-#if GFX_VIDEO_CASTLE
-    if (gfx_video_type == GFX_VIDEO_TYPE_CASTLE)
-        position = castle_get_video_position();
 #endif
     return (position);
 }
@@ -1831,10 +1668,6 @@ gfx_get_video_color_key(void)
     if (gfx_video_type == GFX_VIDEO_TYPE_REDCLOUD)
         key = redcloud_get_video_color_key();
 #endif
-#if GFX_VIDEO_CASTLE
-    if (gfx_video_type == GFX_VIDEO_TYPE_CASTLE)
-        key = castle_get_video_color_key();
-#endif
     return (key);
 }
 
@@ -1859,10 +1692,6 @@ gfx_get_video_color_key_mask(void)
     if (gfx_video_type == GFX_VIDEO_TYPE_REDCLOUD)
         mask = redcloud_get_video_color_key_mask();
 #endif
-#if GFX_VIDEO_CASTLE
-    if (gfx_video_type == GFX_VIDEO_TYPE_CASTLE)
-        mask = castle_get_video_color_key_mask();
-#endif
     return (mask);
 }
 
@@ -1886,10 +1715,6 @@ gfx_get_video_color_key_src(void)
 #if GFX_VIDEO_REDCLOUD
     if (gfx_video_type == GFX_VIDEO_TYPE_REDCLOUD)
         src = redcloud_get_video_color_key_src();
-#endif
-#if GFX_VIDEO_CASTLE
-    if (gfx_video_type == GFX_VIDEO_TYPE_CASTLE)
-        src = castle_get_video_color_key_src();
 #endif
     return (src);
 }
@@ -1934,10 +1759,6 @@ gfx_get_video_request(short *x, short *y)
 #if GFX_VIDEO_REDCLOUD
     if (gfx_video_type == GFX_VIDEO_TYPE_REDCLOUD)
         status = redcloud_get_video_request(x, y);
-#endif
-#if GFX_VIDEO_CASTLE
-    if (gfx_video_type == GFX_VIDEO_TYPE_CASTLE)
-        status = castle_get_video_request(x, y);
 #endif
     return (status);
 }
@@ -2108,11 +1929,6 @@ gfx_get_video_cursor(unsigned long *key, unsigned long *mask,
             redcloud_get_video_cursor(key, mask, select_color2, color1,
             color2);
 #endif
-#if GFX_VIDEO_CASTLE
-    if (gfx_video_type == GFX_VIDEO_TYPE_CASTLE)
-        enable =
-            castle_get_video_cursor(key, mask, select_color2, color1, color2);
-#endif
     return (enable);
 }
 
@@ -2137,10 +1953,6 @@ gfx_read_crc(void)
     if (gfx_video_type == GFX_VIDEO_TYPE_REDCLOUD)
         crc = redcloud_read_crc();
 #endif
-#if GFX_VIDEO_CASTLE
-    if (gfx_video_type == GFX_VIDEO_TYPE_CASTLE)
-        crc = castle_read_crc();
-#endif
     return (crc);
 }
 
@@ -2156,10 +1968,6 @@ gfx_read_crc32(void)
 #if GFX_VIDEO_REDCLOUD
     if (gfx_video_type == GFX_VIDEO_TYPE_REDCLOUD)
         crc = redcloud_read_crc32();
-#endif
-#if GFX_VIDEO_CASTLE
-    if (gfx_video_type == GFX_VIDEO_TYPE_CASTLE)
-        crc = castle_read_crc32();
 #endif
     return (crc);
 }
@@ -2177,10 +1985,6 @@ gfx_read_window_crc(int source, unsigned short x, unsigned short y,
 #if GFX_VIDEO_REDCLOUD
     if (gfx_video_type == GFX_VIDEO_TYPE_REDCLOUD)
         crc = redcloud_read_window_crc(source, x, y, width, height, crc32);
-#endif
-#if GFX_VIDEO_CASTLE
-    if (gfx_video_type == GFX_VIDEO_TYPE_CASTLE)
-        crc = castle_read_window_crc(source, x, y, width, height, crc32);
 #endif
     return (crc);
 }
@@ -2216,10 +2020,6 @@ gfx_get_alpha_enable(int *enable)
     if (gfx_video_type == GFX_VIDEO_TYPE_REDCLOUD)
         redcloud_get_alpha_enable(enable);
 #endif
-#if GFX_VIDEO_CASTLE
-    if (gfx_video_type == GFX_VIDEO_TYPE_CASTLE)
-        castle_get_alpha_enable(enable);
-#endif
     return;
 }
 
@@ -2239,10 +2039,6 @@ gfx_get_alpha_size(unsigned short *x, unsigned short *y,
     if (gfx_video_type == GFX_VIDEO_TYPE_REDCLOUD)
         redcloud_get_alpha_size(x, y, width, height);
 #endif
-#if GFX_VIDEO_CASTLE
-    if (gfx_video_type == GFX_VIDEO_TYPE_CASTLE)
-        castle_get_alpha_size(x, y, width, height);
-#endif
     return;
 }
 
@@ -2260,10 +2056,6 @@ gfx_get_alpha_value(unsigned char *alpha, char *delta)
 #if GFX_VIDEO_REDCLOUD
     if (gfx_video_type == GFX_VIDEO_TYPE_REDCLOUD)
         redcloud_get_alpha_value(alpha, delta);
-#endif
-#if GFX_VIDEO_CASTLE
-    if (gfx_video_type == GFX_VIDEO_TYPE_CASTLE)
-        castle_get_alpha_value(alpha, delta);
 #endif
     return;
 }
@@ -2283,10 +2075,6 @@ gfx_get_alpha_priority(int *priority)
     if (gfx_video_type == GFX_VIDEO_TYPE_REDCLOUD)
         redcloud_get_alpha_priority(priority);
 #endif
-#if GFX_VIDEO_CASTLE
-    if (gfx_video_type == GFX_VIDEO_TYPE_CASTLE)
-        castle_get_alpha_priority(priority);
-#endif
     return;
 }
 
@@ -2304,10 +2092,6 @@ gfx_get_alpha_color(unsigned long *color)
 #if GFX_VIDEO_REDCLOUD
     if (gfx_video_type == GFX_VIDEO_TYPE_REDCLOUD)
         redcloud_get_alpha_color(color);
-#endif
-#if GFX_VIDEO_CASTLE
-    if (gfx_video_type == GFX_VIDEO_TYPE_CASTLE)
-        castle_get_alpha_color(color);
 #endif
     return;
 }

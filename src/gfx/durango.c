@@ -51,13 +51,10 @@
 #define GFX_DISPLAY_DYNAMIC		1       /* runtime selection                                        */
 #define GFX_DISPLAY_GU1			1       /* 1st generation display controller        */
 #define GFX_DISPLAY_GU2			1       /* 2nd generation display controller    */
-#define GFX_DISPLAY_GU3			1       /* 3rd generation display controller    */
 
 #define GFX_INIT_DYNAMIC        1      /* runtime selection                                    */
 #define GFX_INIT_GU1            1      /* Geode family                                         */
 #define GFX_INIT_GU2            1      /* Redcloud                                             */
-#define GFX_INIT_GU3            1      /* Castle                                               */
-
 #define GFX_MSR_DYNAMIC         1      /* runtime selection                                    */
 #define GFX_MSR_REDCLOUD        1      /* Redcloud                                             */
 
@@ -69,7 +66,6 @@
 #define GFX_VIDEO_CS5530		1       /* support for CS5530                               */
 #define GFX_VIDEO_SC1200		1       /* support for SC1200                               */
 #define GFX_VIDEO_REDCLOUD      1      /* support for Redcloud                                 */
-#define GFX_VIDEO_CASTLE        1      /* support for Castle                                   */
 
 #define GFX_VIP_DYNAMIC			1       /* runtime selection                                        */
 #define GFX_VIP_SC1200			1       /* support for SC1200                                       */

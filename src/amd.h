@@ -24,11 +24,6 @@
  * software without specific prior written permission.
  */
 
-/*
- * File Contents: This file contains the data structures Geode driver.
- *
- * Project:       Geode Xfree Frame buffer device driver.
- */
 
 #ifndef _AMD_GEODE_H_
 #define _AMD_GEODE_H_
@@ -40,12 +35,15 @@
 #include "xaa.h"
 #include "exa.h"
 #include "xf86Cursor.h"
+
 #include "vgaHW.h"
 #include "xf86int10.h"
+
 #include "xf86xv.h"
 
 #define CFB 0
 #define INT10_SUPPORT 1
+
 /* Existing Processor Models */
 #define GX1 0x1
 #define GX2 0x10
@@ -269,6 +267,7 @@ typedef struct
     Bool HWCursor;
     Bool NoAccel;
     Bool CustomMode;
+   Bool useVGA;
     unsigned long VideoKey;
 
     Bool TVSupport;
@@ -478,6 +477,8 @@ enum
     GX_OPTION_OSM_IMG_BUFS,
     GX_OPTION_OSM_CLR_BUFS,
     GX_OPTION_CUSTOM_MODE,
+   GX_OPTION_FBSIZE,
+   GX_OPTION_NOVGA,
     GX_OPTION_DONT_PROGRAM
 }
 GX_GeodeOpts;

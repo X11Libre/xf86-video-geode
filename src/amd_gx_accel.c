@@ -2062,11 +2062,9 @@ GXAccelInit(ScreenPtr pScrn)
     if (pExa && pGeode->useEXA) {
 
         xf86DrvMsg(pScrni->scrnIndex, X_INFO, "Init EXA\n");
-        if (exaGetVersion() < EXA_MAKE_VERSION(0, 2, 0)) {
-            xf86DrvMsg(pScrni->scrnIndex, X_ERROR, "EXA version is too old "
-                "(got 0x%3x, need >= 0x020)\n", exaGetVersion());
-            return FALSE;
-        }
+
+	pExa->exa_major = EXA_VERSION_MAJOR;
+	pExa->exa_minor = EXA_VERSION_MINOR;
 
         /* Sync */
         pExa->WaitMarker = amd_gx_exa_WaitMarker;

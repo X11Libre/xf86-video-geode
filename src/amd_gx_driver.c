@@ -128,7 +128,6 @@ extern void GXInitVideo(ScreenPtr pScrn);
 extern Bool GXDGAInit(ScreenPtr pScrn);
 extern void GXLoadCursorImage(ScrnInfoPtr pScrni, unsigned char *src);
 
-unsigned char *XpressROMPtr;
 unsigned long fb;
 
 /* Existing Processor Models */
@@ -260,10 +259,9 @@ static Bool
 GXSaveScreen(ScreenPtr pScrn, int mode)
 {
     ScrnInfoPtr pScrni = xf86Screens[pScrn->myNum];
+   GeodePtr pGeode = GEODEPTR(pScrni);
 
-    DEBUGMSG(1, (0, X_INFO, "GXSaveScreen!\n"));
-
-    if (!pScrni->vtSema)
+   if (pGeode->useVGA && !pScrni->vtSema)
         return vgaHWSaveScreen(pScrn, mode);
     return TRUE;
 }
@@ -477,70 +475,52 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
     if (!(pGeode = GXGetRec(pScrni)))
         return FALSE;
 
-    /* This is the general case */
-    for (i = 0; i < pScrni->numEntities; i++) {
+   if (pScrni->numEntities != 1) 
+     return FALSE;
+
         pGeode->pEnt = xf86GetEntityInfo(pScrni->entityList[i]);
         if (pGeode->pEnt->resources)
             return FALSE;
         pGeode->Chipset = pGeode->pEnt->chipset;
         pScrni->chipset = (char *)xf86TokenToString(GeodeChipsets,
             pGeode->pEnt->chipset);
-    }
 
-    ddc = GXProbeDDC(pScrni, pGeode->pEnt->index);
-    if (flags & PROBE_DETECT) {
-        ConfiguredMonitor = ddc;
+
+   DEBUGMSG(1, (pScrni->scrnIndex, X_ERROR, "PROBEDDC\n"));
+
+   /* Note that we can't do this without VGA */
+
+   if (flags & PROBE_DETECT != 0) {
+	ConfiguredMonitor = GXProbeDDC(pScrni, pGeode->pEnt->index);
         return TRUE;
     }
 
-    pGeode->FBVGAActive = 0;           /* KFB will Knock of VGA */
-#if INT10_SUPPORT
-    if (!xf86LoadSubModule(pScrni, "int10"))
-        return FALSE;
-    xf86LoaderReqSymLists(amdInt10Symbols, NULL);
-#endif
+   /* Hardware detection */
 
-    /* If the vgahw module would be needed it would be loaded here */
-    if (!xf86LoadSubModule(pScrni, "vgahw")) {
-        return FALSE;
-    }
-    xf86LoaderReqSymLists(amdVgahwSymbols, NULL);
-    DEBUGMSG(1, (0, X_INFO, "GXPreInit(1)!\n"));
-    /* Do the durango hardware detection */
     pGeode->cpu_version = gfx_detect_cpu();
 
-    /* find the base chipset core. Currently there can be only one 
-     * chip active at any time.
-     */
-/*	pGeode->DetectedChipSet = GX1; */
-    if ((pGeode->cpu_version & 0xFF) == GFX_CPU_REDCLOUD)
-        pGeode->DetectedChipSet = GX;
-    DEBUGMSG(1, (0, X_INFO, "Detected BaseChip (%d)\n",
-            pGeode->DetectedChipSet));
-    {
+   if ((pGeode->cpu_version & 0xFF) == GFX_CPU_REDCLOUD) {
         Q_WORD msrValue;
+	   pGeode->DetectedChipSet = GX;
 
-        /* GX : Can have CRT or TFT only */
+	   /* See if this a CRT or TFT part */
+
         gfx_msr_read(RC_ID_DF, MBD_MSR_CONFIG, &msrValue);
         pGeode->DetectedChipSet =
             ((msrValue.low & RCDF_CONFIG_FMT_MASK) ==
             RCDF_CONFIG_FMT_FP) ? GX_TFT : GX_CRT;
-        DEBUGMSG(1, (0, X_INFO, "Gx2 for %s\n",
-                ((pGeode->DetectedChipSet == GX_TFT) ? "TFT" : "CRT")));
+
     }
-    DEBUGMSG(1, (0, X_INFO, "GXPreInit(1.1)!\n"));
+
     pGeode->vid_version = gfx_detect_video();
     pGeode->FBLinearAddr = gfx_get_frame_buffer_base();
-    pGeode->FBAvail = gfx_get_frame_buffer_size();
 
     /* update the max clock from the one system suports  */
     GeodeClockRange->maxClock = gfx_get_max_supported_pixel_clock();
 
-    DEBUGMSG(1, (0, X_INFO, "GXPreInit(1.5)!\n"));
-    /* SET DURANGO REGISTER POINTERS
-     * * The method of mapping from a physical address to a linear address
-     * * is operating system independent.  Set variables to linear address.
-     */
+
+   /* Set Durango register pointers */
+
     if (pGeode->DetectedChipSet & GX) {
         pGeode->cpu_reg_size = 0x4000;
         pGeode->gp_reg_size = 0x4000;
@@ -550,29 +530,20 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
         pGeode->vid_reg_size = 0x1000;
     }
 
-    if (!GXMapMem(pScrni))
-        return FALSE;
 
-    /* check if VGA is active */
-    /* This routine saves the current VGA state in Durango VGA structure */
-    /* check if VGA is active */
-    pGeode->FBVGAActive = gu2_get_vga_active();
-
-    DEBUGMSG(1, (0, X_PROBED, "VGA = %d\n", pGeode->FBVGAActive));
+   pGeode->FBVGAActive = 0;
 
     /* Fill in the monitor field */
     pScrni->monitor = pScrni->confScreen->monitor;
-    DEBUGMSG(1, (0, X_INFO, "GXPreInit(2)!\n"));
+
     SupportFlags = Support24bppFb | Support32bppFb;
-    DEBUGMSG(1, (0, X_INFO, "GXPreInit(2)!\n"));
-    /* Determine depth, bpp, etc. */
+
     if (!xf86SetDepthBpp(pScrni, 8, 8, 8, SupportFlags)) {
         return FALSE;
     } else {
         if (!((pScrni->depth == 8) ||
                 (pScrni->depth == 16) ||
                 (pScrni->depth == 24) || (pScrni->depth == 32))) {
-            /* Depth not supported */
             DEBUGMSG(1, (pScrni->scrnIndex, X_ERROR,
                     "Given depth (%d bpp) is not supported by this driver\n",
                     pScrni->depth));
@@ -584,12 +555,12 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
      * * because xf86SetWeight references it.
      */
     if (pScrni->depth > 8) {
-        /* The defaults are OK for us */
+
         rgb BitsPerComponent = { 0, 0, 0 };
         rgb BitMask = { 0, 0, 0 };
 
         if (pScrni->depth > 16) {
-            /* we are operating in 24 bpp, Readcloud */
+
             BitsPerComponent.red = 8;
             BitsPerComponent.green = 8;
             BitsPerComponent.blue = 8;
@@ -607,14 +578,9 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
 
     xf86PrintDepthBpp(pScrni);
 
-    DEBUGMSG(1, (0, X_INFO, "GXPreInit(3)!\n"));
-
     if (!xf86SetDefaultVisual(pScrni, -1))
         return FALSE;
 
-    DEBUGMSG(1, (0, X_INFO, "GXPreInit(4)!\n"));
-
-    /* The new cmap layer needs this to be initialized */
     if (pScrni->depth > 1) {
         Gamma zeros = { 0.0, 0.0, 0.0 };
 
@@ -622,34 +588,60 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
             return FALSE;
         }
     }
-    DEBUGMSG(1, (0, X_INFO, "GXPreInit(5)!\n"));
 
     /* We use a programmable clock */
     pScrni->progClock = TRUE;
 
-    /*Collect all of the relevant option flags
-     * *(fill in pScrni->options)
-     */
     xf86CollectOptions(pScrni, NULL);
 
-    /*Process the options */
-    xf86ProcessOptions(pScrni->scrnIndex, pScrni->options, GeodeOptions);
+   xf86ProcessOptions(pScrni->scrnIndex, pScrni->options,
+		      GeodeOptions);
 
+   pGeode->useVGA = TRUE;
+
+   if (xf86ReturnOptValBool(GeodeOptions, GX_OPTION_NOVGA, FALSE))
+	pGeode->useVGA = FALSE;
+
+    xf86DrvMsg(pScrni->scrnIndex, X_DEFAULT,
+        "useVGA=%d\n", pGeode->useVGA);
+
+
+   if (pGeode->useVGA) {
 #if INT10_SUPPORT
+     if (!xf86LoadSubModule(pScrni, "int10"))
+       return FALSE;
+     xf86LoaderReqSymLists(amdInt10Symbols, NULL);
+     
     pVesa = pGeode->vesa;
-    /* Initialize Vesa record */
 
-    if ((pVesa->pInt = xf86InitInt10(pGeode->pEnt->index)) == NULL) {
-        xf86DrvMsg(0, X_ERROR, "Int10 initialization failed.\n");
-        return (FALSE);
-    }
+     if ((pVesa->pInt = xf86InitInt10(pGeode->pEnt->index)) == NULL) 
+       DEBUGMSG(1, (pScrni->scrnIndex, X_ERROR, 
+		    "Unable to initialize INT10 support\n"));
+     return FALSE;
 #endif
 
+     if (!xf86LoadSubModule(pScrni, "vgahw"))
+       return FALSE;
+     
+     xf86LoaderReqSymLists(amdVgahwSymbols, NULL);
+     
+     pGeode->FBVGAActive = gu2_get_vga_active();
+     pGeode->FBAvail = gfx_get_frame_buffer_size();
+   }
+   else {
+     if (!xf86GetOptValInteger(GeodeOptions, GX_OPTION_FBSIZE,
+			       &(pGeode->FBAvail)))
+       pGeode->FBAvail = 0x800000;
+   }
+
+   if (!GXMapMem(pScrni))
+      return FALSE;
+
     /*Set the bits per RGB for 8bpp mode */
-    if (pScrni->depth == 8) {
-        /* Default to 8 */
+
+   if (pScrni->depth == 8)
         pScrni->rgbBits = 8;
-    }
+
     from = X_DEFAULT;
 
     /*
@@ -657,8 +649,8 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
      * *option, with the default set above.
      */
     pGeode->HWCursor = TRUE;
-    if (xf86GetOptValBool(GeodeOptions, GX_OPTION_HW_CURSOR,
-            &pGeode->HWCursor)) {
+
+   if (xf86GetOptValBool(GeodeOptions, GX_OPTION_HW_CURSOR, &pGeode->HWCursor)) {
         from = X_CONFIG;
     }
     /* For compatibility, accept this too (as an override) */
@@ -666,31 +658,23 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
         from = X_CONFIG;
         pGeode->HWCursor = FALSE;
     }
-    DEBUGMSG(1, (pScrni->scrnIndex, from, "Using %s cursor\n",
-            pGeode->HWCursor ? "HW" : "SW"));
 
     pGeode->Compression = TRUE;
     if (xf86ReturnOptValBool(GeodeOptions, GX_OPTION_NOCOMPRESSION, FALSE)) {
         pGeode->Compression = FALSE;
-        DEBUGMSG(1, (pScrni->scrnIndex, X_CONFIG, "NoCompression\n"));
     }
 
     pGeode->NoAccel = FALSE;
     if (xf86ReturnOptValBool(GeodeOptions, GX_OPTION_NOACCEL, FALSE)) {
         pGeode->NoAccel = TRUE;
-        DEBUGMSG(1, (pScrni->scrnIndex, X_CONFIG, "Acceleration \
-			disabled\n"));
     }
 
     if (!xf86GetOptValInteger(GeodeOptions, GX_OPTION_OSM_IMG_BUFS,
             &(pGeode->NoOfImgBuffers)))
         pGeode->NoOfImgBuffers = DEFAULT_IMG_LINE_BUFS;
-    /* default # of buffers */
 
     if (pGeode->NoOfImgBuffers <= 0)
         pGeode->NoOfImgBuffers = 0;
-    DEBUGMSG(1, (pScrni->scrnIndex, X_CONFIG,
-            "NoOfImgBuffers = %d\n", pGeode->NoOfImgBuffers));
 
     if (!xf86GetOptValInteger(GeodeOptions, GX_OPTION_OSM_CLR_BUFS,
             &(pGeode->NoOfColorExpandLines)))
@@ -699,8 +683,6 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
     if (pGeode->NoOfColorExpandLines <= 0)
         pGeode->NoOfColorExpandLines = 0;
 
-    DEBUGMSG(1, (pScrni->scrnIndex, X_CONFIG,
-            "NoOfColorExpandLines = %d\n", pGeode->NoOfColorExpandLines));
 
     if (!xf86GetOptValInteger(GeodeOptions, GX_OPTION_EXA_SCRATCH_BFRSZ,
             &(pGeode->exaBfrSz)))
@@ -708,22 +690,22 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
 
     if (pGeode->exaBfrSz <= 0)
         pGeode->exaBfrSz = 0;
-    DEBUGMSG(1, (pScrni->scrnIndex, X_CONFIG,
-            "exaBfrSz = 0x%08lx\n", pGeode->exaBfrSz));
 
-    pGeode->Panel = FALSE;
-    if (xf86ReturnOptValBool(GeodeOptions, GX_OPTION_FLATPANEL, FALSE)) {
-        DEBUGMSG(0, (pScrni->scrnIndex, X_CONFIG, "FlatPanel Selected\n"));
-        pGeode->Panel = TRUE;
-    }
+  
 
     pGeode->CustomMode = FALSE;
     if (xf86ReturnOptValBool(GeodeOptions, GX_OPTION_CUSTOM_MODE, FALSE)) {
         pGeode->CustomMode = TRUE;
-        DEBUGMSG(1, (pScrni->scrnIndex, X_CONFIG, "Custom mode enabled\n"));
     }
 
-    /* Force the Panel on if on a GX TFT part, no crt support */
+   pGeode->Panel = FALSE;
+   
+   if (xf86ReturnOptValBool(GeodeOptions, GX_OPTION_FLATPANEL, FALSE)) {
+     pGeode->Panel = TRUE;
+   }
+      
+   /* Force the Panel on if on a GX TFT part, no CRT support anyway */
+
     if (pGeode->DetectedChipSet == GX_TFT) {
         pGeode->Panel = TRUE;
     }
@@ -732,32 +714,23 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
     if ((pGeode->DetectedChipSet == GX_CRT) && (pGeode->Panel))
         pGeode->Panel = FALSE;
 
-    DEBUGMSG(1, (pScrni->scrnIndex, X_CONFIG,
-            "Quering FP Bios %d\n", pGeode->Panel));
 
     /* if FP not supported in BIOS, then turn off user option */
-    if (pGeode->Panel) {
-        /* check if bios supports FP */
+   /* NOTE * NOTE * NOTE - this probably won't work for OLPC! */
+
 #if defined(PNL_SUP)
+   if (pGeode->Panel) {
         pGeode->Panel = Pnl_IsPanelEnabledInBIOS();
+
+     if (pGeode->Panel) {
         Pnl_GetPanelInfoFromBIOS(&pGeode->FPBX, &pGeode->FPBY,
             &pGeode->FPBB, &pGeode->FPBF);
-        DEBUGMSG(1, (pScrni->scrnIndex, X_CONFIG,
-                "FP Bios Params %d %d %d %d\n",
-                pGeode->FPBX, pGeode->FPBY, pGeode->FPBB, pGeode->FPBF));
-
-#endif /* PNL_SUP */
+       Pnl_PowerUp();
     }
-    /* if panel not selected and Panel can be  supported. 
-     * Power down the panel. 
-     */
-#if defined(PNL_SUP)
-    if (!pGeode->Panel) {
+     else
         Pnl_PowerDown();
-    } else {
-        Pnl_PowerUp();
     }
-#endif /* PNL_SUP */
+#endif
 
     pGeode->useEXA = FALSE;
     from = X_DEFAULT;
@@ -783,26 +756,18 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
     if (xf86ReturnOptValBool(GeodeOptions, GX_OPTION_SHADOW_FB, FALSE)) {
         pGeode->ShadowFB = TRUE;
         pGeode->NoAccel = TRUE;
-        DEBUGMSG(1, (pScrni->scrnIndex, X_CONFIG,
-                "Using \"Shadow Framebuffer\"\n"));
     }
 
     pGeode->Rotate = 0;
     if ((s = xf86GetOptValString(GeodeOptions, GX_OPTION_ROTATE))) {
-        DEBUGMSG(1, (pScrni->scrnIndex, X_CONFIG, "Rotating - %s\n", s));
-        if (!xf86NameCmp(s, "CW")) {
+
+     if (!xf86NameCmp(s, "CW")) 
             pGeode->Rotate = 1;
-            DEBUGMSG(1, (pScrni->scrnIndex, X_CONFIG,
-                    "Rotating screen clockwise\n"));
-        } else if (!xf86NameCmp(s, "INVERT")) {
+      else if (!xf86NameCmp(s, "INVERT")) 
             pGeode->Rotate = 2;
-            DEBUGMSG(1, (pScrni->scrnIndex, X_CONFIG,
-                    "Rotating screen inverted\n"));
-        } else if (!xf86NameCmp(s, "CCW")) {
+      else if (!xf86NameCmp(s, "CCW")) 
             pGeode->Rotate = 3;
-            DEBUGMSG(1, (pScrni->scrnIndex, X_CONFIG,
-                    "Rotating screen counter clockwise\n"));
-        }
+
 
         if (pGeode->Rotate == 0) {
             DEBUGMSG(1, (pScrni->scrnIndex, X_CONFIG,
@@ -813,10 +778,15 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
         }
     }
 
+   if (pGeode->Rotate == 1) 
+     xf86DrvMsg(pScrni->scrnIndex, X_CONFIG, "Rotating screen clockwise\n");
+   else if (pGeode->Rotate == 2)
+      xf86DrvMsg(pScrni->scrnIndex, X_CONFIG, "Rotating screen 180 degrees\n");
+   else if (pGeode->Rotate == 3)
+     xf86DrvMsg(pScrni->scrnIndex, X_CONFIG, "Rotating screen 180 counter clockwise\n");
+
     if (pGeode->Rotate != 0) {
-        DEBUGMSG(1, (pScrni->scrnIndex, X_CONFIG,
-                "Option \"Rotate\" disables acceleration and enables shadow"
-                "\n"));
+     xf86DrvMsg(pScrni->scrnIndex, X_CONFIG, "Option 'Rotate' will disable acceleration and enable shadow\n");
         pGeode->NoAccel = TRUE;
         pGeode->ShadowFB = TRUE;
     }
@@ -828,25 +798,14 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
      * * GeodeProbe(), but check it just in case.
      */
     if (pScrni->chipset == NULL) {
-        DEBUGMSG(1, (pScrni->scrnIndex, X_ERROR,
-                "ChipID 0x%04X is not recognised\n", pGeode->Chipset));
+     Xf86DrvMsg(pScrni->scrnIndex, X_ERROR, "ChipID 0x%04X is not recognised\n", pGeode->Chipset);
         return FALSE;
     }
 
     if (pGeode->Chipset < 0) {
-        DEBUGMSG(1, (pScrni->scrnIndex, X_ERROR,
-                "Chipset \"%s\" is not recognised\n", pScrni->chipset));
+     Xf86DrvMsg(pScrni->scrnIndex, X_ERROR, "Chipset %s is not recognised\n", pScrni->chipset);
         return FALSE;
     }
-
-    DEBUGMSG(1, (0, X_INFO, "GXPreInit(6)!\n"));
-
-    /*
-     * * Init the screen with some values
-     */
-    DEBUGMSG(1, (pScrni->scrnIndex, from,
-            "Video I/O registers at 0x%08lX\n",
-            (unsigned long)VGAHW_GET_IOBASE()));
 
     if (pScrni->memPhysBase == 0) {
         from = X_PROBED;
@@ -855,10 +814,6 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
 
     pScrni->fbOffset = 0;
 
-    DEBUGMSG(1, (pScrni->scrnIndex, from,
-            "Linear framebuffer at 0x%08lX\n",
-            (unsigned long)pScrni->memPhysBase));
-
     if (pGeode->pEnt->device->videoRam == 0) {
         from = X_PROBED;
         pScrni->videoRam = pGeode->FBAvail / 1024;
@@ -866,11 +821,6 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
         pScrni->videoRam = pGeode->pEnt->device->videoRam;
         from = X_CONFIG;
     }
-
-    DEBUGMSG(1, (pScrni->scrnIndex, from,
-            "VideoRam: %ld kByte\n", (unsigned long)pScrni->videoRam));
-
-    DEBUGMSG(1, (0, X_INFO, "GXPreInit(7)!\n"));
 
     /*
      * * xf86ValidateModes will check that the mode HTotal and VTotal values
@@ -918,30 +868,22 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
         pScrni->display->virtualX,
         pScrni->display->virtualY, pGeode->FBAvail, LOOKUP_BEST_REFRESH);
 
-    DEBUGMSG(1, (pScrni->scrnIndex, from,
-            "xf86ValidateModes: %d %d %d\n",
-            pScrni->virtualX, pScrni->virtualY, pScrni->displayWidth));
     if (i == -1) {
+     Xf86DrvMsg(pScrni->scrnIndex, X_ERROR, "No valid modes were found\n");
         GXFreeRec(pScrni);
         return FALSE;
     }
-
-    DEBUGMSG(1, (0, X_INFO, "GXPreInit(8)!\n"));
 
     /* Prune the modes marked as invalid */
     xf86PruneDriverModes(pScrni);
 
-    DEBUGMSG(1, (0, X_INFO, "GXPreInit(9)!\n"));
     if (i == 0 || pScrni->modes == NULL) {
-        DEBUGMSG(1, (pScrni->scrnIndex, X_ERROR, "No valid modes found\n"));
+     Xf86DrvMsg(pScrni->scrnIndex, X_ERROR, "No valid modes were found\n");
         GXFreeRec(pScrni);
         return FALSE;
     }
 
-    DEBUGMSG(1, (0, X_INFO, "GXPreInit(10)!\n"));
-
     xf86SetCrtcForModes(pScrni, 0);
-    DEBUGMSG(1, (0, X_INFO, "GXPreInit(11)!\n"));
 
     /* Set the current mode to the first in the list */
     pScrni->currentMode = pScrni->modes;
@@ -949,11 +891,9 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
 
     /* Print the list of modes being used */
     xf86PrintModes(pScrni);
-    DEBUGMSG(1, (0, X_INFO, "GXPreInit(13)!\n"));
 
     /* Set the display resolution */
     xf86SetDpi(pScrni, 0, 0);
-    DEBUGMSG(1, (0, X_INFO, "GXPreInit(14)!\n"));
 
     /* Load bpp-specific modules */
     mod = NULL;
@@ -995,7 +935,7 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
 
     xf86LoaderReqSymLists(amdFbSymbols, NULL);
 #endif
-    DEBUGMSG(1, (0, X_INFO, "GXPreInit(15)!\n"));
+
     if (pGeode->NoAccel == FALSE) {
         const char *module = "xaa";
         const char **symbols = &amdXaaSymbols[0];
@@ -1013,7 +953,7 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
 
         xf86LoaderReqSymLists(symbols, NULL);
     }
-    DEBUGMSG(1, (0, X_INFO, "GXPreInit(16)!\n"));
+
     if (pGeode->HWCursor == TRUE) {
         if (!xf86LoadSubModule(pScrni, "ramdac")) {
             GXFreeRec(pScrni);
@@ -1022,7 +962,7 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
 
         xf86LoaderReqSymLists(amdRamdacSymbols, NULL);
     }
-    DEBUGMSG(1, (0, X_INFO, "GXPreInit(17)!\n"));
+
     /* Load shadowfb if needed */
     if (pGeode->ShadowFB) {
         if (!xf86LoadSubModule(pScrni, "shadowfb")) {
@@ -1033,7 +973,6 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
         xf86LoaderReqSymLists(amdShadowSymbols, NULL);
     }
 
-    DEBUGMSG(1, (0, X_INFO, "GXPreInit(18)!\n"));
     if (xf86RegisterResources(pGeode->pEnt->index, NULL, ResExclusive)) {
         DEBUGMSG(1, (pScrni->scrnIndex, X_ERROR,
                 "xf86RegisterResources() found resource conflicts\n"));
@@ -1042,7 +981,6 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
     }
 
     GXUnmapMem(pScrni);
-    DEBUGMSG(1, (0, X_INFO, "GXPreInit ... done successfully!\n"));
     return TRUE;
 }
 
@@ -1065,8 +1003,7 @@ GXRestore(ScrnInfoPtr pScrni)
 {
     GeodeRec *pGeode = GEODEPTR(pScrni);
 
-    DEBUGMSG(1, (0, X_INFO, "GXRestore!\n"));
-    if (pGeode->FBVGAActive) {
+   if (pGeode->useVGA && pGeode->FBVGAActive) {
         vgaHWPtr pvgaHW = VGAHWPTR(pScrni);
 
         vgaHWProtect(pScrni, TRUE);
@@ -1326,7 +1263,11 @@ GXSetMode(ScrnInfoPtr pScrni, DisplayModePtr pMode)
         GXLoadCursorImage(pScrni, NULL);
         GFX(set_cursor_position(pGeode->CursorStartOffset, 0, 0, 0, 0));
         GFX(set_cursor_enable(1));
-    }
+   } else {
+      DEBUGMSG(1,(0, X_INFO, "GXRestore ... "));
+      GXRestore(pScrni);
+      DEBUGMSG(1,(0, X_INFO, "done.\n"));
+   }
 
     DEBUGMSG(1, (0, X_INFO, "done.\n"));
     /* Reenable the hardware cursor after the mode switch */
@@ -1377,9 +1318,10 @@ static Bool
 GXEnterGraphics(ScreenPtr pScrn, ScrnInfoPtr pScrni)
 {
     GeodeRec *pGeode = GEODEPTR(pScrni);
-    vgaHWPtr pvgaHW = VGAHWPTR(pScrni);
 
     gfx_wait_until_idle();
+
+    DEBUGMSG(1, (0, X_INFO, "GXEnterGraphics(1)!\n"));
 
     /* Save CRT State */
     pGeode->FBgfxdisplaytiming.dwDotClock = gfx_get_clock_frequency();
@@ -1401,8 +1343,13 @@ GXEnterGraphics(ScreenPtr pScrn, ScrnInfoPtr pScrni)
 
     /* Save Display offset */
     pGeode->FBDisplayOffset = gfx_get_display_offset();
-    pGeode->FBBIOSMode = pvgaHW->readCrtc(pvgaHW, 0x040);
-    DEBUGMSG(1, (0, X_INFO, "FBBIOSMode %d\n", pGeode->FBBIOSMode));
+
+    DEBUGMSG(1, (0, X_INFO, "GXEnterGraphics(2)!\n"));
+
+    if (pGeode->useVGA) {
+      vgaHWPtr pvgaHW = VGAHWPTR(pScrni);
+      pGeode->FBBIOSMode = pvgaHW->readCrtc(pvgaHW, 0x040);
+    }
 
     /* Save the current Compression state */
     pGeode->FBCompressionEnable = gfx_get_compression_enable();
@@ -1415,11 +1362,12 @@ GXEnterGraphics(ScreenPtr pScrn, ScrnInfoPtr pScrni)
 
 #if defined(PNL_SUP)
     /* Save the Panel state */
+    DEBUGMSG(1, (0, X_INFO, "GXEnterGraphics(3)!\n"));
     Pnl_SavePanelState();
 #endif
 
     /* only if comming from VGA */
-    if (pGeode->FBVGAActive) {
+   if (pGeode->useVGA && pGeode->FBVGAActive) {
         unsigned short sequencer;
         vgaHWPtr pvgaHW = VGAHWPTR(pScrni);
 
@@ -1460,6 +1408,7 @@ GXEnterGraphics(ScreenPtr pScrn, ScrnInfoPtr pScrni)
     }
 
     gx_enable_dac_power(pScrni);
+    DEBUGMSG(1, (0, X_INFO, "GXEnterGraphics(4)!\n"));
     return TRUE;
 }
 
@@ -1538,15 +1487,14 @@ GXLeaveGraphics(ScrnInfoPtr pScrni)
     /* Restore Cursor */
     gfx_set_cursor_position(pGeode->FBCursorOffset, 0, 0, 0, 0);
 
-    DEBUGMSG(1, (0, X_INFO, "FBVGAActive %d\n", pGeode->FBVGAActive));
-
-    /* For the moment, always do an int 10 */
-
+   if (pGeode->useVGA) {
     pGeode->vesa->pInt->num = 0x10;
     pGeode->vesa->pInt->ax = 0x0 | pGeode->FBBIOSMode;
     pGeode->vesa->pInt->bx = 0;
     xf86ExecX86int10(pGeode->vesa->pInt);
     gfx_delay_milliseconds(3);
+   }
+
     GXRestore(pScrni);
 
     gx_enable_dac_power(pScrni);
@@ -1740,18 +1688,16 @@ GXScreenInit(int scrnIndex, ScreenPtr pScrn, int argc, char **argv)
     ScrnInfoPtr pScrni = xf86Screens[pScrn->myNum];
     Bool Inited = FALSE;
 
-    DEBUGMSG(1, (0, X_INFO, "GXScreenInit!\n"));
-    /* Get driver private */
     pGeode = GXGetRec(pScrni);
-    DEBUGMSG(1, (0, X_INFO, "GXScreenInit(0)!\n"));
-    /*Allocate a vgaHWRec */
 
+   if (pGeode->useVGA) {
     if (!vgaHWGetHWRec(pScrni))
         return FALSE;
     if (!vgaHWMapMem(pScrni))
         return FALSE;
 
     vgaHWGetIOBase(VGAHWPTR(pScrni));
+   }
 
     if (!GXMapMem(pScrni))
         return FALSE;
@@ -2510,14 +2456,10 @@ GXMapMem(ScrnInfoPtr pScrni)
         return (FALSE);
     }
 
-    /* Map the XpressROM ptr to read what platform are we on */
-    XpressROMPtr = (unsigned char *)xf86MapVidMem(pScrni->scrnIndex,
-        VIDMEM_FRAMEBUFFER, 0xF0000, 0x10000);
-
-    DEBUGMSG(1, (0, X_NONE, "adapter info %lx %lx %lx %p, %p\n",
+    DEBUGMSG(1, (0, X_NONE, "adapter info %lx %lx %lx %p\n",
             pGeode->cpu_version,
             pGeode->vid_version,
-            pGeode->FBAvail, pGeode->FBBase, XpressROMPtr));
+            pGeode->FBAvail, pGeode->FBBase));
 
     return TRUE;
 }
@@ -2539,7 +2481,6 @@ GXUnmapMem(ScrnInfoPtr pScrni)
     }
     xf86UnMapVidMem(pScrni->scrnIndex, gfx_virt_vidptr, pGeode->vid_reg_size);
     xf86UnMapVidMem(pScrni->scrnIndex, gfx_virt_fbptr, pGeode->FBAvail);
-    xf86UnMapVidMem(pScrni->scrnIndex, XpressROMPtr, 0x10000);
     return TRUE;
 }
 

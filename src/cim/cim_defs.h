@@ -1,16 +1,32 @@
- /*
-  * <LIC_AMD_STD>
-  * Copyright (C) 2005 Advanced Micro Devices, Inc.  All Rights Reserved.
-  * </LIC_AMD_STD>
-  * 
-  * <CTL_AMD_STD>
-  * </CTL_AMD_STD>
-  * 
-  * <DOC_AMD_STD>
-  * Cimarron hardware access macros.
-  * </DOC_AMD_STD>
-  * 
-  */
+/*
+ * Copyright (c) 2006 Advanced Micro Devices, Inc.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+ * DEALINGS IN THE SOFTWARE.
+ *
+ * Neither the name of the Advanced Micro Devices, Inc. nor the names of its
+ * contributors may be used to endorse or promote products derived from this
+ * software without specific prior written permission.
+ */
+
+/*
+ * Cimarron hardware access macros.
+ */
 
 #ifndef _cim_defs_h
 #define _cim_defs_h
@@ -100,17 +116,18 @@
  * Read the contents of a 64 bit MSR into a data structure
  *-----------------------------------------------------------------*/
 
-#define MSR_READ(msr_reg, device_add, data64_ptr)                                   \
-{                                                                                   \
-	unsigned long msr_add = (unsigned long)(msr_reg) | (unsigned long)(device_add); \
-	unsigned long data_high, data_low;                                              \
-	_asm { mov ecx, msr_add   }                                                     \
-	_asm { rdmsr              }                                                     \
-	_asm { mov data_high, edx }                                                     \
-	_asm { mov data_low,  eax }                                                     \
-	                                                                                \
-	((Q_WORD *)(data64_ptr))->high = data_high;                                     \
-	((Q_WORD *)(data64_ptr))->low  = data_low;                                      \
+#define MSR_READ(msr_reg, device_add, data64_ptr)                           \
+{                                                                           \
+	unsigned long msr_add = (unsigned long)(msr_reg) |                      \
+							(unsigned long)(device_add);                    \
+	unsigned long data_high, data_low;                                      \
+	_asm { mov ecx, msr_add   }                                             \
+	_asm { rdmsr              }                                             \
+	_asm { mov data_high, edx }                                             \
+	_asm { mov data_low,  eax }                                             \
+	                                                                        \
+	((Q_WORD *)(data64_ptr))->high = data_high;                             \
+	((Q_WORD *)(data64_ptr))->low  = data_low;                              \
 }
 
 /*-----------------------------------------------------------------
@@ -118,18 +135,19 @@
  * Write the contents of a 64 bit data structure to a MSR.
  *-----------------------------------------------------------------*/
 
-#define MSR_WRITE(msr_reg, device_add, data64_ptr)                                  \
-{                                                                                   \
-	unsigned long msr_add = (unsigned long)(msr_reg) | (unsigned long)(device_add); \
-	unsigned long data_high, data_low;                                              \
-	                                                                                \
-	data_high = ((Q_WORD *)(data64_ptr))->high;                                     \
-	data_low  = ((Q_WORD *)(data64_ptr))->low;                                      \
-		                                                                            \
-	_asm { mov ecx, msr_add   }                                                     \
-	_asm { mov edx, data_high }                                                     \
-	_asm { mov eax, data_low  }                                                     \
-	_asm { wrmsr              }                                                     \
+#define MSR_WRITE(msr_reg, device_add, data64_ptr)                          \
+{                                                                           \
+	unsigned long msr_add = (unsigned long)(msr_reg) |                      \
+							(unsigned long)(device_add);                    \
+	unsigned long data_high, data_low;                                      \
+	                                                                        \
+	data_high = ((Q_WORD *)(data64_ptr))->high;                             \
+	data_low  = ((Q_WORD *)(data64_ptr))->low;                              \
+		                                                                    \
+	_asm { mov ecx, msr_add   }                                             \
+	_asm { mov edx, data_high }                                             \
+	_asm { mov eax, data_low  }                                             \
+	_asm { wrmsr              }                                             \
 }
 
 #elif CIMARRON_MSR_VSA_IO
@@ -139,23 +157,24 @@
  * Read the contents of a 64 bit MSR into a data structure
  *-----------------------------------------------------------------*/
 
-#define MSR_READ(msr_reg, device_add, data64_ptr)                                   \
-{                                                                                   \
-	unsigned long msr_add = (unsigned long)(msr_reg) | (unsigned long)(device_add); \
-	unsigned long data_high, data_low;                                              \
-		                                                                            \
-	_asm { mov    dx,  0x0AC1C      } 	                                            \
-	_asm { mov    eax, 0x0FC530007  }                                               \
-	_asm { out    dx, eax           }                                               \
-		                                                                            \
-	_asm { add    dl, 2             }                                               \
-	_asm { mov    ecx, msr_add      }                                               \
-	_asm { in     ax, dx            }                                               \
-	_asm { mov    data_high, edx    }                                               \
-	_asm { mov    data_low, eax     }                                               \
-		                                                                            \
-	((Q_WORD *)(data64_ptr))->high = data_high;                                     \
-	((Q_WORD *)(data64_ptr))->low  = data_low;                                      \
+#define MSR_READ(msr_reg, device_add, data64_ptr)                           \
+{                                                                           \
+	unsigned long msr_add = (unsigned long)(msr_reg) |                      \
+							(unsigned long)(device_add);                    \
+	unsigned long data_high, data_low;                                      \
+		                                                                    \
+	_asm { mov    dx,  0x0AC1C      } 	                                    \
+	_asm { mov    eax, 0x0FC530007  }                                       \
+	_asm { out    dx, eax           }                                       \
+		                                                                    \
+	_asm { add    dl, 2             }                                       \
+	_asm { mov    ecx, msr_add      }                                       \
+	_asm { in     ax, dx            }                                       \
+	_asm { mov    data_high, edx    }                                       \
+	_asm { mov    data_low, eax     }                                       \
+		                                                                    \
+	((Q_WORD *)(data64_ptr))->high = data_high;                             \
+	((Q_WORD *)(data64_ptr))->low  = data_low;                              \
 }
 
 /*-----------------------------------------------------------------
@@ -163,26 +182,27 @@
  * Write the contents of a 64 bit data structure to a MSR.
  *-----------------------------------------------------------------*/
 
-#define MSR_WRITE(msr_reg, device_add, data64_ptr)                                  \
-{                                                                                   \
-	unsigned long msr_add = (unsigned long)(msr_reg) | (unsigned long)(device_add); \
-	unsigned long data_high, data_low;                                              \
-		                                                                            \
-	data_high = ((Q_WORD *)(data64_ptr))->high;                                     \
-	data_low  = ((Q_WORD *)(data64_ptr))->low;                                      \
-		                                                                            \
-	_asm { mov    dx,  0x0AC1C      } 	                                            \
-	_asm { mov    eax, 0x0FC530007  }                                               \
-	_asm { out    dx, eax           }                                               \
-		                                                                            \
-	_asm { add    dl, 2             }                                               \
-	_asm { mov    ecx, msr_add      }                                               \
-	_asm { mov    ebx, data_high    }                                               \
-	_asm { mov    eax, data_low }                                                   \
-		                                                                            \
-	_asm { mov    esi, 0 }                                                          \
-	_asm { mov    edi, 0 }                                                          \
-	_asm { out    dx, ax }                                                          \
+#define MSR_WRITE(msr_reg, device_add, data64_ptr)                          \
+{                                                                           \
+	unsigned long msr_add = (unsigned long)(msr_reg) |                      \
+							(unsigned long)(device_add);                    \
+	unsigned long data_high, data_low;                                      \
+		                                                                    \
+	data_high = ((Q_WORD *)(data64_ptr))->high;                             \
+	data_low  = ((Q_WORD *)(data64_ptr))->low;                              \
+		                                                                    \
+	_asm { mov    dx,  0x0AC1C      } 	                                    \
+	_asm { mov    eax, 0x0FC530007  }                                       \
+	_asm { out    dx, eax           }                                       \
+		                                                                    \
+	_asm { add    dl, 2             }                                       \
+	_asm { mov    ecx, msr_add      }                                       \
+	_asm { mov    ebx, data_high    }                                       \
+	_asm { mov    eax, data_low }                                           \
+		                                                                    \
+	_asm { mov    esi, 0 }                                                  \
+	_asm { mov    edi, 0 }                                                  \
+	_asm { out    dx, ax }                                                  \
 }
 
 #elif CIMARRON_MSR_ABSTRACTED_ASM
@@ -235,15 +255,15 @@
  * Read the contents of a 64 bit MSR into a data structure
  *-----------------------------------------------------------------*/
 
-#define MSR_READ(msr_reg, device_add, data64_ptr)                                   \
-{                                                                                   \
-    unsigned long addr, val1, val2;                                                 \
-                                                                                    \
-	addr = device_add | msr_reg;                                                    \
-	rdmsr (addr, val1, val2);                                                       \
-                                                                                    \
-	((Q_WORD *)(data64_ptr))->high = val2;                                          \
-	((Q_WORD *)(data64_ptr))->low  = val1;	                                        \
+#define MSR_READ(msr_reg, device_add, data64_ptr)                  \
+{                                                                  \
+    unsigned long addr, val1, val2;                                \
+                                                                   \
+	addr = device_add | msr_reg;                                   \
+	rdmsr (addr, val1, val2);                                      \
+                                                                   \
+	((Q_WORD *)(data64_ptr))->high = val2;                         \
+	((Q_WORD *)(data64_ptr))->low  = val1;	                       \
 }
 
 /*-----------------------------------------------------------------
@@ -251,15 +271,15 @@
  * Read the contents of a 64 bit data structure to a MSR.
  *-----------------------------------------------------------------*/
 
-#define MSR_WRITE(msr_reg, device_add, data64_ptr)                                  \
-{                                                                                   \
-	unsigned long addr, val1, val2;                                                 \
-                                                                                    \
-	val2 = ((Q_WORD *)(data64_ptr))->high;                                          \
-	val1 = ((Q_WORD *)(data64_ptr))->low;                                           \
-                                                                                    \
-	addr = (device_add & 0xFFFF0000) | (unsigned long)msr_reg;                      \
-	wrmsr(addr, val1, val2);                                                        \
+#define MSR_WRITE(msr_reg, device_add, data64_ptr)                 \
+{                                                                  \
+	unsigned long addr, val1, val2;                                \
+                                                                   \
+	val2 = ((Q_WORD *)(data64_ptr))->high;                         \
+	val1 = ((Q_WORD *)(data64_ptr))->low;                          \
+                                                                   \
+	addr = (device_add & 0xFFFF0000) | (unsigned long)msr_reg;     \
+	wrmsr(addr, val1, val2);                                       \
 }
 
 #endif
@@ -350,13 +370,14 @@
  * Write a series of DWORDs to the current command buffer offset  
  *-----------------------------------------------------------------*/
 
-#define WRITE_COMMAND_STRING32(offset, dataptr, dataoffset, dword_count)                   \
-{                                                                                          \
-	unsigned long i;                                                                       \
-	unsigned long tempdata = (unsigned long)dataptr + (dataoffset);                        \
-	unsigned long byte_off = 0;                                                            \
-	for (i = 0; i < dword_count; i++, byte_off += 4)                                       \
-		WRITE_COMMAND32 ((offset) + byte_off, *((unsigned long *)(tempdata + byte_off)));  \
+#define WRITE_COMMAND_STRING32(offset, dataptr, dataoffset, dword_count) \
+{                                                                        \
+	unsigned long i;                                                     \
+	unsigned long tempdata = (unsigned long)dataptr + (dataoffset);      \
+	unsigned long byte_off = 0;                                          \
+	for (i = 0; i < dword_count; i++, byte_off += 4)                     \
+		WRITE_COMMAND32 ((offset) + byte_off,                            \
+						    *((unsigned long *)(tempdata + byte_off)));  \
 }
 
 /*-----------------------------------------------------------------
@@ -364,13 +385,14 @@
  * Write a series of DWORDS to video memory.
  *-----------------------------------------------------------------*/
 
-#define WRITE_FB_STRING32(offset, dataptr, dword_count)                               \
-{                                                                                     \
-	unsigned long i;                                                                  \
-	unsigned long tempdata = (unsigned long)dataptr;                                  \
-	unsigned long byte_off = 0;                                                       \
-	for (i = 0; i < dword_count; i++, byte_off += 4)                                  \
-		WRITE_FB32 ((offset) + byte_off, *((unsigned long *)(tempdata + byte_off)));  \
+#define WRITE_FB_STRING32(offset, dataptr, dword_count)                  \
+{                                                                        \
+	unsigned long i;                                                     \
+	unsigned long tempdata = (unsigned long)dataptr;                     \
+	unsigned long byte_off = 0;                                          \
+	for (i = 0; i < dword_count; i++, byte_off += 4)                     \
+		WRITE_FB32 ((offset) + byte_off,                                 \
+					*((unsigned long *)(tempdata + byte_off)));          \
 }
 
 /*-----------------------------------------------------------------
@@ -378,12 +400,12 @@
  * Write a constant DWORD to multiple video memory addresses
  *-----------------------------------------------------------------*/
 
-#define WRITE_FB_CONSTANT(offset, value, dword_count)                                        \
-{                                                                                            \
-	unsigned long i;                                                                         \
-	unsigned long tempoffset = offset;                                                       \
-	for (i = 0; i < dword_count; i++, tempoffset += 4)                                       \
-		WRITE_FB32 (tempoffset, value);                                                      \
+#define WRITE_FB_CONSTANT(offset, value, dword_count)                    \
+{                                                                        \
+	unsigned long i;                                                     \
+	unsigned long tempoffset = offset;                                   \
+	for (i = 0; i < dword_count; i++, tempoffset += 4)                   \
+		WRITE_FB32 (tempoffset, value);                                  \
 }
 
 /*-----------------------------------------------------------------
@@ -391,13 +413,14 @@
  * Write a series of DWORDs to the GP host source register
  *-----------------------------------------------------------------*/
 
-#define WRITE_HOST_SOURCE_STRING32(dataptr, dataoffset, dword_count)                           \
-{                                                                                              \
-	unsigned long i;                                                                           \
-	unsigned long tempdata = (unsigned long)dataptr + (dataoffset);                            \
-	unsigned long byte_off = 0;                                                                \
-	for (i = 0; i < dword_count; i++, byte_off += 4)                                           \
-		WRITE_GP32 (byte_off + GP3_HST_SRC_RANGE, *((unsigned long *)(tempdata + byte_off)));  \
+#define WRITE_HOST_SOURCE_STRING32(dataptr, dataoffset, dword_count)     \
+{                                                                        \
+	unsigned long i;                                                     \
+	unsigned long tempdata = (unsigned long)dataptr + (dataoffset);      \
+	unsigned long byte_off = 0;                                          \
+	for (i = 0; i < dword_count; i++, byte_off += 4)                     \
+		WRITE_GP32 (byte_off + GP3_HST_SRC_RANGE,                        \
+					*((unsigned long *)(tempdata + byte_off)));          \
 }
 
 #elif CIMARRON_OPTIMIZE_ABSTRACTED_ASM
@@ -428,13 +451,14 @@
  * Write a series of DWORDS to video memory.
  *-----------------------------------------------------------------*/
 
-#define WRITE_FB_STRING32(offset, dataptr, dword_count)                               \
-{                                                                                     \
-	unsigned long i;                                                                  \
-	unsigned long tempdata = (unsigned long)dataptr;                                  \
-	unsigned long byte_off = 0;                                                       \
-	for (i = 0; i < dword_count; i++, byte_off += 4)                                  \
-		WRITE_FB32 ((offset) + byte_off, *((unsigned long *)(tempdata + byte_off)));  \
+#define WRITE_FB_STRING32(offset, dataptr, dword_count)                  \
+{                                                                        \
+	unsigned long i;                                                     \
+	unsigned long tempdata = (unsigned long)dataptr;                     \
+	unsigned long byte_off = 0;                                          \
+	for (i = 0; i < dword_count; i++, byte_off += 4)                     \
+		WRITE_FB32 ((offset) + byte_off,                                 \
+					*((unsigned long *)(tempdata + byte_off)));          \
 }
 
 /*-----------------------------------------------------------------
@@ -442,12 +466,12 @@
  * Write a constant DWORD to multiple video memory addresses
  *-----------------------------------------------------------------*/
 
-#define WRITE_FB_CONSTANT(offset, value, dword_count)                                        \
-{                                                                                            \
-	unsigned long i;                                                                         \
-	unsigned long tempoffset = offset;                                                       \
-	for (i = 0; i < dword_count; i++, tempoffset += 4)                                       \
-		WRITE_FB32 (tempoffset, value);                                                      \
+#define WRITE_FB_CONSTANT(offset, value, dword_count)                    \
+{                                                                        \
+	unsigned long i;                                                     \
+	unsigned long tempoffset = offset;                                   \
+	for (i = 0; i < dword_count; i++, tempoffset += 4)                   \
+		WRITE_FB32 (tempoffset, value);                                  \
 }
 
 /*-----------------------------------------------------------------
@@ -455,13 +479,14 @@
  * Write a series of DWORDs to the GP host source register
  *-----------------------------------------------------------------*/
 
-#define WRITE_HOST_SOURCE_STRING32(dataptr, dataoffset, dword_count)                           \
-{                                                                                              \
-	unsigned long i;                                                                           \
-	unsigned long tempdata = (unsigned long)dataptr + (dataoffset);                            \
-	unsigned long byte_off = 0;                                                                \
-	for (i = 0; i < dword_count; i++, byte_off += 4)                                           \
-		WRITE_GP32 (byte_off + GP3_HST_SRC_RANGE, *((unsigned long *)(tempdata + byte_off)));  \
+#define WRITE_HOST_SOURCE_STRING32(dataptr, dataoffset, dword_count)     \
+{                                                                        \
+	unsigned long i;                                                     \
+	unsigned long tempdata = (unsigned long)dataptr + (dataoffset);      \
+	unsigned long byte_off = 0;                                          \
+	for (i = 0; i < dword_count; i++, byte_off += 4)                     \
+		WRITE_GP32 (byte_off + GP3_HST_SRC_RANGE,                        \
+					*((unsigned long *)(tempdata + byte_off)));          \
 }
 
 #endif
@@ -486,21 +511,22 @@
  * Write a series of bytes to the host source register  
  *-----------------------------------------------------------------*/
 
-#define WRITE_HOST_SOURCE_STRING8(dataptr, dataoffset, byte_count)                          \
-{                                                                                           \
-	unsigned long temp1 = (unsigned long)dataptr + (dataoffset);                            \
-	unsigned long temp2 = 0;                                                                \
-	unsigned long shift = 0;                                                                \
-	unsigned long counter;                                                                  \
-    if (byte_count)                                                                         \
-    {                                                                                       \
-        for (counter = 0; counter < byte_count; counter++)                                  \
-	    {                                                                                   \
-		    temp2 |= ((unsigned long)(*((unsigned char *)(temp1 + counter)))) << shift;     \
-		    shift += 8;                                                                     \
-	    }                                                                                   \
-	    WRITE_GP32 (GP3_HST_SRC, temp2);                                                    \
-    }                                                                                       \
+#define WRITE_HOST_SOURCE_STRING8(dataptr, dataoffset, byte_count)      \
+{                                                                       \
+	unsigned long temp1 = (unsigned long)dataptr + (dataoffset);        \
+	unsigned long temp2 = 0;                                            \
+	unsigned long shift = 0;                                            \
+	unsigned long counter;                                              \
+    if (byte_count)                                                     \
+    {                                                                   \
+        for (counter = 0; counter < byte_count; counter++)              \
+	    {                                                               \
+		    temp2 |= ((unsigned long)(*((unsigned char *)               \
+						(temp1 + counter)))) << shift;                  \
+		    shift += 8;                                                 \
+	    }                                                               \
+	    WRITE_GP32 (GP3_HST_SRC, temp2);                                \
+    }                                                                   \
 }
 
 /*-----------------------------------------*/
@@ -528,15 +554,11 @@
  *-------------------------------------------*/
 
 #define OUTD(port, data) cim_outd(port, data)
-void cim_outd (unsigned short port, unsigned long data)
+void
+cim_outd(unsigned short port, unsigned long data)
 {
-	_asm {
-		pushf
-		mov     eax, data
-		mov     dx, port
-		out     dx, eax
-		popf
-	}
+    _asm {
+    pushf mov eax, data mov dx, port out dx, eax popf}
 }
 
 /*-------------------------------------------
@@ -545,17 +567,14 @@ void cim_outd (unsigned short port, unsigned long data)
  *-------------------------------------------*/
 
 #define IND(port) cim_ind(port)
-unsigned long cim_ind (unsigned short port)
+unsigned long
+cim_ind(unsigned short port)
 {
-	unsigned long data;
-	_asm {
-		pushf
-		mov     dx, port
-		in      eax, dx
-		mov     data, eax
-		popf
-	}
-	return data;
+    unsigned long data;
+
+    _asm {
+    pushf mov dx, port in eax, dx mov data, eax popf}
+    return data;
 }
 
 /*-------------------------------------------
@@ -564,15 +583,11 @@ unsigned long cim_ind (unsigned short port)
  *-------------------------------------------*/
 
 #define OUTW(port, data) cim_outw(port, data)
-void cim_outw (unsigned short port, unsigned short data)
+void
+cim_outw(unsigned short port, unsigned short data)
 {
-	_asm {
-		pushf
-		mov     ax, data
-		mov     dx, port
-		out     dx, ax
-		popf
-	}
+    _asm {
+    pushf mov ax, data mov dx, port out dx, ax popf}
 }
 
 /*-------------------------------------------
@@ -581,17 +596,14 @@ void cim_outw (unsigned short port, unsigned short data)
  *-------------------------------------------*/
 
 #define INW(port) cim_inw(port)
-unsigned short cim_inw (unsigned short port)
+unsigned short
+cim_inw(unsigned short port)
 {
-	unsigned short data;
-	_asm {
-		pushf
-		mov     dx, port
-		in      ax, dx
-		mov     data, ax
-		popf
-	}
-	return data;
+    unsigned short data;
+
+    _asm {
+    pushf mov dx, port in ax, dx mov data, ax popf}
+    return data;
 }
 
 /*-------------------------------------------
@@ -600,15 +612,11 @@ unsigned short cim_inw (unsigned short port)
  *-------------------------------------------*/
 
 #define OUTB(port, data) cim_outb(port, data)
-void cim_outb (unsigned short port, unsigned char data)
+void
+cim_outb(unsigned short port, unsigned char data)
 {
-	_asm {
-		pushf
-		mov     al, data
-		mov     dx, port
-		out     dx, al
-		popf
-	}
+    _asm {
+    pushf mov al, data mov dx, port out dx, al popf}
 }
 
 /*-------------------------------------------
@@ -617,17 +625,14 @@ void cim_outb (unsigned short port, unsigned char data)
  *-------------------------------------------*/
 
 #define INB(port) cim_inb(port)
-unsigned char cim_inb (unsigned short port)
+unsigned char
+cim_inb(unsigned short port)
 {
-	unsigned char data;
-	_asm {
-		pushf
-		mov     dx, port
-		in      al, dx
-		mov     data, al
-		popf
-	}
-	return data;
+    unsigned char data;
+
+    _asm {
+    pushf mov dx, port in al, dx mov data, al popf}
+    return data;
 }
 
 #elif CIMARRON_IO_ABSTRACTED_ASM
@@ -638,10 +643,11 @@ unsigned char cim_inb (unsigned short port)
  *-------------------------------------------*/
 
 #define OUTD(port, data) cim_outd(port, data)
-void cim_outd (unsigned short port, unsigned long data);
-void cim_outd (unsigned short port, unsigned long data)
+void cim_outd(unsigned short port, unsigned long data);
+void
+cim_outd(unsigned short port, unsigned long data)
 {
-	__asm__ __volatile__ ("outl %0,%w1" : : "a" (data), "Nd" (port));
+    __asm__ __volatile__("outl %0,%w1"::"a"(data), "Nd"(port));
 }
 
 /*-------------------------------------------
@@ -650,11 +656,12 @@ void cim_outd (unsigned short port, unsigned long data)
  *-------------------------------------------*/
 
 #define IND(port) cim_ind(port)
-unsigned long cim_ind (unsigned short port);
-unsigned long cim_ind (unsigned short port)
+unsigned long cim_ind(unsigned short port);
+unsigned long
+cim_ind(unsigned short port)
 {
-	unsigned long value;
-    __asm__ __volatile__ ("inl %w1,%0" : "=a" (value) : "Nd" (port) );
+    unsigned long value;
+    __asm__ __volatile__("inl %w1,%0":"=a"(value):"Nd"(port));
 
     return value;
 }
@@ -665,10 +672,11 @@ unsigned long cim_ind (unsigned short port)
  *-------------------------------------------*/
 
 #define OUTW(port, data) cim_outw(port, data)
-void cim_outw (unsigned short port, unsigned short data);
-void cim_outw (unsigned short port, unsigned short data)
+void cim_outw(unsigned short port, unsigned short data);
+void
+cim_outw(unsigned short port, unsigned short data)
 {
-	__asm__ volatile ("out %0,%1" : : "a" (data),"d" (port));
+    __asm__ volatile ("out %0,%1"::"a" (data), "d"(port));
 }
 
 /*-------------------------------------------
@@ -677,11 +685,13 @@ void cim_outw (unsigned short port, unsigned short data)
  *-------------------------------------------*/
 
 #define INW(port) cim_inw(port)
-unsigned short cim_inw (unsigned short port);
-unsigned short cim_inw (unsigned short port)
+unsigned short cim_inw(unsigned short port);
+unsigned short
+cim_inw(unsigned short port)
 {
-	unsigned short value;
-    __asm__ volatile ("in %1,%0" : "=a" (value) : "d" (port));
+    unsigned short value;
+    __asm__ volatile ("in %1,%0":"=a" (value):"d"(port));
+
     return value;
 }
 
@@ -692,12 +702,13 @@ unsigned short cim_inw (unsigned short port)
 
 #define INB(port) cim_inb(port)
 unsigned char cim_inb(unsigned short port);
-unsigned char cim_inb(unsigned short port)
+unsigned char
+cim_inb(unsigned short port)
 {
-   unsigned char value;
-   __asm__ volatile ("inb %1,%0":"=a" (value):"d"(port));
+    unsigned char value;
+    __asm__ volatile ("inb %1,%0":"=a" (value):"d"(port));
 
-   return value;
+    return value;
 }
 
 /*-------------------------------------------
@@ -707,9 +718,10 @@ unsigned char cim_inb(unsigned short port)
 
 #define OUTB(port) cim_outb(port)
 void cim_outb(unsigned short port, unsigned char data);
-void cim_outb(unsigned short port, unsigned char data)
+void
+cim_outb(unsigned short port, unsigned char data)
 {
-   __asm__ volatile ("outb %0,%1"::"a" (data), "d"(port));
+    __asm__ volatile ("outb %0,%1"::"a" (data), "d"(port));
 }
 
 #endif

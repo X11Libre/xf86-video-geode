@@ -48,6 +48,11 @@ AC_ARG_WITH(xorg-module-dir,
             [moduledir="$withval"],
             [moduledir="$libdir/xorg/modules"])
 
+AC_ARG_ENABLE(geodegx-panel, 
+	      AC_HELP_STRING([--enable-geodegx-panel],
+	      	             [Enable support for flatpanels with the Geode GX]),
+	      [ AMD_CFLAGS="-DPNL_SUP $AMD_CFLAGS" ])
+
 # Checks for extensions
 XORG_DRIVER_CHECK_EXT(RANDR, randrproto)
 XORG_DRIVER_CHECK_EXT(RENDER, renderproto)
@@ -66,6 +71,7 @@ AC_HEADER_STDC
 
 AC_SUBST([XORG_CFLAGS])
 AC_SUBST([moduledir])
+AC_SUBST([AMD_CFLAGS])
 
 is386=false
 
