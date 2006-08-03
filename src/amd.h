@@ -28,8 +28,12 @@
 #ifndef _AMD_GEODE_H_
 #define _AMD_GEODE_H_
 
+#if (EXA_VERSION_MAJOR >= 2)
 #ifndef XF86EXA
 #define XF86EXA 1
+#endif
+#else
+#undef XF86EXA
 #endif
 
 #include "xaa.h"

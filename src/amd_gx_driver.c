@@ -689,12 +689,14 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
         pGeode->NoOfColorExpandLines = 0;
 
 
+#ifdef XF86EXA
     if (!xf86GetOptValInteger(GeodeOptions, GX_OPTION_EXA_SCRATCH_BFRSZ,
             &(pGeode->exaBfrSz)))
         pGeode->exaBfrSz = DEFAULT_EXA_SCRATCH_BFRSZ;
 
     if (pGeode->exaBfrSz <= 0)
         pGeode->exaBfrSz = 0;
+#endif
 
   
 
@@ -1550,11 +1552,13 @@ GXCloseScreen(int scrnIndex, ScreenPtr pScrn)
         pGeode->AccelColorExpandBuffers = NULL;
     }
 
+#ifdef XF86EXA
     if (pGeode->pExa) {
         exaDriverFini(pScrn);
         xfree(pGeode->pExa);
         pGeode->pExa = NULL;
     }
+#endif
 
     pScrni->vtSema = FALSE;
 
