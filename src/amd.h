@@ -298,6 +298,7 @@ typedef struct
     Bool TV_Overscan_On;
 
     Bool Panel;
+    Bool dconPanel;
 
     /* Flatpanel support from Bios */
     int FPBX;                          /* xres */
@@ -481,11 +482,19 @@ enum
     GX_OPTION_OSM_IMG_BUFS,
     GX_OPTION_OSM_CLR_BUFS,
     GX_OPTION_CUSTOM_MODE,
-   GX_OPTION_FBSIZE,
-   GX_OPTION_NOVGA,
+    GX_OPTION_FBSIZE,
+    GX_OPTION_NOVGA,
+    GX_OPTION_DCONPANEL,
     GX_OPTION_DONT_PROGRAM
 }
 GX_GeodeOpts;
 #endif
+
+/* OLPC defines */
+
+#define DCON_DEFAULT_XRES  1200
+#define DCON_DEFAULT_YRES   900
+#define DCON_DEFAULT_BPP     16
+#define DCON_DEFAULT_REFRESH 50
 
 #endif /* _AMD_GEODE_H_ */

@@ -49,8 +49,9 @@ AC_ARG_WITH(xorg-module-dir,
             [moduledir="$libdir/xorg/modules"])
 
 AC_ARG_ENABLE(geodegx-panel, 
-	      AC_HELP_STRING([--enable-geodegx-panel],
-	      	             [Enable support for flatpanels with the Geode GX]),
+	      AC_HELP_STRING([--disable-geodegx-panel],
+	      	             [Disable support for flatpanels with the Geode GX]),
+	      [ ], 
 	      [ AMD_CFLAGS="-DPNL_SUP $AMD_CFLAGS" ])
 
 # Checks for extensions

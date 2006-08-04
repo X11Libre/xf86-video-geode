@@ -706,37 +706,53 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
     }
 
    pGeode->Panel = FALSE;
-   
+
    if (xf86ReturnOptValBool(GeodeOptions, GX_OPTION_FLATPANEL, FALSE)) {
      pGeode->Panel = TRUE;
    }
-      
-   /* Force the Panel on if on a GX TFT part, no CRT support anyway */
 
     if (pGeode->DetectedChipSet == GX_TFT) {
         pGeode->Panel = TRUE;
     }
 
-    /* If on a CRT and Panel flag set, disable Panel */
-    if ((pGeode->DetectedChipSet == GX_CRT) && (pGeode->Panel))
-        pGeode->Panel = FALSE;
+   pGeode->dconPanel = FALSE;
 
+   if (xf86ReturnOptValBool(GeodeOptions, GX_OPTION_DCONPANEL, FALSE)) {
+	   pGeode->dconPanel = TRUE;
+   }
 
-    /* if FP not supported in BIOS, then turn off user option */
-   /* NOTE * NOTE * NOTE - this probably won't work for OLPC! */
+   /* Force the Panel on if on a GX TFT part, no CRT support anyway */
+
+   if (pGeode->DetectedChipSet == GX_TFT) {
+        pGeode->Panel = TRUE;
+   }
+
+   /* If on a CRT and Panel flag set, disable Panel */
+   if ((pGeode->DetectedChipSet == GX_CRT) && (pGeode->Panel)) {
+       pGeode->dconPanel = FALSE;
+       pGeode->Panel = FALSE;
+    }
 
 #if defined(PNL_SUP)
-   if (pGeode->Panel) {
-        pGeode->Panel = Pnl_IsPanelEnabledInBIOS();
+    /* If dconPanel is selected - then hard wire the settings */
+    /* Otherwise, suck the timings out of the BIOS */
 
-     if (pGeode->Panel) {
-        Pnl_GetPanelInfoFromBIOS(&pGeode->FPBX, &pGeode->FPBY,
-            &pGeode->FPBB, &pGeode->FPBF);
+    if (pGeode->dconPanel) {
+	    pGeode->FPBX = DCON_DEFAULT_XRES;
+	    pGeode->FPBY = DCON_DEFAULT_YRES;
+	    pGeode->FPBB = DCON_DEFAULT_BPP;
+	    pGeode->FPBF = DCON_DEFAULT_REFRESH;
+            DEBUGMSG(1, (pScrni->scrnIndex, X_ERROR, "DCON!\n"));
+    } else if (pGeode->Panel) {
+	if ((pGeode->Panel = Pnl_IsPanelEnabledInBIOS()))
+		Pnl_GetPanelInfoFromBIOS(&pGeode->FPBX, &pGeode->FPBY,
+		&pGeode->FPBB, &pGeode->FPBF);
+    }
+
+    if (pGeode->Panel)
        Pnl_PowerUp();
-    }
      else
-        Pnl_PowerDown();
-    }
+       Pnl_PowerDown();
 #endif
 
     pGeode->useEXA = FALSE;
@@ -805,12 +821,12 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
      * * GeodeProbe(), but check it just in case.
      */
     if (pScrni->chipset == NULL) {
-     Xf86DrvMsg(pScrni->scrnIndex, X_ERROR, "ChipID 0x%04X is not recognised\n", pGeode->Chipset);
+     xf86DrvMsg(pScrni->scrnIndex, X_ERROR, "ChipID 0x%04X is not recognised\n", pGeode->Chipset);
         return FALSE;
     }
 
     if (pGeode->Chipset < 0) {
-     Xf86DrvMsg(pScrni->scrnIndex, X_ERROR, "Chipset %s is not recognised\n", pScrni->chipset);
+     xf86DrvMsg(pScrni->scrnIndex, X_ERROR, "Chipset %s is not recognised\n", pScrni->chipset);
         return FALSE;
     }
 
@@ -876,7 +892,7 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
         pScrni->display->virtualY, pGeode->FBAvail, LOOKUP_BEST_REFRESH);
 
     if (i == -1) {
-     Xf86DrvMsg(pScrni->scrnIndex, X_ERROR, "No valid modes were found\n");
+     xf86DrvMsg(pScrni->scrnIndex, X_ERROR, "No valid modes were found\n");
         GXFreeRec(pScrni);
         return FALSE;
     }
@@ -885,7 +901,7 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
     xf86PruneDriverModes(pScrni);
 
     if (i == 0 || pScrni->modes == NULL) {
-     Xf86DrvMsg(pScrni->scrnIndex, X_ERROR, "No valid modes were found\n");
+     xf86DrvMsg(pScrni->scrnIndex, X_ERROR, "No valid modes were found\n");
         GXFreeRec(pScrni);
         return FALSE;
     }
@@ -2359,6 +2375,9 @@ GXValidMode(int scrnIndex, DisplayModePtr pMode, Bool Verbose, int flags)
 
 #if defined(PNL_SUP)
         if (pGeode->Panel != 0) {
+	    DEBUGMSG(1, (0, X_NONE, "crtcH = %d, FPBX=%d, CrtcV=%d FPBY=%d\n",
+				    pMode->CrtcHDisplay, pGeode->FPBX,
+				    pMode->CrtcVDisplay, pGeode->FPBY));
             if (pMode->CrtcHDisplay > pGeode->FPBX ||
                 pMode->CrtcVDisplay > pGeode->FPBY ||
                 gfx_is_panel_mode_supported(pGeode->FPBX, pGeode->FPBY,
