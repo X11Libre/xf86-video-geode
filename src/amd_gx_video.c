@@ -34,10 +34,14 @@
  * Alan Hourihane <alanh@fairlite.demon.co.uk>
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include "xf86.h"
 #include "xf86_OSproc.h"
 #include "xf86Resources.h"
-#include "xf86_ansic.h"
+//#include "xf86_ansic.h"
 #include "compiler.h"
 #include "xf86PciInfo.h"
 #include "xf86Pci.h"
@@ -45,7 +49,8 @@
 #include "regionstr.h"
 
 #include "amd.h"
-/* #include "Xv.h" */
+#include "xf86xv.h"
+#include <X11/extensions/Xv.h>
 #include "xaa.h"
 #include "xaalocal.h"
 #include "dixstruct.h"
@@ -64,6 +69,7 @@
 #define REINIT  		1
 
 #ifndef XvExtension
+#error "It didn't work!"
 void
 GXInitVideo(ScreenPtr pScrn)
 {
@@ -92,7 +98,7 @@ static void GXQueryBestSize(ScrnInfoPtr, Bool,
     short, short, short, short, unsigned int *, unsigned int *, pointer);
 static int GXPutImage(ScrnInfoPtr, short, short, short, short, short, short,
     short, short, int, unsigned char *, short, short, Bool,
-    RegionPtr, pointer);
+    RegionPtr, pointer, DrawablePtr pDraw);
 static int GXQueryImageAttributes(ScrnInfoPtr, int, unsigned short *,
     unsigned short *, int *, int *);
 
@@ -937,7 +943,7 @@ GXPutImage(ScrnInfoPtr pScrni,
     short src_w, short src_h,
     short drw_w, short drw_h,
     int id, unsigned char *buf,
-    short width, short height, Bool sync, RegionPtr clipBoxes, pointer data)
+    short width, short height, Bool sync, RegionPtr clipBoxes, pointer data, DrawablePtr pDraw)
 {
     GeodePortPrivRec *pPriv = (GeodePortPrivRec *) data;
     GeodeRec *pGeode = GEODEPTR(pScrni);

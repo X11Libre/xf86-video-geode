@@ -128,6 +128,7 @@ extern void GXInitVideo(ScreenPtr pScrn);
 extern Bool GXDGAInit(ScreenPtr pScrn);
 extern void GXLoadCursorImage(ScrnInfoPtr pScrni, unsigned char *src);
 
+unsigned char *XpressROMPtr;
 unsigned long fb;
 
 /* Existing Processor Models */
@@ -500,12 +501,15 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
     pGeode->cpu_version = gfx_detect_cpu();
 
    if ((pGeode->cpu_version & 0xFF) == GFX_CPU_REDCLOUD) {
+	   int ret;
         Q_WORD msrValue;
 	   pGeode->DetectedChipSet = GX;
 
 	   /* See if this a CRT or TFT part */
 
-        gfx_msr_read(RC_ID_DF, MBD_MSR_CONFIG, &msrValue);
+        ret = gfx_msr_read(RC_ID_DF, MBD_MSR_CONFIG, &msrValue);
+	DEBUGMSG(1, (pScrni->scrnIndex, X_ERROR, "MSR=%d\n", ret));
+
         pGeode->DetectedChipSet =
             ((msrValue.low & RCDF_CONFIG_FMT_MASK) ==
             RCDF_CONFIG_FMT_FP) ? GX_TFT : GX_CRT;
@@ -2470,6 +2474,9 @@ GXMapMem(ScrnInfoPtr pScrni)
 
     gfx_virt_fbptr = (unsigned char *)xf86MapVidMem(pScrni->scrnIndex,
         VIDMEM_FRAMEBUFFER, pGeode->FBLinearAddr, pGeode->FBAvail);
+
+    XpressROMPtr = (unsigned char *)xf86MapVidMem(pScrni->scrnIndex,
+        VIDMEM_FRAMEBUFFER, 0xF0000, 0x10000);
 
     pGeode->FBBase = gfx_virt_fbptr;
 
