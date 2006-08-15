@@ -109,8 +109,9 @@ extern FILE *zdfp;
 	do {} while(0)
 #endif /* if DEBUGLVL > 0 */
 
-#define CALC_FBOFFSET(x, y)		\
-		(((ulong)(y) << gu2_yshift) | ((ulong)(x) << gu2_xshift))
+#define CALC_FBOFFSET(x, y) \
+	        (((ulong)(y) * gu2_pitch) + ((ulong)(x) << gu2_xshift))
+
 #define FBADDR(x,y)				\
 		((unsigned char *)pGeode->FBBase + CALC_FBOFFSET(x, y))
 
@@ -165,6 +166,8 @@ static GDashLine gdln;
 #endif
 
 static unsigned int gu2_xshift, gu2_yshift;
+static unsigned int gu2_pitch;
+
 static XAAInfoRecPtr localRecPtr;
 
 /* pat  0xF0 */
@@ -2027,6 +2030,7 @@ GXAccelInit(ScreenPtr pScrn)
 #endif
 
     gu2_xshift = pScrni->bitsPerPixel >> 4;
+    gu2_pitch = pGeode->AccelPitch;
 
     switch (pGeode->AccelPitch) {
     case 1024:
@@ -2042,6 +2046,7 @@ GXAccelInit(ScreenPtr pScrn)
         gu2_yshift = 13;
         break;
     }
+
 
 #ifdef OPT_ACCEL
     ACCEL_STRIDE = (pGeode->AccelPitch << 16) | pGeode->AccelPitch;

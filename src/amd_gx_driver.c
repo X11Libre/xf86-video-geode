@@ -856,21 +856,36 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
      * * already takes care of this, we don't worry about setting them here.
      */
     /* Select valid modes from those available */
+
     /*
      * * min pitch 1024, max 2048 (Pixel count)
      * * min height 480, max 1024 (Pixel count)
      */
+
     minPitch = 1024;
     maxPitch = 8192;                   /* Can support upto 1600x1200 32Bpp */
     maxWidth = 1600;
     minHeight = 400;
     maxHeight = 1200;                  /* Can support upto 1600x1200 32Bpp */
-    if (pScrni->depth > 16) {
-        PitchInc = 4096;
-    } else if (pScrni->depth == 16) {
-        PitchInc = 2048;
-    } else {
-        PitchInc = 1024;
+
+
+    if (pGeode->Compression) {
+        if (pScrni->depth > 16) {
+            PitchInc = 4096;
+        } else if (pScrni->depth == 16) {
+            PitchInc = 2048;
+        } else {
+            PitchInc = 1024;
+        }
+    }
+    else {
+	/* When compression is off - use a linear pitch */
+	if (pScrni->depth < 16)
+		PitchInc = 1600;
+	else if (pScrni->depth == 16)
+		PitchInc = 3200;
+	else
+		PitchInc = 6400;
     }
 
     PitchInc <<= 3;                    /* in bits */
@@ -1731,8 +1746,12 @@ GXScreenInit(int scrnIndex, ScreenPtr pScrn, int argc, char **argv)
     if (!GXMapMem(pScrni))
         return FALSE;
 
-    pGeode->Pitch = GXCalculatePitchBytes(pScrni->virtualX,
-        pScrni->bitsPerPixel);
+    /* If compression is not turned on - adjust the pitch to be linear */
+    if (pGeode->Compression)
+      pGeode->Pitch = GXCalculatePitchBytes(pScrni->virtualX, pScrni->bitsPerPixel);
+    else
+      pGeode->Pitch = ((pScrni->virtualX + 3) & ~3) * (pScrni->bitsPerPixel >> 3);
+
     pGeode->AccelPitch = pGeode->Pitch;
     bytpp = (pScrni->bitsPerPixel + 7) / 8;
 
@@ -2370,6 +2389,8 @@ GXValidMode(int scrnIndex, DisplayModePtr pMode, Bool Verbose, int flags)
     unsigned int total_memory_required;
     ScrnInfoPtr pScrni = xf86Screens[scrnIndex];
     int ret = -1;
+    unsigned int ptch;
+
     GeodeRec *pGeode = GEODEPTR(pScrni);
 
     DEBUGMSG(1, (0, X_NONE, "GeodeValidateMode: %dx%d %d %d\n",
@@ -2402,8 +2423,12 @@ GXValidMode(int scrnIndex, DisplayModePtr pMode, Bool Verbose, int flags)
             return MODE_NOMODE;
     }
 
-    total_memory_required = GXCalculatePitchBytes(pMode->CrtcHDisplay,
-        pScrni->bitsPerPixel) * pMode->CrtcVDisplay;
+    if (pGeode->Compression)
+	ptch = GXCalculatePitchBytes(pMode->CrtcHDisplay, pScrni->bitsPerPixel);
+    else
+	ptch = ((pMode->CrtcHDisplay + 3) & ~3) * (pScrni->bitsPerPixel >> 3);
+
+    total_memory_required = ptch * pMode->CrtcVDisplay;
 
     DEBUGMSG(1, (0, X_NONE, "Total Mem %X %lX\n",
             total_memory_required, pGeode->FBAvail));

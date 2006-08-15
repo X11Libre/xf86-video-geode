@@ -377,7 +377,7 @@ GXSetupImageVideo(ScreenPtr pScrn)
     adapt->PutStill = NULL;
     adapt->GetVideo = NULL;
     adapt->GetStill = NULL;
-    adapt->StopVideo = GXStopVideo;
+    adapt->StopVideo= GXStopVideo;
     adapt->SetPortAttribute = GXSetPortAttribute;
     adapt->GetPortAttribute = GXGetPortAttribute;
     adapt->QueryBestSize = GXQueryBestSize;
@@ -677,19 +677,21 @@ static FBAreaPtr
 GXAllocateMemory(ScrnInfoPtr pScrni, FBAreaPtr area, int numlines)
 {
     ScreenPtr pScrn = screenInfo.screens[pScrni->scrnIndex];
+    GeodeRec *pGeode = GEODEPTR(pScrni);
     FBAreaPtr new_area;
+    long displayWidth = pGeode->AccelPitch / ((pScrni->bitsPerPixel + 7) / 8);
 
     if (area) {
         if ((area->box.y2 - area->box.y1) >= numlines)
             return area;
 
-        if (xf86ResizeOffscreenArea(area, pScrni->displayWidth, numlines))
+        if (xf86ResizeOffscreenArea(area, displayWidth, numlines))
             return area;
 
         xf86FreeOffscreenArea(area);
     }
 
-    new_area = xf86AllocateOffscreenArea(pScrn, pScrni->displayWidth,
+    new_area = xf86AllocateOffscreenArea(pScrn, displayWidth,
         numlines, 0, NULL, NULL, NULL);
 
     if (!new_area) {
@@ -698,11 +700,13 @@ GXAllocateMemory(ScrnInfoPtr pScrni, FBAreaPtr area, int numlines)
         xf86QueryLargestOffscreenArea(pScrn, &max_w, &max_h, 0,
             FAVOR_WIDTH_THEN_AREA, PRIORITY_EXTREME);
 
-        if ((max_w < pScrni->displayWidth) || (max_h < numlines))
-            return NULL;
+        if ((max_w < displayWidth) || (max_h < numlines)) {
+	  xf86DrvMsg(pScrni->scrnIndex, X_ERROR, "No room - how sad %x, %x, %x, %x\n", max_w, displayWidth, max_h, numlines);
+	  return NULL;
+	}
 
         xf86PurgeUnlockedOffscreenAreas(pScrn);
-        new_area = xf86AllocateOffscreenArea(pScrn, pScrni->displayWidth,
+        new_area = xf86AllocateOffscreenArea(pScrn, displayWidth,
             numlines, 0, NULL, NULL, NULL);
     }
 
@@ -1029,9 +1033,13 @@ GXPutImage(ScrnInfoPtr pScrni,
         if (pPriv->doubleBuffer)
             new_h <<= 1;
 #endif
-        if (!(pPriv->area = GXAllocateMemory(pScrni, pPriv->area, new_h)))
-            return BadAlloc;
 
+        if (!(pPriv->area = GXAllocateMemory(pScrni, pPriv->area, new_h))) {
+	  xf86DrvMsg(pScrni->scrnIndex, X_ERROR,
+		     "Could not allocate area of size %d\n", new_h);
+	  return BadAlloc;
+	}
+		
         /* copy data */
         top = By1;
         left = Bx1 & ~1;
