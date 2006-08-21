@@ -28,14 +28,6 @@
 #ifndef _AMD_GEODE_H_
 #define _AMD_GEODE_H_
 
-#if (EXA_VERSION_MAJOR >= 2)
-#ifndef XF86EXA
-#define XF86EXA 1
-#endif
-#else
-#undef XF86EXA
-#endif
-
 #include "xaa.h"
 #include "exa.h"
 #include "xf86Cursor.h"
@@ -44,6 +36,16 @@
 #include "xf86int10.h"
 
 #include "xf86xv.h"
+
+/* We only support EXA version >=2 */
+
+#if (EXA_VERSION_MAJOR >= 2)
+#ifndef XF86EXA
+#define XF86EXA 1
+#endif
+#else
+#undef XF86EXA
+#endif
 
 #define CFB 0
 #define INT10_SUPPORT 1
