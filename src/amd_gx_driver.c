@@ -487,7 +487,7 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
             pGeode->pEnt->chipset);
 
 
-   DEBUGMSG(1, (pScrni->scrnIndex, X_ERROR, "PROBEDDC\n"));
+   /* DEBUGMSG(1, (pScrni->scrnIndex, X_ERROR, "PROBEDDC\n")); */
 
    /* Note that we can't do this without VGA */
 
@@ -508,7 +508,15 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
 	   /* See if this a CRT or TFT part */
 
         ret = gfx_msr_read(RC_ID_DF, MBD_MSR_CONFIG, &msrValue);
-	DEBUGMSG(1, (pScrni->scrnIndex, X_ERROR, "MSR=%d\n", ret));
+
+	/* We depend heavily on the MSR working, so if it doesn't, there
+	 * isn't much we can do but complain and move on
+	 */
+
+	if (ret != 0) {
+		DEBUGMSG(1, (pScrni->scrnIndex, X_ERROR,
+					"MSR read failed (ret=%d)\n", ret));
+	}
 
         pGeode->DetectedChipSet =
             ((msrValue.low & RCDF_CONFIG_FMT_MASK) ==
