@@ -33,6 +33,10 @@
  * Project:         Geode Xfree Frame buffer device driver.
  * */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 /* Includes that are used by all drivers */
 #include "xf86.h"
 #include "xf86_OSproc.h"
@@ -87,14 +91,14 @@
 /* Check for some extensions */
 #ifdef XFreeXDGA
 #define _XF86_DGA_SERVER_
-#include "extensions/xf86dgastr.h"
+#include <X11/extensions/xf86dgastr.h>
 #endif /* XFreeXDGA */
 
 #ifdef DPMSExtension
 #include "globals.h"
 #include "opaque.h"
 #define DPMS_SERVER
-#include "extensions/dpms.h"
+#include <X11/extensions/dpms.h>
 #endif /* DPMSExtension */
 
 #include "amd_gx_vga.c"

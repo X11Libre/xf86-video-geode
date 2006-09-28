@@ -38,6 +38,10 @@
  * developer is willing to tune the file again for the specific project.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include "cim_defs.h"
 
 extern unsigned char *cim_vid_ptr;

@@ -31,6 +31,10 @@
  * Project:       Geode Xfree Frame buffer device driver.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 /* Xfree86 header files */
 
 #include "vgaHW.h"
@@ -43,16 +47,6 @@
 #include "xaarop.h"
 #include "amd.h"
 
-#undef ulong
-typedef unsigned long ulong;
-
-#undef uint
-typedef unsigned int uint;
-
-#undef ushort
-typedef unsigned short ushort;
-
-#undef uchar
 typedef unsigned char uchar;
 
 #if DEBUGLVL>0

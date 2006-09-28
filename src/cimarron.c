@@ -29,6 +29,10 @@
   * and included in any Cimarron-based project.
   */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 /*----------------------------------------------------------------------*/
 /* MODULE SETTINGS                                                      */
 /* The following #defines affect which modules are included in the      */

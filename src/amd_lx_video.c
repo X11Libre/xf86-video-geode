@@ -35,6 +35,11 @@
  * Fixes & Extensions to support Y800 greyscale modes 
  * Alan Hourihane <alanh@fairlite.demon.co.uk>
  */
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #ifndef AMD_V4L2_VIDEO
 #include "xf86.h"
 #include "xf86_OSproc.h"

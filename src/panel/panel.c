@@ -38,6 +38,7 @@
 #include <asm/io.h>
 
 #elif !defined(XFree86Server)
+#error blah
 
 #include <linux/fs.h>
 #include <asm/mman.h>

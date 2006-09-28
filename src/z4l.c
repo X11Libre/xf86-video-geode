@@ -26,12 +26,17 @@
 
 /* prototype Xv interface for lxv4l2 driver */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <sys/time.h>
 #include <sys/fcntl.h>
 #include <asm/ioctl.h>
 #include <asm/ioctls.h>
 
 #include "xf86.h"
+#include <X11/extensions/Xv.h>
 #include "xf86_OSproc.h"
 #include "xf86Resources.h"
 #include "xf86_ansic.h"
@@ -784,7 +789,7 @@ static int
 Z4lPutImage(ScrnInfoPtr pScrni, short src_x, short src_y, short drw_x,
     short drw_y, short src_w, short src_h, short drw_w, short drw_h,
     int id, unsigned char *buf, short width, short height,
-    Bool sync, RegionPtr clipBoxes, pointer data)
+    Bool sync, RegionPtr clipBoxes, pointer data, DrawablePtr pDraw)
 {
     int fd, size;
     int y_pitch, uv_pitch, offset1, offset2;
@@ -915,7 +920,7 @@ Z4lQueryImageAttributes(ScrnInfoPtr pScrni, int id, unsigned short *width,
 static int
 Z4lPutVideo(ScrnInfoPtr pScrni, short src_x, short src_y, short drw_x,
     short drw_y, short src_w, short src_h, short drw_w, short drw_h,
-    RegionPtr clipBoxes, pointer data)
+    RegionPtr clipBoxes, pointer data, DrawablePtr pDraw)
 {
     int id;
     Z4lPortPrivRec *pPriv = (Z4lPortPrivRec *) data;
@@ -1697,7 +1702,7 @@ Z4lIdentify(int flags)
     xf86Msg(X_INFO, "z4l driver for Video4Linux\n");
 }
 
-DriverRec Z4l = {
+_X_EXPORT DriverRec Z4l = {
     40001,
     "z4l",
     Z4lIdentify,
@@ -1719,7 +1724,7 @@ static XF86ModuleVersionInfo z4lVersRec = {
     {0, 0, 0, 0}
 };
 
-XF86ModuleData z4lModuleData = { &z4lVersRec, z4lSetup, NULL };
+_X_EXPORT XF86ModuleData z4lModuleData = { &z4lVersRec, z4lSetup, NULL };
 
 static pointer
 z4lSetup(pointer module, pointer opts, int *errmaj, int *errmin)

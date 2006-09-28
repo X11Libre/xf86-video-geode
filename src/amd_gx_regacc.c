@@ -37,6 +37,10 @@
  * developer is willing to tune the file again for the specific project.
  * */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include "gfx_rtns.h"
 #include "gfx_defs.h"
 #include "gfx_regs.h"

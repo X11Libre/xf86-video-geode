@@ -30,6 +30,7 @@
  * SubModule:       Geode FlatPanel library
  * */
 
+
 #define LINUX_ROM_SEGMENT 0x000F
 #define SEGMENT_LENGTH  0xFFFF
 #define PAGE_LENGTH     0x1000
@@ -146,14 +147,7 @@ FindStringInSeg(unsigned int segment_address, char *string_ptr)
     /* silence compiler */
     (void)mem_ptr;
 
-#if defined(linux) && !defined(XFree86Server)
-    XpressROMPtr = (unsigned char *)ioremap(mem_ptr, SEGMENT_LENGTH + 1);
     psegment_buf = (char *)XpressROMPtr;
-#elif defined (XFree86Server)
-    psegment_buf = (char *)XpressROMPtr;
-#elif defined(_WIN32)                  /* Windows */
-    psegment_buf = XpressROMPtr;
-#endif
 
     /* Now search for the first character of the string_ptr */
     for (i = 0; i < SEGMENT_LENGTH + 1; i++) {

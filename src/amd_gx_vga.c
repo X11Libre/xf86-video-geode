@@ -29,6 +29,10 @@
  * to SoftVGA registers.  It works for both VSA1 and VSA2.
  * */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 /* VGA STRUCTURE */
 
 #define GU2_STD_CRTC_REGS 	25

@@ -35,6 +35,10 @@
  *
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 /* Includes that are used by all drivers */
 #include "xf86.h"
 #include "xf86_OSproc.h"
@@ -80,14 +84,14 @@
 /* Check for some extensions */
 #ifdef XFreeXDGA
 #define _XF86_DGA_SERVER_
-#include "extensions/xf86dgastr.h"
+#include <X11/extensions/xf86dgastr.h>
 #endif /* XFreeXDGA */
 
 #ifdef DPMSExtension
 #include "globals.h"
 #include "opaque.h"
 #define DPMS_SERVER
-#include "extensions/dpms.h"
+#include <X11/extensions/dpms.h>
 #endif /* DPMSExtension */
 
 /* A few things all drivers should have */
@@ -108,7 +112,7 @@ static int CPUDetected;
 /* driver record contains the functions needed by the server after loading
  * the driver module.
  */
-DriverRec AMD = {
+_X_EXPORT DriverRec AMD = {
     AMD_VERSION_CURRENT,
     AMD_DRIVER_NAME,
     AmdIdentify,
@@ -300,8 +304,6 @@ const char *amdShadowSymbols[] = {
 
 static MODULESETUPPROTO(AmdSetup);
 
-#define XORG_VERSION_CURRENT (((7) * 10000000) + ((1) * 100000) + ((0) * 1000) + 0)
-
 static XF86ModuleVersionInfo AmdVersionRec = {
     "amd",
     MODULEVENDORSTRING,
@@ -322,7 +324,7 @@ static XF86ModuleVersionInfo AmdVersionRec = {
  * This data is accessed by the loader.  The name must be the module name
  * followed by "ModuleInit".
  */
-XF86ModuleData amdModuleData = { &AmdVersionRec, AmdSetup, NULL };
+_X_EXPORT XF86ModuleData amdModuleData = { &AmdVersionRec, AmdSetup, NULL };
 
 /*-------------------------------------------------------------------------
  * AmdSetup.
