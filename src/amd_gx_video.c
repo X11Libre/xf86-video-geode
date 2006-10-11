@@ -32,6 +32,8 @@
 /* 
  * Fixes & Extensions to support Y800 greyscale modes 
  * Alan Hourihane <alanh@fairlite.demon.co.uk>
+
+ * code to allocate offscreen memory from EXA - is borrowed from Radeon
  */
 
 #ifdef HAVE_CONFIG_H
@@ -227,8 +229,8 @@ static XF86ImageRec Images[NUM_IMAGES] = {
 
 typedef struct
 {
-    FBAreaPtr area;
-    FBLinearPtr linear;
+    void *area;
+    int offset;
     RegionRec clip;
     CARD32 filter;
     CARD32 colorKey;
@@ -627,7 +629,7 @@ GXCopyGreyscale(unsigned char *src,
  *		srcPitch	: pitch of the srcdata
  *		dstPitch	: pitch of the destination data 
  *		h & w		: height and width of source data
- *					 
+ * 
  * Returns			:None
  *
  * Comments			:None
@@ -673,44 +675,82 @@ GXCopyData422(unsigned char *src, unsigned char *dst,
     }
 }
 
-static FBAreaPtr
-GXAllocateMemory(ScrnInfoPtr pScrni, FBAreaPtr area, int numlines)
-{
-    ScreenPtr pScrn = screenInfo.screens[pScrni->scrnIndex];
-    GeodeRec *pGeode = GEODEPTR(pScrni);
-    FBAreaPtr new_area;
-    long displayWidth = pGeode->AccelPitch / ((pScrni->bitsPerPixel + 7) / 8);
+#ifdef XF86EXA
+static void
+GXVideoSave(ScreenPtr pScreen, ExaOffscreenArea *area) {
+	ScrnInfoPtr pScrni = xf86Screens[pScreen->myNum];
+	GeodeRec *pGeode = GEODEPTR(pScrni);
+	GeodePortPrivRec *pPriv = GET_PORT_PRIVATE(pScrni);
 
-    if (area) {
+	if (area == pPriv->area)
+		pPriv->area = NULL;
+}
+#endif
+
+static int
+GXAllocateMemory(ScrnInfoPtr pScrni, void **memp, int numlines)
+{
+  ScreenPtr pScrn = screenInfo.screens[pScrni->scrnIndex];
+  GeodeRec *pGeode = GEODEPTR(pScrni);
+  long displayWidth = pGeode->AccelPitch / ((pScrni->bitsPerPixel + 7) / 8);
+
+#if XF86EXA
+    if (pGeode->useEXA) {
+      ExaOffscreenArea *area = *memp;
+
+      if (area != NULL) {
+          if (area->size >= (numlines * displayWidth))
+	      return area->offset;
+
+	  exaOffscreenFree(pScrni->pScreen, area);
+      }
+
+      area = exaOffscreenAlloc(pScrni->pScreen, numlines * displayWidth, 16,
+      TRUE, GXVideoSave, NULL);
+      *memp = area;
+
+      return area == NULL ? 0 : area->offset;
+    }
+#endif
+
+    if (!pGeode->useEXA) {
+      FBAreaPtr area = *memp;
+      FBAreaPtr new_area;
+
+      if (area) {
         if ((area->box.y2 - area->box.y1) >= numlines)
-            return area;
+		return (area->box.y1 * pGeode->Pitch);
+
 
         if (xf86ResizeOffscreenArea(area, displayWidth, numlines))
-            return area;
+		return (area->box.y1 * pGeode->Pitch);
 
         xf86FreeOffscreenArea(area);
-    }
+      }
 
-    new_area = xf86AllocateOffscreenArea(pScrn, displayWidth,
-        numlines, 0, NULL, NULL, NULL);
+      new_area = xf86AllocateOffscreenArea(pScrn, displayWidth,
+					   numlines, 0, NULL, NULL, NULL);
 
-    if (!new_area) {
+      if (!new_area) {
         int max_w, max_h;
 
         xf86QueryLargestOffscreenArea(pScrn, &max_w, &max_h, 0,
-            FAVOR_WIDTH_THEN_AREA, PRIORITY_EXTREME);
+				      FAVOR_WIDTH_THEN_AREA, PRIORITY_EXTREME);
 
         if ((max_w < displayWidth) || (max_h < numlines)) {
 	  xf86DrvMsg(pScrni->scrnIndex, X_ERROR, "No room - how sad %x, %x, %x, %x\n", max_w, displayWidth, max_h, numlines);
-	  return NULL;
+	  return 0;
 	}
 
         xf86PurgeUnlockedOffscreenAreas(pScrn);
         new_area = xf86AllocateOffscreenArea(pScrn, displayWidth,
-            numlines, 0, NULL, NULL, NULL);
+					     numlines, 0, NULL, NULL, NULL);
+      }
+
+      return (new_area->box.y1 * pGeode->Pitch);
     }
 
-    return new_area;
+    return 0;
 }
 
 static BoxRec dstBox;
@@ -760,6 +800,9 @@ GXSetVideoPosition(int x, int y, int width, int height,
     DeltaX = startAddress & (pGeode->Pitch - 1);
     DeltaX /= (pScrni->bitsPerPixel >> 3);
 
+#if 0
+    /* Thhis code is pretty dang broken - comment it out for now */
+
     if (pGeode->Panel) {
         ovly.x1 = x;
         ovly.x2 = x + pGeode->video_dstw;
@@ -778,6 +821,7 @@ GXSetVideoPosition(int x, int y, int width, int height,
             yend = ovly.y2 - DeltaY;
         }
     }
+#endif
 
     /*  TOP CLIPPING */
 
@@ -802,7 +846,7 @@ GXSetVideoPosition(int x, int y, int width, int height,
         GFX(set_video_yuv_offsets(offset + y_extra,
                 offset + d3offset + uv_extra, offset + d2offset + uv_extra));
     } else {
-        GFX(set_video_offset(offset + y_extra));
+       GFX(set_video_offset(offset + y_extra));
     }
 }
 
@@ -1034,12 +1078,12 @@ GXPutImage(ScrnInfoPtr pScrni,
             new_h <<= 1;
 #endif
 
-        if (!(pPriv->area = GXAllocateMemory(pScrni, pPriv->area, new_h))) {
+	if (!(pPriv->offset = GXAllocateMemory(pScrni, &pPriv->area, new_h))) {
 	  xf86DrvMsg(pScrni->scrnIndex, X_ERROR,
 		     "Could not allocate area of size %d\n", new_h);
 	  return BadAlloc;
 	}
-		
+
         /* copy data */
         top = By1;
         left = Bx1 & ~1;
@@ -1052,8 +1096,9 @@ GXPutImage(ScrnInfoPtr pScrni,
                 int tmp;
 
                 top &= ~1;
-                offset =
-                    (pPriv->area->box.y1 * pGeode->Pitch) + (top * dstPitch);
+
+		offset = pPriv->offset + (top * dstPitch);
+
 #if DBUF
                 if (pPriv->doubleBuffer && pPriv->currentBuffer)
                     offset += (new_h >> 1) * pGeode->Pitch;
@@ -1077,7 +1122,8 @@ GXPutImage(ScrnInfoPtr pScrni,
             left <<= 1;
             buf += (top * srcPitch) + left;
             nlines = By2 - top;
-            offset = (pPriv->area->box.y1 * pGeode->Pitch) + (top * dstPitch);
+	    offset = (pPriv->offset) + (top * dstPitch);
+
 #if DBUF
             if (pPriv->doubleBuffer && pPriv->currentBuffer)
                 offset += (new_h >> 1) * pGeode->Pitch;
@@ -1089,11 +1135,11 @@ GXPutImage(ScrnInfoPtr pScrni,
 #if REINIT
         /* update cliplist */
         REGION_COPY(pScrni->pScreen, &pPriv->clip, clipBoxes);
+
         if (pPriv->colorKeyMode == 0) {
-            /* draw these */
-            XAAFillSolidRects(pScrni, pPriv->colorKey, GXcopy, ~0,
-                REGION_NUM_RECTS(clipBoxes), REGION_RECTS(clipBoxes));
+	    xf86XVFillKeyHelper(pScrni->pScreen, pPriv->colorKey, clipBoxes);
         }
+
         GXDisplayVideo(pScrni, id, offset, width, height, dstPitch,
             Bx1, By1, Bx2, By2, &dstBox, src_w, src_h, drw_w, drw_h);
     }
@@ -1241,8 +1287,15 @@ GXBlockHandler(int i, pointer blockData, pointer pTimeout, pointer pReadmask)
             }
         } else {                       /* FREE_TIMER */
             if (pPriv->freeTime < currentTime.milliseconds) {
+
                 if (pPriv->area) {
+#ifdef XF86EXA
+		  if (pGeode->useEXA)
+			  exaOffscreenFree(pScrn, pPriv->area);
+#endif
+		  if (!pGeode->useEXA)
                     xf86FreeOffscreenArea(pPriv->area);
+
                     pPriv->area = NULL;
                 }
 
@@ -1256,8 +1309,8 @@ GXBlockHandler(int i, pointer blockData, pointer pTimeout, pointer pReadmask)
 
 typedef struct
 {
-    FBAreaPtr area;
-    FBLinearPtr linear;
+    void * area;
+    int offset;
     Bool isOn;
 } OffscreenPrivRec, *OffscreenPrivPtr;
 
@@ -1278,7 +1331,7 @@ static int
 GXAllocateSurface(ScrnInfoPtr pScrni,
     int id, unsigned short w, unsigned short h, XF86SurfacePtr surface)
 {
-    FBAreaPtr area;
+    void * area = NULL;
     int pitch, fbpitch, numlines;
     OffscreenPrivRec *pPriv;
 
@@ -1290,8 +1343,8 @@ GXAllocateSurface(ScrnInfoPtr pScrni,
     fbpitch = pScrni->bitsPerPixel * pScrni->displayWidth >> 3;
     numlines = ((pitch * h) + fbpitch - 1) / fbpitch;
 
-    if (!(area = GXAllocateMemory(pScrni, NULL, numlines)))
-        return BadAlloc;
+    if (!(offset = GXAllocateMemory(pScrni, &area, numlines)))
+      return BadAlloc;
 
     surface->width = w;
     surface->height = h;
@@ -1311,12 +1364,14 @@ GXAllocateSurface(ScrnInfoPtr pScrni,
     }
 
     pPriv->area = area;
+    pPriv->offset = offset;
+
     pPriv->isOn = FALSE;
 
     surface->pScrn = pScrni;
     surface->id = id;
     surface->pitches[0] = pitch;
-    surface->offsets[0] = area->box.y1 * fbpitch;
+    surface->offsets[0] = offset;
     surface->devPrivate.ptr = (pointer) pPriv;
 
     return Success;
