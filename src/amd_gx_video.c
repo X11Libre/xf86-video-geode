@@ -732,7 +732,7 @@ GXAllocateMemory(ScrnInfoPtr pScrni, void **memp, int numlines)
         if (xf86ResizeOffscreenArea(area, displayWidth, numlines))
 		return (area->box.y1 * pGeode->Pitch);
 
-        xf86FreeOffcreenArea(area);
+        xf86FreeOffscreenArea(area);
       }
 
       new_area = xf86AllocateOffscreenArea(pScrn, displayWidth,
