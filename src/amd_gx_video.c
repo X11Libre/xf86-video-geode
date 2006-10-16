@@ -450,8 +450,15 @@ GXStopVideo(ScrnInfoPtr pScrni, pointer data, Bool exit)
         }
 
         if (pPriv->area) {
-            xf86FreeOffscreenArea(pPriv->area);
-            pPriv->area = NULL;
+#ifdef XF86EXA
+	    if (pGeode->useEXA)
+	        exaOffscreenFree(pScrni->pScreen, pPriv->area);
+#endif
+
+	    if (!pGeode->useEXA)
+                xf86FreeOffscreenArea(pPriv->area);
+
+	  pPriv->area = NULL;
         }
 
         pPriv->videoStatus = 0;
@@ -725,7 +732,7 @@ GXAllocateMemory(ScrnInfoPtr pScrni, void **memp, int numlines)
         if (xf86ResizeOffscreenArea(area, displayWidth, numlines))
 		return (area->box.y1 * pGeode->Pitch);
 
-        xf86FreeOffscreenArea(area);
+        xf86FreeOffcreenArea(area);
       }
 
       new_area = xf86AllocateOffscreenArea(pScrn, displayWidth,
