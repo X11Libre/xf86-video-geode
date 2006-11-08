@@ -114,6 +114,7 @@ extern void GXAccelSync(ScrnInfoPtr pScrni);
 int DeltaX, DeltaY;
 
 unsigned long graphics_lut[256];
+unsigned long *lutptr = NULL;
 
 #define MAKE_ATOM(a) MakeAtom(a, sizeof(a) - 1, TRUE)
 
@@ -125,6 +126,8 @@ static Atom xvColorKey, xvColorKeyMode, xvFilter
 
 #define PALETTE_ADDRESS   0x038
 #define PALETTE_DATA      0x040
+#define DISPLAY_CONFIG    0x008
+#define MISC              0x050
 
 static void get_gamma_ram(unsigned long *lut) {
 
@@ -343,7 +346,6 @@ GXResetVideo(ScrnInfoPtr pScrni)
         GeodePortPrivRec *pPriv = pGeode->adaptor->pPortPrivates[0].ptr;
 
         GXAccelSync(pScrni);
-        GFX(set_video_palette(NULL));
         GXSetColorkey(pScrni, pPriv);
         GFX(set_video_filter(pPriv->filter, pPriv->filter));
     }
@@ -462,7 +464,16 @@ GXStopVideo(ScrnInfoPtr pScrni, pointer data, Bool exit)
     if (exit) {
         if (pPriv->videoStatus & CLIENT_VIDEO_ON) {
             GFX(set_video_enable(0));
-	    GFX(set_graphics_palette(graphics_lut));
+
+            /* If we have saved graphics LUT data - restore it */
+	    /* Otherwise, turn bypass on */
+
+	    if (lutptr != NULL)
+		GFX(set_graphics_palette(lutptr));
+	    else
+	        GFX(set_video_palette_bypass(1));
+
+	    lutptr = NULL;
         }
 
         if (pPriv->area) {
@@ -898,11 +909,22 @@ GXDisplayVideo(ScrnInfoPtr pScrni,
     BoxPtr dstBox, short src_w, short src_h, short drw_w, short drw_h)
 {
     GeodeRec *pGeode = GEODEPTR(pScrni);
+    unsigned long dcfg, misc;
 
     GXAccelSync(pScrni);
 
-    /* Save off the current contents of the gamma ram */
-    get_gamma_ram(graphics_lut);
+    /* If the gamma LUT is already loaded with graphics data, then save it
+     * off
+     */
+
+    dcfg = gfx_read_vid32(DISPLAY_CONFIG);
+    misc = gfx_read_vid32(MISC);
+
+    if ((!(misc & 1)) && (!(dcfg & (1 << 21)))) {
+	/* xf86DrvMsg(pScrni->scrnIndex, X_ERROR, "save graphics_lut\n"); */
+	get_gamma_ram(graphics_lut);
+	lutptr = graphics_lut;
+    }
 
     /* Set the video gamma ram */
     GFX(set_video_palette(NULL));
@@ -1312,8 +1334,15 @@ GXBlockHandler(int i, pointer blockData, pointer pTimeout, pointer pReadmask)
             if (pPriv->offTime < currentTime.milliseconds) {
                 GFX(set_video_enable(0));
 
-		/* put back the graphics LUT */
-		GFX(set_graphics_palette(graphics_lut));
+		/* If we have saved graphics LUT data - restore it */
+		/* Otherwise, turn bypass on */
+
+		if (lutptr != NULL)
+			GFX(set_graphics_palette(lutptr));
+		else
+			GFX(set_video_palette_bypass(1));
+
+		lutptr = NULL;
 
                 pPriv->videoStatus = FREE_TIMER;
                 pPriv->freeTime = currentTime.milliseconds + FREE_DELAY;

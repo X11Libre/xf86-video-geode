@@ -208,8 +208,10 @@ gfx_set_display_control(int sync_polarities)
         RCDF_DCFG_CRT_HSYNC_POL | RCDF_DCFG_CRT_VSYNC_POL |
         RCDF_DCFG_FP_PWR_EN | RCDF_DCFG_FP_DATA_EN);
 
-    dcfg |= (RCDF_DCFG_CRT_SYNC_SKW_INIT |
-        RCDF_DCFG_PWR_SEQ_DLY_INIT | RCDF_DCFG_GV_PAL_BYP);
+    /* Don't blindly set the PAL_BYP bit - assume that somebody along
+     * the line has set up the gamma correctly before this point */
+
+    dcfg |= (RCDF_DCFG_CRT_SYNC_SKW_INIT | RCDF_DCFG_PWR_SEQ_DLY_INIT);
 
     if (PanelEnable) {
         power = READ_VID32(RCDF_POWER_MANAGEMENT);
