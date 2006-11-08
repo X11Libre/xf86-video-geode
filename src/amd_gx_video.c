@@ -113,6 +113,8 @@ extern void GXAccelSync(ScrnInfoPtr pScrni);
 
 int DeltaX, DeltaY;
 
+unsigned long graphics_lut[256];
+
 #define MAKE_ATOM(a) MakeAtom(a, sizeof(a) - 1, TRUE)
 
 static Atom xvColorKey, xvColorKeyMode, xvFilter
@@ -120,6 +122,19 @@ static Atom xvColorKey, xvColorKeyMode, xvFilter
    , xvDoubleBuffer
 #endif
    ;
+
+#define PALETTE_ADDRESS   0x038
+#define PALETTE_DATA      0x040
+
+static void get_gamma_ram(unsigned long *lut) {
+
+	int i;
+
+	gfx_write_vid32(PALETTE_ADDRESS, 0);
+
+	for(i = 0; i < 256; i++)
+		lut[i] = gfx_read_vid32(PALETTE_DATA);
+}
 
 /*----------------------------------------------------------------------------
  * GXInitVideo
@@ -447,6 +462,7 @@ GXStopVideo(ScrnInfoPtr pScrni, pointer data, Bool exit)
     if (exit) {
         if (pPriv->videoStatus & CLIENT_VIDEO_ON) {
             GFX(set_video_enable(0));
+	    GFX(set_graphics_palette(graphics_lut));
         }
 
         if (pPriv->area) {
@@ -885,6 +901,12 @@ GXDisplayVideo(ScrnInfoPtr pScrni,
 
     GXAccelSync(pScrni);
 
+    /* Save off the current contents of the gamma ram */
+    get_gamma_ram(graphics_lut);
+
+    /* Set the video gamma ram */
+    GFX(set_video_palette(NULL));
+
     GFX(set_video_enable(1));
 
     switch (id) {
@@ -1289,6 +1311,10 @@ GXBlockHandler(int i, pointer blockData, pointer pTimeout, pointer pReadmask)
         if (pPriv->videoStatus & OFF_TIMER) {
             if (pPriv->offTime < currentTime.milliseconds) {
                 GFX(set_video_enable(0));
+
+		/* put back the graphics LUT */
+		GFX(set_graphics_palette(graphics_lut));
+
                 pPriv->videoStatus = FREE_TIMER;
                 pPriv->freeTime = currentTime.milliseconds + FREE_DELAY;
             }
