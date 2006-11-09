@@ -47,6 +47,7 @@ amd_drv_la_SOURCES = \
         amd_gx_video.c \
         amd_gx_shadow.c \
         amd_gx_regacc.c \
+	amd_gx_dcon.c \
         durango.c \
         panel.c \
         amd_lx_driver.c \

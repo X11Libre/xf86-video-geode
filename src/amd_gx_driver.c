@@ -735,6 +735,7 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
 
    if (xf86ReturnOptValBool(GeodeOptions, GX_OPTION_DCONPANEL, FALSE)) {
 	   pGeode->dconPanel = TRUE;
+	   gx_dcon_init();
    }
 
    /* Force the Panel on if on a GX TFT part, no CRT support anyway */
