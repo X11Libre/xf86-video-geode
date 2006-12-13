@@ -32,124 +32,127 @@
 #include "amd.h"
 
 void *
-GXWindowLinear(ScreenPtr pScreen, CARD32 row, CARD32 offset, int mode, CARD32 *size, void *closure)
+GXWindowLinear(ScreenPtr pScreen, CARD32 row, CARD32 offset, int mode,
+    CARD32 * size, void *closure)
 {
-  ScrnInfoPtr pScrni = xf86Screens[pScreen->myNum];
-  GeodeRec *pGeode = GEODEPTR(pScrni);
+    ScrnInfoPtr pScrni = xf86Screens[pScreen->myNum];
+    GeodeRec *pGeode = GEODEPTR(pScrni);
 
-  *size = pGeode->displayPitch;
+    *size = pGeode->displayPitch;
 
-  return (pGeode->FBBase + pGeode->displayOffset) +
-    row * pGeode->displayPitch + offset;
+    return (pGeode->FBBase + pGeode->displayOffset) +
+	row * pGeode->displayPitch + offset;
 }
 
-static
-void GXGetUpdateFunc(ScrnInfoPtr pScrni, int rotate, ShadowUpdateProc *update)
+static void
+GXGetUpdateFunc(ScrnInfoPtr pScrni, int rotate, ShadowUpdateProc * update)
 {
-  *update = NULL;
+    *update = NULL;
 
-  switch(rotate) {
-  case RR_Rotate_90:
+    switch (rotate) {
+    case RR_Rotate_90:
 
-    if (pScrni->bitsPerPixel == 8)
-      *update = shadowUpdateRotate8_90;
-    else if (pScrni->bitsPerPixel == 16)
-      *update = shadowUpdateRotate16_90;
-    else
-      *update = shadowUpdateRotate32_90;
+	if (pScrni->bitsPerPixel == 8)
+	    *update = shadowUpdateRotate8_90;
+	else if (pScrni->bitsPerPixel == 16)
+	    *update = shadowUpdateRotate16_90;
+	else
+	    *update = shadowUpdateRotate32_90;
 
-    break;
+	break;
 
-  case RR_Rotate_180:
+    case RR_Rotate_180:
 
-    if (pScrni->bitsPerPixel == 8)
-      *update = shadowUpdateRotate8_180;
-    else if (pScrni->bitsPerPixel == 16)
-      *update = shadowUpdateRotate16_180;
-    else
-      *update = shadowUpdateRotate32_180;
+	if (pScrni->bitsPerPixel == 8)
+	    *update = shadowUpdateRotate8_180;
+	else if (pScrni->bitsPerPixel == 16)
+	    *update = shadowUpdateRotate16_180;
+	else
+	    *update = shadowUpdateRotate32_180;
 
-    break;
+	break;
 
-  case RR_Rotate_270:
-    if (pScrni->bitsPerPixel == 8)
-      *update = shadowUpdateRotate8_270;
-    else if (pScrni->bitsPerPixel == 16)
-      *update = shadowUpdateRotate16_270;
-    else
-      *update = shadowUpdateRotate32_270;
+    case RR_Rotate_270:
+	if (pScrni->bitsPerPixel == 8)
+	    *update = shadowUpdateRotate8_270;
+	else if (pScrni->bitsPerPixel == 16)
+	    *update = shadowUpdateRotate16_270;
+	else
+	    *update = shadowUpdateRotate32_270;
 
-    break;
-  }
+	break;
+    }
 }
 
 Bool
 GXRotate(ScrnInfoPtr pScrni, DisplayModePtr mode)
 {
-  GeodeRec *pGeode = GEODEPTR(pScrni);
-  ShadowUpdateProc update;
-  Rotation curr = pGeode->rotation;
-  unsigned int pitch, dw;
-  PixmapPtr pPixmap;
-  BOOL ret;
+    GeodeRec *pGeode = GEODEPTR(pScrni);
+    ShadowUpdateProc update;
+    Rotation curr = pGeode->rotation;
+    unsigned int pitch, dw;
+    PixmapPtr pPixmap;
+    BOOL ret;
 
-  pPixmap = pScrni->pScreen->GetScreenPixmap(pScrni->pScreen);
-  pGeode->rotation = GXGetRotation(pScrni->pScreen);
+    pPixmap = pScrni->pScreen->GetScreenPixmap(pScrni->pScreen);
+    pGeode->rotation = GXGetRotation(pScrni->pScreen);
 
-  /* Leave if we have nothing to do */
+    /* Leave if we have nothing to do */
 
-  if (pGeode->rotation == curr && pGeode->curMode == mode) {
+    if (pGeode->rotation == curr && pGeode->curMode == mode) {
+	return TRUE;
+    }
+
+    shadowRemove(pScrni->pScreen, NULL);
+
+    switch (pGeode->rotation) {
+    case RR_Rotate_0:
+	ErrorF("Rotate to 0 degrees\n");
+	pScrni->displayWidth = pGeode->displayWidth;
+	pGeode->Pitch = pGeode->displayPitch;
+	break;
+
+    case RR_Rotate_90:
+	ErrorF("Rotate to 90 degrees\n");
+	pScrni->displayWidth = pScrni->pScreen->width;
+	break;
+
+    case RR_Rotate_180:
+	ErrorF("Rotate to 180 degrees\n");
+	pScrni->displayWidth = pGeode->displayWidth;
+	break;
+
+    case RR_Rotate_270:
+	ErrorF("Rotate to 270 degrees\n");
+	pScrni->displayWidth = pScrni->pScreen->width;
+	break;
+    }
+
+    if (pGeode->rotation != RR_Rotate_0) {
+
+	GXGetUpdateFunc(pScrni, pGeode->rotation, &update);
+	ret =
+	    shadowAdd(pScrni->pScreen, pPixmap, update, GXWindowLinear,
+	    pGeode->rotation, NULL);
+
+	/* XXX - FIXME - bail gracefully */
+
+	if (!ret)
+	    ErrorF("shadowAdd failed\n");
+    }
+
+    if (pGeode->rotation == RR_Rotate_0)
+	pScrni->fbOffset = pGeode->displayOffset;
+    else
+	pScrni->fbOffset = pGeode->shadowOffset;
+
+    pScrni->pScreen->ModifyPixmapHeader(pPixmap,
+	pScrni->pScreen->width,
+	pScrni->pScreen->height,
+	pScrni->pScreen->rootDepth,
+	pScrni->bitsPerPixel,
+	PixmapBytePad(pScrni->displayWidth, pScrni->pScreen->rootDepth),
+	(pointer) (pGeode->FBBase + pScrni->fbOffset));
+
     return TRUE;
-  }
-
-  shadowRemove(pScrni->pScreen, NULL);
-
-  switch(pGeode->rotation) {
-  case RR_Rotate_0:
-    ErrorF("Rotate to 0 degrees\n");
-    pScrni->displayWidth = pGeode->displayWidth;
-    pGeode->Pitch = pGeode->displayPitch;
-    break;
-
-   case RR_Rotate_90:
-     ErrorF("Rotate to 90 degrees\n");
-     pScrni->displayWidth = pScrni->pScreen->width;
-     break;
-
-  case RR_Rotate_180:
-    ErrorF("Rotate to 180 degrees\n");
-    pScrni->displayWidth = pGeode->displayWidth;
-    break;
-
-  case RR_Rotate_270:
-    ErrorF("Rotate to 270 degrees\n");
-    pScrni->displayWidth = pScrni->pScreen->width;
-    break;
-  }
-
-  if (pGeode->rotation != RR_Rotate_0) {
-
-    GXGetUpdateFunc(pScrni, pGeode->rotation, &update);
-    ret = shadowAdd(pScrni->pScreen, pPixmap, update, GXWindowLinear, pGeode->rotation, NULL);
-
-    /* XXX - FIXME - bail gracefully */
-
-    if (!ret)
-      ErrorF("shadowAdd failed\n");
-  }
-
-  if (pGeode->rotation == RR_Rotate_0)
-    pScrni->fbOffset = pGeode->displayOffset;
-  else
-    pScrni->fbOffset = pGeode->shadowOffset;
-
-  pScrni->pScreen->ModifyPixmapHeader(pPixmap,
-				      pScrni->pScreen->width,
-				      pScrni->pScreen->height,
-				      pScrni->pScreen->rootDepth,
-				      pScrni->bitsPerPixel,
-				      PixmapBytePad(pScrni->displayWidth, pScrni->pScreen->rootDepth),
-				      (pointer)(pGeode->FBBase + pScrni->fbOffset));
-
-  return TRUE;
 }

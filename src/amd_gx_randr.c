@@ -40,300 +40,292 @@
 
 #include "amd.h"
 
-static int          GXRandRIndex;
-static int          GXRandRGeneration;
+static int GXRandRIndex;
+static int GXRandRGeneration;
 
-typedef struct _GXRandRInfo {
-  int                             virtualX;
-  int                             virtualY;
-  int                             mmWidth;
-  int                             mmHeight;
-  int                             maxX;
-  int                             maxY;
-  Rotation                        rotation; /* current mode */
-  Rotation                        supported_rotations; /* driver supported */
+typedef struct _GXRandRInfo
+{
+    int virtualX;
+    int virtualY;
+    int mmWidth;
+    int mmHeight;
+    int maxX;
+    int maxY;
+    Rotation rotation;		       /* current mode */
+    Rotation supported_rotations;      /* driver supported */
 } XF86RandRInfoRec, *XF86RandRInfoPtr;
 
 #define XF86RANDRINFO(p)    ((XF86RandRInfoPtr) (p)->devPrivates[GXRandRIndex].ptr)
 
 static int
-GXRandRModeRefresh (DisplayModePtr mode)
+GXRandRModeRefresh(DisplayModePtr mode)
 {
     if (mode->VRefresh)
-        return (int) (mode->VRefresh + 0.5);
+	return (int)(mode->VRefresh + 0.5);
     else
-        return (int) (mode->Clock * 1000.0 / mode->HTotal / mode->VTotal + 0.5);}
+	return (int)(mode->Clock * 1000.0 / mode->HTotal / mode->VTotal +
+	    0.5);
+}
 
 static Bool
-GXRandRGetInfo (ScreenPtr pScreen, Rotation *rotations)
+GXRandRGetInfo(ScreenPtr pScreen, Rotation * rotations)
 {
-    RRScreenSizePtr         pSize;
-    ScrnInfoPtr             pScrni = XF86SCRNINFO(pScreen);
-    XF86RandRInfoPtr        pRandr = XF86RANDRINFO(pScreen);
-    DisplayModePtr          mode;
-    int                     refresh0 = 60;
-    int                     maxX = 0, maxY = 0;
+    RRScreenSizePtr pSize;
+    ScrnInfoPtr pScrni = XF86SCRNINFO(pScreen);
+    XF86RandRInfoPtr pRandr = XF86RANDRINFO(pScreen);
+    DisplayModePtr mode;
+    int refresh0 = 60;
+    int maxX = 0, maxY = 0;
 
     *rotations = pRandr->supported_rotations;
 
     if (pRandr->virtualX == -1 || pRandr->virtualY == -1) {
-      pRandr->virtualX = pScrni->virtualX;
-      pRandr->virtualY = pScrni->virtualY;
+	pRandr->virtualX = pScrni->virtualX;
+	pRandr->virtualY = pScrni->virtualY;
     }
 
-    for (mode = pScrni->modes; ; mode = mode->next) {
-      int refresh = GXRandRModeRefresh (mode);
-      if (pRandr->maxX == 0 || pRandr->maxY == 0) {
-	if (maxX < mode->HDisplay)
-	  maxX = mode->HDisplay;
-	if (maxY < mode->VDisplay)
-	  maxY = mode->VDisplay;
-      }
+    for (mode = pScrni->modes;; mode = mode->next) {
+	int refresh = GXRandRModeRefresh(mode);
 
-      if (mode == pScrni->modes)
-	refresh0 = refresh;
+	if (pRandr->maxX == 0 || pRandr->maxY == 0) {
+	    if (maxX < mode->HDisplay)
+		maxX = mode->HDisplay;
+	    if (maxY < mode->VDisplay)
+		maxY = mode->VDisplay;
+	}
 
-      pSize = RRRegisterSize (pScreen,
-			      mode->HDisplay, mode->VDisplay,
-			      pRandr->mmWidth, pRandr->mmHeight);
-      if (!pSize)
-	return FALSE;
+	if (mode == pScrni->modes)
+	    refresh0 = refresh;
 
-      RRRegisterRate (pScreen, pSize, refresh);
+	pSize = RRRegisterSize(pScreen,
+	    mode->HDisplay, mode->VDisplay,
+	    pRandr->mmWidth, pRandr->mmHeight);
+	if (!pSize)
+	    return FALSE;
 
-      if (mode == pScrni->currentMode &&
-	  mode->HDisplay == pScrni->virtualX && mode->VDisplay == pScrni->virtualY)
-	RRSetCurrentConfig (pScreen, pRandr->rotation, refresh, pSize);
-      if (mode->next == pScrni->modes)
-	break;
+	RRRegisterRate(pScreen, pSize, refresh);
+
+	if (mode == pScrni->currentMode &&
+	    mode->HDisplay == pScrni->virtualX
+	    && mode->VDisplay == pScrni->virtualY)
+	    RRSetCurrentConfig(pScreen, pRandr->rotation, refresh, pSize);
+	if (mode->next == pScrni->modes)
+	    break;
     }
 
-    if (pRandr->maxX == 0 || pRandr->maxY == 0)
-    {
-      pRandr->maxX = maxX;
-      pRandr->maxY = maxY;
+    if (pRandr->maxX == 0 || pRandr->maxY == 0) {
+	pRandr->maxX = maxX;
+	pRandr->maxY = maxY;
     }
 
     if (pScrni->currentMode->HDisplay != pScrni->virtualX ||
-        pScrni->currentMode->VDisplay != pScrni->virtualY) {
+	pScrni->currentMode->VDisplay != pScrni->virtualY) {
 
-      mode = pScrni->modes;
-      pSize = RRRegisterSize (pScreen,
-			      pRandr->virtualX, pRandr->virtualY,
-			      pRandr->mmWidth,
-			      pRandr->mmHeight);
-      if (!pSize)
-	return FALSE;
+	mode = pScrni->modes;
+	pSize = RRRegisterSize(pScreen,
+	    pRandr->virtualX, pRandr->virtualY,
+	    pRandr->mmWidth, pRandr->mmHeight);
+	if (!pSize)
+	    return FALSE;
 
-      RRRegisterRate (pScreen, pSize, refresh0);
-      if (pScrni->virtualX == pRandr->virtualX &&
-	  pScrni->virtualY == pRandr->virtualY)
-        {
-	  RRSetCurrentConfig (pScreen, pRandr->rotation, refresh0, pSize);
-        }
+	RRRegisterRate(pScreen, pSize, refresh0);
+	if (pScrni->virtualX == pRandr->virtualX &&
+	    pScrni->virtualY == pRandr->virtualY) {
+	    RRSetCurrentConfig(pScreen, pRandr->rotation, refresh0, pSize);
+	}
     }
 
     return TRUE;
 }
 
-
-
-
 static Bool
-GXRandRSetMode (ScreenPtr         pScreen,
-                  DisplayModePtr    mode,
-                  Bool              useVirtual,
-                  int               mmWidth,
-                  int               mmHeight)
+GXRandRSetMode(ScreenPtr pScreen,
+    DisplayModePtr mode, Bool useVirtual, int mmWidth, int mmHeight)
 {
-  ScrnInfoPtr         pScrni = XF86SCRNINFO(pScreen);
-  XF86RandRInfoPtr    pRandr = XF86RANDRINFO(pScreen);
-  
-  int                 oldWidth = pScreen->width;
-  int                 oldHeight = pScreen->height;
-  int                 oldmmWidth = pScreen->mmWidth;
-  int                 oldmmHeight = pScreen->mmHeight;
-  WindowPtr           pRoot = WindowTable[pScreen->myNum];
-  DisplayModePtr      currentMode = NULL;
-  Bool                ret = TRUE;
-  PixmapPtr           pspix = NULL;
-  
-  if (pRoot)
-    (*pScrni->EnableDisableFBAccess) (pScreen->myNum, FALSE);
+    ScrnInfoPtr pScrni = XF86SCRNINFO(pScreen);
+    XF86RandRInfoPtr pRandr = XF86RANDRINFO(pScreen);
 
-  if (useVirtual) {
-    pScrni->virtualX = pRandr->virtualX;
-    pScrni->virtualY = pRandr->virtualY;
-  } else {
-    pScrni->virtualX = mode->HDisplay;
-    pScrni->virtualY = mode->VDisplay;
-  }
-  
-  if(pRandr->rotation & (RR_Rotate_90 | RR_Rotate_270)) {
-    pScreen->width = pScrni->virtualY;
-    pScreen->height = pScrni->virtualX;
-    pScreen->mmWidth = mmHeight;
-    pScreen->mmHeight = mmWidth;
-  }
-  else {
-    pScreen->width = pScrni->virtualX;
-    pScreen->height = pScrni->virtualY;
-    pScreen->mmWidth = mmWidth;
-    pScreen->mmHeight = mmHeight;
-  }
-  
-  if (pScrni->currentMode == mode) {
-    currentMode = pScrni->currentMode;
-    pScrni->currentMode = NULL;
-  }
+    int oldWidth = pScreen->width;
+    int oldHeight = pScreen->height;
+    int oldmmWidth = pScreen->mmWidth;
+    int oldmmHeight = pScreen->mmHeight;
+    WindowPtr pRoot = WindowTable[pScreen->myNum];
+    DisplayModePtr currentMode = NULL;
+    Bool ret = TRUE;
+    PixmapPtr pspix = NULL;
 
-  if (!xf86SwitchMode (pScreen, mode))
-    {
-      ret = FALSE;
-      pScrni->virtualX = pScreen->width = oldWidth;
-      pScrni->virtualY = pScreen->height = oldHeight;
-      pScreen->mmWidth = oldmmWidth;
-      pScreen->mmHeight = oldmmHeight;
-      pScrni->currentMode = currentMode;
+    if (pRoot)
+	(*pScrni->EnableDisableFBAccess) (pScreen->myNum, FALSE);
+
+    if (useVirtual) {
+	pScrni->virtualX = pRandr->virtualX;
+	pScrni->virtualY = pRandr->virtualY;
+    } else {
+	pScrni->virtualX = mode->HDisplay;
+	pScrni->virtualY = mode->VDisplay;
+    }
+
+    if (pRandr->rotation & (RR_Rotate_90 | RR_Rotate_270)) {
+	pScreen->width = pScrni->virtualY;
+	pScreen->height = pScrni->virtualX;
+	pScreen->mmWidth = mmHeight;
+	pScreen->mmHeight = mmWidth;
+    } else {
+	pScreen->width = pScrni->virtualX;
+	pScreen->height = pScrni->virtualY;
+	pScreen->mmWidth = mmWidth;
+	pScreen->mmHeight = mmHeight;
+    }
+
+    if (pScrni->currentMode == mode) {
+	currentMode = pScrni->currentMode;
+	pScrni->currentMode = NULL;
+    }
+
+    if (!xf86SwitchMode(pScreen, mode)) {
+	ret = FALSE;
+	pScrni->virtualX = pScreen->width = oldWidth;
+	pScrni->virtualY = pScreen->height = oldHeight;
+	pScreen->mmWidth = oldmmWidth;
+	pScreen->mmHeight = oldmmHeight;
+	pScrni->currentMode = currentMode;
     }
 
     /*
      * Get the new Screen pixmap ptr as SwitchMode might have called
      * ModifyPixmapHeader and xf86EnableDisableFBAccess will put it back...
      * Unfortunately.
-
-   */
+     
+     */
 
     pspix = (*pScreen->GetScreenPixmap) (pScreen);
     if (pspix->devPrivate.ptr)
-       pScrni->pixmapPrivate = pspix->devPrivate;
+	pScrni->pixmapPrivate = pspix->devPrivate;
 
     xf86ReconfigureLayout();
 
-    xf86SetViewport (pScreen, pScreen->width, pScreen->height);
-    xf86SetViewport (pScreen, 0, 0);
+    xf86SetViewport(pScreen, pScreen->width, pScreen->height);
+    xf86SetViewport(pScreen, 0, 0);
 
     if (pRoot)
-        (*pScrni->EnableDisableFBAccess) (pScreen->myNum, TRUE);
+	(*pScrni->EnableDisableFBAccess) (pScreen->myNum, TRUE);
 
     return ret;
 }
 
-
 Bool
-GXRandRSetConfig(ScreenPtr pScreen, Rotation rotation, int rate, RRScreenSizePtr pSize) 
+GXRandRSetConfig(ScreenPtr pScreen, Rotation rotation,
+    int rate, RRScreenSizePtr pSize)
 {
-  ScrnInfoPtr          pScrni = XF86SCRNINFO(pScreen);
-  XF86RandRInfoPtr   pRandr = XF86RANDRINFO(pScreen);
-  
-  DisplayModePtr          mode;
-  int                     px, py;
-  Bool                    useVirtual = FALSE;
-  int                     maxX = 0, maxY = 0;
-  Rotation                oldRotation = pRandr->rotation;
-  
-  pRandr->rotation = rotation;
-  
-  if (pRandr->virtualX == -1 || pRandr->virtualY == -1) {
-    pRandr->virtualX = pScrni->virtualX;
-    pRandr->virtualY = pScrni->virtualY;
-  }
+    ScrnInfoPtr pScrni = XF86SCRNINFO(pScreen);
+    XF86RandRInfoPtr pRandr = XF86RANDRINFO(pScreen);
 
-  miPointerPosition(&px, &py);
-  
-  for (mode = pScrni->modes; ; mode = mode->next)
-    {
-      if (pRandr->maxX == 0 || pRandr->maxY == 0) {
-	if (maxX < mode->HDisplay)
-	  maxX = mode->HDisplay;
-	if (maxY < mode->VDisplay)
-	  maxY = mode->VDisplay;
-      }
-      if (mode->HDisplay == pSize->width &&
-	  mode->VDisplay == pSize->height &&
-	  (rate == 0 || GXRandRModeRefresh (mode) == rate))
-	break;
-      if (mode->next == pScrni->modes) {
-	if (pSize->width == pRandr->virtualX &&
-	    pSize->height == pRandr->virtualY) {
-	  mode = pScrni->modes;
-	  useVirtual = TRUE;
-	  break;
-	}
+    DisplayModePtr mode;
+    int px, py;
+    Bool useVirtual = FALSE;
+    int maxX = 0, maxY = 0;
+    Rotation oldRotation = pRandr->rotation;
+
+    pRandr->rotation = rotation;
+
+    if (pRandr->virtualX == -1 || pRandr->virtualY == -1) {
+	pRandr->virtualX = pScrni->virtualX;
+	pRandr->virtualY = pScrni->virtualY;
+    }
+
+    miPointerPosition(&px, &py);
+
+    for (mode = pScrni->modes;; mode = mode->next) {
 	if (pRandr->maxX == 0 || pRandr->maxY == 0) {
-	  pRandr->maxX = maxX;
-	  pRandr->maxY = maxY;
+	    if (maxX < mode->HDisplay)
+		maxX = mode->HDisplay;
+	    if (maxY < mode->VDisplay)
+		maxY = mode->VDisplay;
 	}
+	if (mode->HDisplay == pSize->width &&
+	    mode->VDisplay == pSize->height &&
+	    (rate == 0 || GXRandRModeRefresh(mode) == rate))
+	    break;
+	if (mode->next == pScrni->modes) {
+	    if (pSize->width == pRandr->virtualX &&
+		pSize->height == pRandr->virtualY) {
+		mode = pScrni->modes;
+		useVirtual = TRUE;
+		break;
+	    }
+	    if (pRandr->maxX == 0 || pRandr->maxY == 0) {
+		pRandr->maxX = maxX;
+		pRandr->maxY = maxY;
+	    }
+	    return FALSE;
+	}
+    }
+
+    if (pRandr->maxX == 0 || pRandr->maxY == 0) {
+	pRandr->maxX = maxX;
+	pRandr->maxY = maxY;
+    }
+
+    if (!GXRandRSetMode(pScreen, mode, useVirtual, pSize->mmWidth,
+	    pSize->mmHeight)) {
+	pRandr->rotation = oldRotation;
 	return FALSE;
-      }
     }
 
-  if (pRandr->maxX == 0 || pRandr->maxY == 0)
-    {
-      pRandr->maxX = maxX;
-      pRandr->maxY = maxY;
+    if (pScreen == miPointerCurrentScreen()) {
+	px = (px >= pScreen->width ? (pScreen->width - 1) : px);
+	py = (py >= pScreen->height ? (pScreen->height - 1) : py);
+
+	xf86SetViewport(pScreen, px, py);
+
+	(*pScreen->SetCursorPosition) (pScreen, px, py, FALSE);
     }
 
-  if (!GXRandRSetMode (pScreen, mode, useVirtual, pSize->mmWidth, pSize->mmHeight)) {
-    pRandr->rotation = oldRotation;
-    return FALSE;
-  }
-
-  if (pScreen == miPointerCurrentScreen ()) {
-    px = (px >= pScreen->width ? (pScreen->width - 1) : px);
-    py = (py >= pScreen->height ? (pScreen->height - 1) : py);
-
-    xf86SetViewport(pScreen, px, py);
-
-    (*pScreen->SetCursorPosition) (pScreen, px, py, FALSE);
-  }
-
-  return TRUE;
+    return TRUE;
 }
 
 Rotation
 GXGetRotation(ScreenPtr pScreen)
 {
-  XF86RandRInfoPtr pRandr = XF86RANDRINFO(pScreen);
-  return pRandr->rotation;
+    XF86RandRInfoPtr pRandr = XF86RANDRINFO(pScreen);
+
+    return pRandr->rotation;
 }
 
 Bool
 GXRandRInit(ScreenPtr pScreen, int rotation)
 {
-  XF86RandRInfoPtr   pRandr;
-  rrScrPrivPtr        rp;
+    XF86RandRInfoPtr pRandr;
+    rrScrPrivPtr rp;
 
-  if (GXRandRGeneration != serverGeneration) {
-    GXRandRIndex = AllocateScreenPrivateIndex();
-    GXRandRGeneration = serverGeneration;
-  }
+    if (GXRandRGeneration != serverGeneration) {
+	GXRandRIndex = AllocateScreenPrivateIndex();
+	GXRandRGeneration = serverGeneration;
+    }
 
-  pRandr = xalloc(sizeof(XF86RandRInfoRec));
-  if (pRandr == NULL)
-    return FALSE;
+    pRandr = xalloc(sizeof(XF86RandRInfoRec));
+    if (pRandr == NULL)
+	return FALSE;
 
-  if (!RRScreenInit(pScreen)) {
-    xfree(pRandr);
-    return FALSE;
-  }
+    if (!RRScreenInit(pScreen)) {
+	xfree(pRandr);
+	return FALSE;
+    }
 
-  rp = rrGetScrPriv(pScreen);
-  rp->rrGetInfo = GXRandRGetInfo;
-  rp->rrSetConfig = GXRandRSetConfig;
+    rp = rrGetScrPriv(pScreen);
+    rp->rrGetInfo = GXRandRGetInfo;
+    rp->rrSetConfig = GXRandRSetConfig;
 
-  pRandr->virtualX = -1;
-  pRandr->virtualY = -1;
+    pRandr->virtualX = -1;
+    pRandr->virtualY = -1;
 
-  pRandr->mmWidth = pScreen->mmWidth;
-  pRandr->mmHeight = pScreen->mmHeight;
+    pRandr->mmWidth = pScreen->mmWidth;
+    pRandr->mmHeight = pScreen->mmHeight;
 
-  pRandr->rotation = RR_Rotate_0;
-  pRandr->supported_rotations = rotation;
-  pRandr->maxX = pRandr->maxY = 0;
+    pRandr->rotation = RR_Rotate_0;
+    pRandr->supported_rotations = rotation;
+    pRandr->maxX = pRandr->maxY = 0;
 
-  pScreen->devPrivates[GXRandRIndex].ptr = pRandr;
-  return TRUE;
+    pScreen->devPrivates[GXRandRIndex].ptr = pRandr;
+    return TRUE;
 }
-
-

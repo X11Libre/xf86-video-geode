@@ -57,100 +57,117 @@ extern unsigned long gfx_gamma_ram_redcloud[];
    embedded controller 
 */
 
-static int eccmd(ScrnInfoPtr pScrni, unsigned char cmd) {
+static int
+eccmd(ScrnInfoPtr pScrni, unsigned char cmd)
+{
 
-	unsigned char ret;
-	int i;
+    unsigned char ret;
+    int i;
 
-	ret = inb(0x6c);
+    ret = inb(0x6c);
 
-	if (ret & 1)
-		ret = inb(0x68);
-	
-	/* Write the command */
-	outb(0x6C, cmd);
-	
-	/* Wait for the 2 response */
-	for(i = 0; i < 1000; i++) {
-		ret = inb(0x6C);
-		if ((ret & 3) == 1)
-			break;
-	}
-	
-	if (i == 100) {
-		xf86DrvMsg(pScrni->scrnIndex, X_ERROR, "Error waiting for the EC command (%x)\n", ret);
-		ret = -1;		
-		goto eread;
-	}
-
-	/* get the response */
+    if (ret & 1)
 	ret = inb(0x68);
 
- eread:	
-	/* Clear the "ownership flag" */
-	outb(0x6C, 0xFF);
-	return ret;
+    /* Write the command */
+    outb(0x6C, cmd);
+
+    /* Wait for the 2 response */
+    for (i = 0; i < 1000; i++) {
+	ret = inb(0x6C);
+	if ((ret & 3) == 1)
+	    break;
+    }
+
+    if (i == 100) {
+	xf86DrvMsg(pScrni->scrnIndex, X_ERROR,
+	    "Error waiting for the EC command (%x)\n", ret);
+	ret = -1;
+	goto eread;
+    }
+
+    /* get the response */
+    ret = inb(0x68);
+
+  eread:
+    /* Clear the "ownership flag" */
+    outb(0x6C, 0xFF);
+    return ret;
 }
 
-static int boardrev(ScrnInfoPtr pScrni) {
-	int i, ret;
+static int
+boardrev(ScrnInfoPtr pScrni)
+{
+    int i, ret;
 
-	ret = eccmd(pScrni, 0x09);
+    ret = eccmd(pScrni, 0x09);
 
-	if (ret == -1)
-		return -1;
+    if (ret == -1)
+	return -1;
 
-	return ret == TESTA_REVISION ? REV_TESTA : REV_TESTB;
+    return ret == TESTA_REVISION ? REV_TESTA : REV_TESTB;
 }
 
 #define RTC_BASE_PORT 0x70
 #define RTC_PORT(x)     (RTC_BASE_PORT + (x))
 
-static inline char cmos_read(unsigned char addr) {
-	outb(RTC_PORT(0), addr);
-	return inb(RTC_PORT(1));
+static inline char
+cmos_read(unsigned char addr)
+{
+    outb(RTC_PORT(0), addr);
+    return inb(RTC_PORT(1));
 }
 
-static inline void cmos_write(unsigned char val, unsigned char addr) {
-	outb(RTC_PORT(0), addr);
-	outb(RTC_PORT(1), val);
-}
-	
-static int dcon_avail(void) {
-	return cmos_read(440 / 8) & 1;
+static inline void
+cmos_write(unsigned char val, unsigned char addr)
+{
+    outb(RTC_PORT(0), addr);
+    outb(RTC_PORT(1), val);
 }
 
-void gx_dcon_init(ScrnInfoPtr pScrni) {
+static int
+dcon_avail(void)
+{
+    return cmos_read(440 / 8) & 1;
+}
 
-	int rev = boardrev(pScrni);
-	int i;
+void
+gx_dcon_init(ScrnInfoPtr pScrni)
+{
 
-	if (rev == -1) {
-		xf86DrvMsg(pScrni->scrnIndex, X_DEFAULT, "This is not an OLPC board\n");
-		return;  
+    int rev = boardrev(pScrni);
+    int i;
+
+    if (rev == -1) {
+	xf86DrvMsg(pScrni->scrnIndex, X_DEFAULT,
+	    "This is not an OLPC board\n");
+	return;
+    }
+    if (dcon_avail() == 0) {
+	xf86DrvMsg(pScrni->scrnIndex, X_DEFAULT, "No DCON is present\n");
+	return;
+    }
+
+    xf86DrvMsg(pScrni->scrnIndex, X_DEFAULT, "OLPC board revision %s\n",
+	rev == REV_TESTB ? "testB" : "testA");
+    xf86DrvMsg(pScrni->scrnIndex, X_DEFAULT, "DCON detected.\n");
+
+    /* FIXME:  Panel setup should go here */
+    /* FIXME:  Mode setup should go here */
+    /* FIXME:  Controller setup should go here */
+
+    /* Update the Xv map on a rev-b board */
+
+    if (rev == REV_TESTB) {
+	for (i = 0; i < 256; i++) {
+	    unsigned char r, g, b;
+
+	    r = (gfx_gamma_ram_redcloud[i] >> 16) & 0xFF;
+	    g = (gfx_gamma_ram_redcloud[i] >> 8) & 0xFF;
+	    b = gfx_gamma_ram_redcloud[i] & 0xFF;
+
+	    gfx_gamma_ram_redcloud[i] =
+		((r >> 2) << 16) | ((g >> 1) << 8) | (b >> 2);
 	}
-	if (dcon_avail() == 0) {
-		xf86DrvMsg(pScrni->scrnIndex, X_DEFAULT, "No DCON is present\n");
-		return;
-	}
-
-	xf86DrvMsg(pScrni->scrnIndex, X_DEFAULT, "OLPC board revision %s\n", rev == REV_TESTB ? "testB" : "testA");
-	xf86DrvMsg(pScrni->scrnIndex, X_DEFAULT, "DCON detected.\n");
-
-	/* FIXME:  Panel setup should go here */
-	/* FIXME:  Mode setup should go here */
-	/* FIXME:  Controller setup should go here */
- 
-	/* Update the Xv map on a rev-b board */
-
-	if (rev == REV_TESTB) {
-		for(i = 0; i < 256; i++) {
-			unsigned char r, g, b;
-			r = (gfx_gamma_ram_redcloud[i] >> 16) & 0xFF;
-			g = (gfx_gamma_ram_redcloud[i] >> 8) & 0xFF;
-			b = gfx_gamma_ram_redcloud[i] & 0xFF;
-
-			gfx_gamma_ram_redcloud[i] = ((r >> 2) << 16) | ((g >> 1) << 8) | (b >> 2);
-		}
-	}
+    }
 }
