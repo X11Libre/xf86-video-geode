@@ -33,6 +33,9 @@
 #include "config.h"
 #endif
 
+#include <stdlib.h>
+#include <string.h>
+
 /* VGA STRUCTURE */
 
 #define GU2_STD_CRTC_REGS 	25

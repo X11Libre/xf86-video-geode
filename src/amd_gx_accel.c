@@ -68,47 +68,6 @@ typedef unsigned short ushort;
 #undef uchar
 typedef unsigned char uchar;
 
-#if DEBUGLVL>0
-extern FILE *zdfp;
-
-#if DEBUGTIM>0
-#ifdef NO_RDTSC
-#define DBLOG(n,s...)							\
-	do {										\
-		if((DEBUGLVL)>=(n)) {					\
-			long secs,usecs;					\
-			getsecs(&secs,&usecs);				\
-			fprintf(zdfp,"%d,%d ",secs,usecs);	\
-			fprintf(zdfp,s);					\
-		}										\
-	} while(0)
-#else /* ifdef No_RDTSC */
-#define tsc(n) __asm__ __volatile__ ( \
-   " rdtsc" \
- : "=a" (((int*)(&(n)))[0]), "=d" (((int*)(&(n)))[1]) \
- : )
-#define DBLOG(n,s...)					\
-	do {								\
-		if((DEBUGLVL)>=(n)) {			\
-			long long t;				\
-			tsc(t);						\
-			fprintf(zdfp,"%lld ",t);	\
-			fprintf(zdfp,s);			\
-	   }								\
-	} while(0)
-#endif /* ifdef No_RDTSC */
-#else /* if DEBUFTIM */
-#define DBLOG(n,s...)			\
-	do {						\
-		if((DEBUGLVL)>=(n))		\
-			fprintf(zdfp,s);	\
-	} while(0)
-#endif /* if DEBUGTIM */
-#else /* if DEBUGLVL > 0 */
-#define DBLOG(n,s...)			\
-	do {} while(0)
-#endif /* if DEBUGLVL > 0 */
-
 #define CALC_FBOFFSET(x, y) \
 	        (((ulong)(y) * gu2_pitch) + ((ulong)(x) << gu2_xshift))
 
@@ -132,6 +91,8 @@ unsigned int ACCEL_STRIDE;
 #endif
 
 #define HOOK(fn) localRecPtr->fn = GX##fn
+
+#define DLOG(l, fmt, args...) ErrorF(fmt, ##args)
 
 /* static storage declarations */
 
@@ -289,7 +250,7 @@ amd_memory_to_screen_blt(unsigned long src, unsigned long dst,
 void
 GXAccelSync(ScrnInfoPtr pScrni)
 {
-    DBLOG(3, "GXAccelSync()\n");
+    //ErrorF("GXAccelSync()\n");
 #ifndef OPT_ACCEL
     gfx_wait_until_idle();
 #else
@@ -318,7 +279,7 @@ static void
 GXSetupForSolidFill(ScrnInfoPtr pScrni,
     int color, int rop, unsigned int planemask)
 {
-    DBLOG(2, "GXSetupForSolidFill(%#x,%#x,%#x)\n", color, rop, planemask);
+    //ErrorF("GXSetupForSolidFill(%#x,%#x,%#x)\n", color, rop, planemask);
     rop &= 0x0F;
 #ifndef OPT_ACCEL
     gfx_set_solid_pattern(planemask);
@@ -365,7 +326,7 @@ GXSetupForSolidFill(ScrnInfoPtr pScrni,
 static void
 GXSubsequentSolidFillRect(ScrnInfoPtr pScrni, int x, int y, int w, int h)
 {
-    DBLOG(2, "GXSubsequentSolidFillRect() at %d,%d %dx%d\n", x, y, w, h);
+    //ErrorF("GXSubsequentSolidFillRect() at %d,%d %dx%d\n", x, y, w, h);
 #ifndef OPT_ACCEL
     gfx_pattern_fill(x, y, w, h);
 #else
@@ -412,16 +373,16 @@ GXSetupForColor8x8PatternFill(ScrnInfoPtr pScrni, int patx, int paty, int rop,
 {
     GeodeRec *pGeode = GEODEPTR(pScrni);
 
-    DBLOG(2, "GXSetupForColor8x8PatternFill() pat %#x,%#x rop %#x %#x %#x\n",
-        patx, paty, rop, planemask, trans_color);
+    //ErrorF("GXSetupForColor8x8PatternFill() pat %#x,%#x rop %#x %#x %#x\n",
+    //    patx, paty, rop, planemask, trans_color);
     rop &= 0x0F;
     gc8x8p = (unsigned long *)FBADDR(patx, paty);
     /* gfx_set_solid_pattern is needed to clear src/pat transparency */
     gfx_set_solid_pattern(0);
     gfx_set_raster_operation(planemask == ~0U ? PDfn[rop] :
         (gfx_set_solid_source(planemask), PDfn_SM[rop]));
-    gfx2_set_source_stride(pGeode->AccelPitch);
-    gfx2_set_destination_stride(pGeode->AccelPitch);
+    gfx2_set_source_stride(pGeode->Pitch);
+    gfx2_set_destination_stride(pGeode->Pitch);
     if (trans_color == -1)
         gfx2_set_source_transparency(0, 0);
     else
@@ -453,9 +414,9 @@ static void
 GXSubsequentColor8x8PatternFillRect(ScrnInfoPtr pScrni, int patx, int paty,
     int x, int y, int w, int h)
 {
-    DBLOG(2,
-        "GXSubsequentColor8x8PatternFillRect() patxy %d,%d at %d,%d %dsx%d\n",
-        patx, paty, x, y, w, h);
+   //ErrorF(
+    //    "GXSubsequentColor8x8PatternFillRect() patxy %d,%d at %d,%d %dsx%d\n",
+    //    patx, paty, x, y, w, h);
     gfx2_set_pattern_origin(patx, paty);
     gfx2_color_pattern_fill(CALC_FBOFFSET(x, y), w, h, gc8x8p);
 }
@@ -491,9 +452,9 @@ static void
 GXSetupForMono8x8PatternFill(ScrnInfoPtr pScrni, int patx, int paty,
     int fg, int bg, int rop, uint planemask)
 {
-    DBLOG(2,
-        "GXSetupForMono8x8PatternFill() pat %#x,%#x fg %#x bg %#x %#x %#x\n",
-        patx, paty, fg, bg, rop, planemask);
+	//ErrorF(
+        //"GXSetupForMono8x8PatternFill() pat %#x,%#x fg %#x bg %#x %#x %#x\n",
+        //patx, paty, fg, bg, rop, planemask);
     rop &= 0x0F;
 #ifndef OPT_ACCEL
     gfx_set_mono_pattern(bg, fg, patx, paty, bg == -1 ? 1 : 0);
@@ -603,8 +564,8 @@ GXSetupForScreenToScreenCopy(ScrnInfoPtr pScrni, int xdir, int ydir, int rop,
         else
             gfx2_set_source_transparency(trans_color, ~0);
         gfx_set_raster_operation(planemask == ~0U ? SDfn[rop] : SDfn_PM[rop]);
-        gfx2_set_source_stride(pGeode->AccelPitch);
-        gfx2_set_destination_stride(pGeode->AccelPitch);
+        gfx2_set_source_stride(pGeode->Pitch);
+        gfx2_set_destination_stride(pGeode->Pitch);
     }
 #else
     {
@@ -678,7 +639,7 @@ GXSubsequentScreenToScreenCopy(ScrnInfoPtr pScrni,
             blt_mode |= MGP_BM_NEG_XDIR;
         }
         if (y2 > y1) {
-            int n = (h - 1) * pGeode->AccelPitch;
+            int n = (h - 1) * pGeode->Pitch;
 
             src += n;
             dst += n;
@@ -735,8 +696,8 @@ GXSetupForScanlineImageWrite(ScrnInfoPtr pScrni, int rop, uint planemask,
     else
         gfx2_set_source_transparency(trans_color, ~0);
     gfx_set_raster_operation(planemask == ~0U ? SDfn[rop] : SDfn_PM[rop]);
-    gfx2_set_source_stride(pGeode->AccelPitch);
-    gfx2_set_destination_stride(pGeode->AccelPitch);
+    gfx2_set_source_stride(pGeode->Pitch);
+    gfx2_set_destination_stride(pGeode->Pitch);
 }
 
 /*----------------------------------------------------------------------------
@@ -805,7 +766,7 @@ GXSubsequentImageWriteScanline(ScrnInfoPtr pScrni, int bufno)
         1, 0);
 #else /* if !GX_USE_OFFSCRN_MEM */
     gfx2_color_bitmap_to_screen_blt(0, 0, CALC_FBOFFSET(giwr.x, giwr.y),
-        giwr.w, 1, pGeode->AccelImageWriteBuffers[bufno], pGeode->AccelPitch);
+        giwr.w, 1, pGeode->AccelImageWriteBuffers[bufno], pGeode->Pitch);
 #endif /* if !GX_USE_OFFSCRN_MEM */
     ++giwr.y;
 #else /* if GX_ONE_LINE_AT_A_TIME */
@@ -825,7 +786,7 @@ GXSubsequentImageWriteScanline(ScrnInfoPtr pScrni, int bufno)
 #else /* if !GX_USE_OFFSCRN_MEM */
     gfx2_color_bitmap_to_screen_blt(0, 0, CALC_FBOFFSET(giwr.x, giwr.y),
         giwr.w, blt_height, pGeode->AccelImageWriteBuffers[0],
-        pGeode->AccelPitch);
+        pGeode->Pitch);
 #endif /* if !GX_USE_OFFSCRN_MEM */
     giwr.h -= blt_height;
     giwr.y += blt_height;
@@ -863,16 +824,16 @@ GXSetupForScanlineCPUToScreenColorExpandFill(ScrnInfoPtr pScrni,
         "GXSetupForScanlineCPUToScreenColorExpandFill() fg %#x bg %#x "
         "rop %#x %#x\n", fg, bg, rop, planemask);
     rop &= 0x0F;
-    srcpitch = ((pGeode->AccelPitch + 31) >> 5) << 2;
+    srcpitch = ((pGeode->Pitch + 31) >> 5) << 2;
 #ifndef OPT_ACCEL
     gfx_set_solid_pattern(planemask);
     gfx_set_mono_source(bg, fg, bg == -1 ? 1 : 0);
     gfx_set_raster_operation(planemask == ~0U ? SDfn[rop] : SDfn_PM[rop]);
     gfx2_set_source_stride(srcpitch);
-    gfx2_set_destination_stride(pGeode->AccelPitch);
+    gfx2_set_destination_stride(pGeode->Pitch);
 #else
     {
-        unsigned int stride = (srcpitch << 16) | pGeode->AccelPitch;
+        unsigned int stride = (srcpitch << 16) | pGeode->Pitch;
         unsigned int ROP =
             BPP | (planemask == ~0U ? SDfn[rop] : SDfn_PM[rop]);
         if (bg == -1)
@@ -971,7 +932,7 @@ GXSubsequentColorExpandScanline(ScrnInfoPtr pScrni, int bufno)
             return;
 
         /* convert from bits to dwords */
-        srcpitch = ((pGeode->AccelPitch + 31) >> 5) << 2;
+        srcpitch = ((pGeode->Pitch + 31) >> 5) << 2;
         gfx2_mono_bitmap_to_screen_blt(0, 0, CALC_FBOFFSET(gc2s.x, gc2s.y),
             gc2s.w, blt_height, pGeode->AccelColorExpandBuffers[0], srcpitch);
         gc2s.h -= blt_height;
@@ -1047,8 +1008,8 @@ GXSetupForScreenToScreenColorExpandFill(ScrnInfoPtr pScrni, int fg, int bg,
         gfx_set_solid_pattern(planemask);
         gfx_set_mono_source(bg, fg, bg == -1 ? 1 : 0);
         gfx_set_raster_operation(planemask == ~0U ? SDfn[rop] : SDfn_PM[rop]);
-        gfx2_set_source_stride(pGeode->AccelPitch);
-        gfx2_set_destination_stride(pGeode->AccelPitch);
+        gfx2_set_source_stride(pGeode->Pitch);
+        gfx2_set_destination_stride(pGeode->Pitch);
     }
 #else
     {
@@ -1430,8 +1391,9 @@ GXSubsequentDashedBresenhamLine(ScrnInfoPtr pScrni,
     int trans = (gdln.bg == -1);
     unsigned long pat8x8[2];
 
-    DEBUGMSG(0, (0, 0, "BLine %d, %d, %d, %d, %d, %d, %d\n",
-            x1, y1, absmaj, absmin, err, len, octant));
+    //ErrorF("BLine %d, %d, %d, %d, %d, %d, %d\n" x1, y1, absmaj, absmin, 
+    //err, len, octant);
+
     i = phase >= 32 ? (phase -= 32, 1) : 0;
     n = 32 - phase;
     pat8x8[0] =
@@ -1471,8 +1433,8 @@ GXSubsequentDashedTwoPointLine(ScrnInfoPtr pScrni, int x0, int y0,
     long dx, dy, dmaj, dmin, octant, bias;
     long axial, diagn, err, len, pat8x8[2];
 
-    DBLOG(2, "GXSubsequentDashedTwoPointLine() %d,%d %d,%d, %#x %d\n",
-        x0, y0, x1, y1, flags, phase);
+    //ErrorF("GXSubsequentDashedTwoPointLine() %d,%d %d,%d, %#x %d\n",
+     //   x0, y0, x1, y1, flags, phase);
 
     i = phase >= 32 ? (phase -= 32, 1) : 0;
     n = 32 - phase;
@@ -1524,14 +1486,15 @@ GXWritePixmap(ScrnInfoPtr pScrni, int x, int y, int w, int h,
 {
     GeodeRec *pGeode = GEODEPTR(pScrni);
 
-    DBLOG(2, "GXWritePixmap() %d,%d %dx%d, s%#x sp%d %#x %#x %#x %d %d\n",
-        x, y, w, h, src, srcwidth, rop, planemask, trans, bpp, depth);
+    //ErrorF("GXWritePixmap() %d,%d %dx%d, s%#x sp%d %#x %#x %#x %d %d\n",
+    //    x, y, w, h, src, srcwidth, rop, planemask, trans, bpp, depth);
+
     if (bpp == pScrni->bitsPerPixel) {
         rop &= 0x0F;
         if (rop == GXcopy && trans == -1) {
             gfx_wait_until_idle();
             amd_memory_to_screen_blt((unsigned long)src,
-                (unsigned long)FBADDR(x, y), srcwidth, pGeode->AccelPitch, w,
+                (unsigned long)FBADDR(x, y), srcwidth, pGeode->Pitch, w,
                 h, bpp);
         } else {
             gfx_set_solid_pattern(planemask);
@@ -1605,9 +1568,11 @@ amd_gx_exa_DownloadFromScreen(PixmapPtr pSrc, int x, int y, int w, int h,
 static Bool
 amd_gx_exa_PrepareSolid(PixmapPtr pxMap, int alu, Pixel planemask, Pixel fg)
 {
-    DBLOG(2, "amd_gx_exa_PrepareSolid(%#x,%#x,%#x)\n", alu, planemask, fg);
+
     int dstPitch = exaGetPixmapPitch(pxMap);
     unsigned int ROP = BPP | (planemask == ~0U ? SDfn[alu] : SDfn_PM[alu]);
+
+    //ErrorF("amd_gx_exa_PrepareSolid(%#x,%#x,%#x)\n", alu, planemask, fg);
 
     BLT_MODE = ((ROP ^ (ROP >> 2)) & 0x33) == 0 ? MGP_BM_SRC_MONO : 0;
     if (((ROP ^ (ROP >> 1)) & 0x55) != 0)
@@ -1623,11 +1588,12 @@ amd_gx_exa_PrepareSolid(PixmapPtr pxMap, int alu, Pixel planemask, Pixel fg)
 static void
 amd_gx_exa_Solid(PixmapPtr pxMap, int x1, int y1, int x2, int y2)
 {
-    DBLOG(2, "amd_gx_exa_Solid() at %d,%d %d,%d\n", x1, y1, x2, y2);
     int bpp = (pxMap->drawable.bitsPerPixel + 7) / 8;
     int pitch = exaGetPixmapPitch(pxMap);
     unsigned int offset = exaGetPixmapOffset(pxMap) + pitch * y1 + bpp * x1;
     unsigned int size = ((x2 - x1) << 16) | (y2 - y1);
+
+    //ErrorF("amd_gx_exa_Solid() at %d,%d %d,%d\n", x1, y1, x2, y2);
 
     GU2_WAIT_PENDING;
     WRITE_GP32(MGP_DST_OFFSET, offset);
@@ -1641,10 +1607,11 @@ static Bool
 amd_gx_exa_PrepareCopy(PixmapPtr pxSrc, PixmapPtr pxDst, int dx, int dy,
     int alu, Pixel planemask)
 {
-    DBLOG(2, "amd_gx_exa_PrepareCopy() dx%d dy%d alu %#x %#x\n",
-        dx, dy, alu, planemask);
     GeodeRec *pGeode = GEODEPTR_FROM_PIXMAP(pxDst);
     int dstPitch = exaGetPixmapPitch(pxDst);
+
+    //ErrorF("amd_gx_exa_PrepareCopy() dx%d dy%d alu %#x %#x\n",
+    //  dx, dy, alu, planemask);
 
     pGeode->cpySrcOffset = exaGetPixmapOffset(pxSrc);
     pGeode->cpySrcPitch = exaGetPixmapPitch(pxSrc);
@@ -1668,8 +1635,6 @@ static void
 amd_gx_exa_Copy(PixmapPtr pxDst, int srcX, int srcY, int dstX, int dstY,
     int w, int h)
 {
-    DBLOG(2, "amd_gx_exa_Copy() from %d,%d to %d,%d %dx%d\n", srcX, srcY,
-        dstX, dstY, w, h);
     GeodeRec *pGeode = GEODEPTR_FROM_PIXMAP(pxDst);
     int dstBpp = (pxDst->drawable.bitsPerPixel + 7) / 8;
     int dstPitch = exaGetPixmapPitch(pxDst);
@@ -1680,6 +1645,9 @@ amd_gx_exa_Copy(PixmapPtr pxDst, int srcX, int srcY, int dstX, int dstY,
         exaGetPixmapOffset(pxDst) + dstPitch * dstY + dstBpp * dstX;
     unsigned int size = (w << 16) | h;
     unsigned int blt_mode = BLT_MODE;
+
+    //ErrorF("amd_gx_exa_Copy() from %d,%d to %d,%d %dx%d\n", srcX, srcY,
+    //   dstX, dstY, w, h);
 
     if (pGeode->cpyDx < 0) {
         srcOffset += w * pGeode->cpySrcBpp - 1;
@@ -1863,10 +1831,11 @@ amd_gx_exa_PrepareComposite(int op, PicturePtr pSrc, PicturePtr pMsk,
 {
     int srcPitch;
 
-    DBLOG(2, "amd_gx_exa_PrepareComposite()\n");
     GeodeRec *pGeode = GEODEPTR_FROM_PIXMAP(pxDst);
     amd_gx_exa_fmt_t *sfp, *dfp;
 
+    //ErrorF("amd_gx_exa_PrepareComposite()\n");
+ 
     if ((sfp = amd_gx_exa_check_format(pSrc)) == NULL)
         return FALSE;
     if (sfp->alpha_bits == 0 && usesSrcAlpha(op))
@@ -1900,8 +1869,8 @@ amd_gx_exa_Composite(PixmapPtr pxDst, int srcX, int srcY, int maskX,
     unsigned int sizes, strides, blt_mode, rop, pitch;
     GeodeRec *pGeode = GEODEPTR_FROM_PIXMAP(pxDst);
 
-    DBLOG(2, "amd_gx_exa_Composite() from %d,%d to %d,%d %dx%d\n",
-        srcX, srcY, dstX, dstY, width, height);
+    //ErrorF("amd_gx_exa_Composite() from %d,%d to %d,%d %dx%d\n",
+    //    srcX, srcY, dstX, dstY, width, height);
 
     op = pGeode->cmpOp;
     if (usesPasses(op)) {
@@ -2029,10 +1998,15 @@ GXAccelInit(ScreenPtr pScrn)
     ExaDriverPtr pExa = pGeode->pExa;
 #endif
 
-    gu2_xshift = pScrni->bitsPerPixel >> 4;
-    gu2_pitch = pGeode->AccelPitch;
+    ErrorF("ACCELINIT START\n");;
 
-    switch (pGeode->AccelPitch) {
+    gu2_xshift = pScrni->bitsPerPixel >> 4;
+
+    /* XXX - fixme - this will change - we'll need to update it */
+
+    gu2_pitch = pGeode->Pitch;
+
+    switch (pGeode->Pitch) {
     case 1024:
         gu2_yshift = 10;
         break;
@@ -2049,7 +2023,7 @@ GXAccelInit(ScreenPtr pScrn)
 
 
 #ifdef OPT_ACCEL
-    ACCEL_STRIDE = (pGeode->AccelPitch << 16) | pGeode->AccelPitch;
+    ACCEL_STRIDE = (pGeode->Pitch << 16) | pGeode->Pitch;
     switch (pScrni->bitsPerPixel) {
     case 16:
         BPP = MGP_RM_BPPFMT_565;
@@ -2065,8 +2039,7 @@ GXAccelInit(ScreenPtr pScrn)
 
 #if XF86EXA
     if (pExa && pGeode->useEXA) {
-
-        xf86DrvMsg(pScrni->scrnIndex, X_INFO, "Init EXA\n");
+	ErrorF("Init EXA\n");
 
 	pExa->exa_major = EXA_VERSION_MAJOR;
 	pExa->exa_minor = EXA_VERSION_MINOR;

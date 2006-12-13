@@ -140,11 +140,40 @@ GXSetCursorPosition(ScrnInfoPtr pScrni, int x, int y)
 {
     static unsigned long panOffset = 0;
     GeodeRec *pGeode = GEODEPTR(pScrni);
+    int savex, savey;
     int newX, newY;
 
-    (*pGeode->Rotation) (x, y, pGeode->HDisplay, pGeode->VDisplay, &newX,
-        &newY);
-    (*pGeode->RBltXlat) (newX, newY, 32, 32, &newX, &newY);
+    /* Adjust xf86HWCursor messing about */
+
+    savex = x + pScrni->frameX0;
+    savey = y + pScrni->frameY0;
+
+    switch(pGeode->rotation) {
+    case RR_Rotate_0:
+      newX = savex; newY = savey;
+      break;
+      
+    case RR_Rotate_90:
+      newX = savey;
+      newY = pScrni->pScreen->width - savex;
+      break;
+      
+    case RR_Rotate_180:
+      newX = pScrni->pScreen->width - savex;
+      newY = pScrni->pScreen->height - savey;
+      break;
+      
+    case RR_Rotate_270:
+      newX = pScrni->pScreen->height - savey;
+      newY = savex;
+      break;
+    }
+
+    newX += pScrni->frameX0;
+    newY += pScrni->frameY0;
+
+    //ErrorF("Turned (%d,%d) into (%d,%d)\n", x,y,newX, newY);
+
     if (newX < -31)
         newX = -31;
     if (newY < -31)
@@ -204,7 +233,10 @@ GXLoadCursorImage(ScrnInfoPtr pScrni, unsigned char *src)
                     ++rowp;
                     ++mskp;
                 }
-                (*pGeode->Rotation) (x, y, 32, 32, &newX, &newY);
+                //(*pGeode->Rotation) (x, y, 32, 32, &newX, &newY);
+		newX = x;
+		newY = y;
+
                 i = 7 - i;
                 n = 31 - newX;
                 andMask[newY] |= (((mskb >> i) & 1) << n);
@@ -281,10 +313,7 @@ static Bool
 GXUseHWCursor(ScreenPtr pScrn, CursorPtr pCurs)
 {
     ScrnInfoPtr pScrni = XF86SCRNINFO(pScrn);
+    GeodeRec *pGeode = GEODEPTR(pScrni);
 
-    if (pScrni->currentMode->Flags & V_DBLSCAN)
-        return FALSE;
-    return TRUE;
+    return pGeode->HWCursor;
 }
-
-/* End of File */

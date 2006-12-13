@@ -48,6 +48,8 @@
 #include "amd.h"
 
 typedef unsigned char uchar;
+typedef unsigned int uint;
+typedef unsigned short ushort;
 
 #if DEBUGLVL>0
 extern FILE *zdfp;

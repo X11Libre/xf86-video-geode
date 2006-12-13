@@ -236,7 +236,7 @@ VESARec;
 #define LX_OT_VOP  0x0004
 #define LX_OT_DRGB 0x0008
 
-typedef struct
+typedef struct _geodeRec
 {
     /* Private struct for the server */
     unsigned long cpu_version;
@@ -270,6 +270,13 @@ typedef struct
 #endif
     int Pitch;                         /* display FB pitch */
     int AccelPitch;                    /* accel pitch (may be ShadowPitch) */
+
+    /** new **/
+    int displayPitch;  /* The pitch ofthe visible area */
+    int shadowPitch;   /* The pitch of the shadow area */
+    int displayOffset; /* The offset of the visible area */
+    int displaySize;   /* The size of the visibile area */
+
     Bool HWCursor;
     Bool NoAccel;
     Bool CustomMode;
@@ -300,7 +307,6 @@ typedef struct
     Bool TV_Overscan_On;
 
     Bool Panel;
-    Bool dconPanel;
 
     /* Flatpanel support from Bios */
     int FPBX;                          /* xres */
@@ -320,10 +326,13 @@ typedef struct
 #endif
 
     Bool ShadowFB;
+
+#ifdef HAVE_LX
     unsigned char *ShadowPtr;
     int ShadowSize;
     int ShadowPitch;
     int ShadowInFBMem;
+#endif
 
     int orig_virtX;                    /* original */
     int orig_virtY;
@@ -429,6 +438,17 @@ typedef struct
     unsigned int cmpSrcFmt, cmpDstFmt;
     int cmpOp;
 #endif
+
+    DisplayModePtr curMode;
+    int rotation;
+    int displayWidth;
+    Bool starting;
+    Bool tryCompression;
+    Bool tryHWCursor;
+    unsigned int shadowSize;
+    unsigned int shadowOffset;
+
+    Bool (*CreateScreenResources)(ScreenPtr);
 }
 GeodeRec, *GeodePtr;
 
@@ -476,7 +496,7 @@ enum
     GX_OPTION_TV_OVERSCAN,
     GX_OPTION_SHADOW_FB,
     GX_OPTION_ROTATE,
-    GX_OPTION_FLATPANEL,
+    GX_OPTION_NOPANEL,
     GX_OPTION_FLATPANEL_INFO,
     GX_OPTION_FLATPANEL_IN_BIOS,
     GX_OPTION_COLOR_KEY,
@@ -486,7 +506,7 @@ enum
     GX_OPTION_CUSTOM_MODE,
     GX_OPTION_FBSIZE,
     GX_OPTION_NOVGA,
-    GX_OPTION_DCONPANEL,
+    GX_OPTION_PANEL_GEOMETRY,
     GX_OPTION_DONT_PROGRAM
 }
 GX_GeodeOpts;

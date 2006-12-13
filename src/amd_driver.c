@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006 Advanced Micro Devices, Inc.
+ * Copyright (c) 2006 Avanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -204,14 +204,14 @@ OptionInfoRec GX_GeodeOptions[] = {
     {GX_OPTION_TV_OVERSCAN, "TVOverscan", OPTV_ANYSTR, {0}, FALSE},
     {GX_OPTION_SHADOW_FB, "ShadowFB", OPTV_BOOLEAN, {0}, FALSE},
     {GX_OPTION_ROTATE, "Rotate", OPTV_ANYSTR, {0}, FALSE},
-    {GX_OPTION_FLATPANEL, "FlatPanel", OPTV_BOOLEAN, {0}, FALSE},
+    {GX_OPTION_NOPANEL, "NoPanel", OPTV_BOOLEAN, {0}, FALSE},
     {GX_OPTION_COLOR_KEY, "ColorKey", OPTV_INTEGER, {0}, FALSE},
     {GX_OPTION_OSM_IMG_BUFS, "OSMImageBuffers", OPTV_INTEGER, {0}, FALSE},
     {GX_OPTION_OSM_CLR_BUFS, "OSMColorExpBuffers", OPTV_INTEGER, {0}, FALSE},
     {GX_OPTION_CUSTOM_MODE, "CustomMode", OPTV_BOOLEAN, {0}, FALSE},
     {GX_OPTION_FBSIZE, "FBSize", OPTV_INTEGER, {0}, FALSE },
     {GX_OPTION_NOVGA, "NoVGA", OPTV_BOOLEAN, {0}, FALSE },
-    {GX_OPTION_DCONPANEL, "DconPanel", OPTV_BOOLEAN, {0}, FALSE },
+    {GX_OPTION_PANEL_GEOMETRY, "PanelGeometry", OPTV_STRING, {0}, FALSE },
     {-1, NULL, OPTV_NONE, {0}, FALSE}
 };
 #endif
