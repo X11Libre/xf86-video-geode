@@ -624,11 +624,6 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
     if (pGeode->exaBfrSz <= 0)
 	pGeode->exaBfrSz = 0;
 
-    /* We are going to see if we can get rid of this option */
-
-    if (xf86ReturnOptValBool(GeodeOptions, GX_OPTION_CUSTOM_MODE, FALSE))
-	pGeode->CustomMode = TRUE;
-
     if (pGeode->Panel == TRUE) {
 	if (xf86ReturnOptValBool(GeodeOptions, GX_OPTION_NOPANEL, FALSE))
 	    pGeode->Panel = FALSE;
