@@ -1,5 +1,9 @@
-/* Copyright (c) 2003-2005 Advanced Micro Devices, Inc.
+/* Copyright (c) 2003-2006 Advanced Micro Devices, Inc.
  *
+ * Portioned modeled from xf86-video-intel/src/i830_driver.c
+ * Copyright 2001 VA Linux Systems Inc., Fremont, California.
+ * Copyright \ufffd 2002 by David Dawes
+
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
  * deal in the Software without restriction, including without limitation the
@@ -605,6 +609,21 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
     if (xf86ReturnOptValBool(GeodeOptions, GX_OPTION_NOACCEL, FALSE))
 	pGeode->NoAccel = TRUE;
 
+    pGeode->rotation = RR_Rotate_0;
+    
+    if ((s = xf86GetOptValString(GeodeOptions, GX_OPTION_ROTATE))) {
+      
+      if (!xf86NameCmp(s, "LEFT")) 
+	pGeode->rotation = RR_Rotate_90;      
+      else if (!xf86NameCmp(s, "INVERT")) 
+	pGeode->rotation = RR_Rotate_180;
+      else if (!xf86NameCmp(s, "CCW")) 
+	pGeode->rotation = RR_Rotate_270;
+      else
+	xf86DrvMsg(pScrni->scrnIndex, X_ERROR,
+		   "Invalid rotation %s.\n", s);
+    }
+
     xf86GetOptValInteger(GeodeOptions, GX_OPTION_OSM_IMG_BUFS,
 	&(pGeode->NoOfImgBuffers));
 
@@ -1136,7 +1155,7 @@ GXEnterGraphics(ScreenPtr pScrn, ScrnInfoPtr pScrni)
 
     /* Set up the memory */
     /* XXX - FIXME - when we alow inital rotation, it should be here */
-    GXAllocateMemory(pScrn, pScrni, RR_Rotate_0);
+    GXAllocateMemory(pScrn, pScrni, pGeode->rotation);
 
     /* Clear the framebuffer */
     memset(pGeode->FBBase + pGeode->displayOffset, 0, pGeode->displaySize);
@@ -1429,28 +1448,29 @@ GXScreenInit(int scrnIndex, ScreenPtr pScrn, int argc, char **argv)
     shadowReq.majorversion = 1;
     shadowReq.minorversion = 1;
 
-    rotate = RR_Rotate_0;
-
     if (LoadSubModule(pScrni->module, "shadow",
 	    NULL, NULL, NULL, &shadowReq, &maj, &min)) {
 
 	rotate = RR_Rotate_0 | RR_Rotate_90 | RR_Rotate_180 | RR_Rotate_270;
 	shadowSetup(pScrn);
     } else {
-	LoaderErrorMsg(NULL, "shadow", maj, min);
+      LoaderErrorMsg(NULL, "shadow", maj, min);
+      xf86DrvMsg(pScrni->scrnIndex, X_ERROR,
+		 "Error loading shadow - rotation not available.\n");
+      
+      if (pGeode->rotation != RR_Rotate_0) 
 	xf86DrvMsg(pScrni->scrnIndex, X_ERROR,
-	    "Error loading shadow - rotation not available.\n");
+		   "Reverting back to normal rotation.\n");
+	
+      rotate = pGeode->rotation = RR_Rotate_0;      
     }
-
+    
     GXRandRInit(pScrn, rotate);
 
     pGeode->PointerMoved = pScrni->PointerMoved;
     pScrni->PointerMoved = GXPointerMoved;
     pGeode->CreateScreenResources = pScrn->CreateScreenResources;
     pScrn->CreateScreenResources = GXCreateScreenResources;
-
-    /* XXX - Allow user to specify initial rotation */
-    pGeode->rotation = RR_Rotate_0;
 
     pGeode->CloseScreen = pScrn->CloseScreen;
     pScrn->CloseScreen = GXCloseScreen;
