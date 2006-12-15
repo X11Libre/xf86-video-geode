@@ -1998,8 +1998,6 @@ GXAccelInit(ScreenPtr pScrn)
     ExaDriverPtr pExa = pGeode->pExa;
 #endif
 
-    ErrorF("ACCELINIT START\n");;
-
     gu2_xshift = pScrni->bitsPerPixel >> 4;
 
     /* XXX - fixme - this will change - we'll need to update it */
@@ -2039,8 +2037,6 @@ GXAccelInit(ScreenPtr pScrn)
 
 #if XF86EXA
     if (pExa && pGeode->useEXA) {
-	ErrorF("Init EXA\n");
-
 	pExa->exa_major = EXA_VERSION_MAJOR;
 	pExa->exa_minor = EXA_VERSION_MINOR;
 
