@@ -308,7 +308,9 @@ GXAllocateMemory(ScreenPtr pScrn, ScrnInfoPtr pScrni, int rotate)
 	}
     }
 
-    /* Set the memory available for the offscreen pixmaps */
+    /* XAA always exists - we can't remove it on demand like we can with EXA.
+       So we assume the worse, and only give XAA enough offspace room to
+       account for any eventuality that RandR might throw at us. */
 
     if (!pGeode->NoAccel) {
 
@@ -319,9 +321,6 @@ GXAllocateMemory(ScreenPtr pScrn, ScrnInfoPtr pScrni, int rotate)
 	    pExa->memorySize = fboffset + fbavail;
 	}
 
-	/* XXX - We don't use XAA if we are rotated, so this should be fine.  Changing the 
-	 * resolution will hurt us though */
-
 	if (!pGeode->useEXA) {
 
 	    if (!xf86FBManagerRunning(pScrn)) {
@@ -331,15 +330,10 @@ GXAllocateMemory(ScreenPtr pScrn, ScrnInfoPtr pScrni, int rotate)
 		RegionRec OffscreenRegion;
 		BoxRec AvailBox;
 
-		/* We only get one shot at allocating offscreen memory for XAA */
-		/* That means if the mode changes with RandR, we'll probably be out of luck. 
-		 * we can compensate for rotation by offsetting the start of offscreen memory to account
-		 * for the shadow framebuffer even if we're not using it right now 
-		 */
+		/* Assume the shadow FB exists even if it doesnt */
 
 		if (pGeode->shadowSize == 0) {
 		    size = (pScrn->width * bytpp) * pScrni->virtualX;
-
 		    offset += size;
 		    avail -= size;
 		}
@@ -709,9 +703,6 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
     else
 	pScrni->videoRam = pGeode->pEnt->device->videoRam;
 
-    if (!GXMapMem(pScrni))
-	return FALSE;
-
     pGeode->maxWidth = GX_MAX_WIDTH;
     pGeode->maxHeight = GX_MAX_HEIGHT;
 
@@ -1075,6 +1066,9 @@ static Bool
 GXEnterGraphics(ScreenPtr pScrn, ScrnInfoPtr pScrni)
 {
     GeodeRec *pGeode = GEODEPTR(pScrni);
+
+    if (!GXMapMem(pScrni))
+        return FALSE;
 
     gfx_wait_until_idle();
 

@@ -90,7 +90,7 @@ GXRotate(ScrnInfoPtr pScrni, DisplayModePtr mode)
     GeodeRec *pGeode = GEODEPTR(pScrni);
     ShadowUpdateProc update;
     Rotation curr = pGeode->rotation;
-    unsigned int pitch, dw;
+    unsigned int curdw = pScrni->displayWidth;
     PixmapPtr pPixmap;
     BOOL ret;
 
@@ -154,5 +154,37 @@ GXRotate(ScrnInfoPtr pScrni, DisplayModePtr mode)
 	PixmapBytePad(pScrni->displayWidth, pScrni->pScreen->rootDepth),
 	(pointer) (pGeode->FBBase + pScrni->fbOffset));
 
+    /* Don't use XAA pixmap cache or offscreen pixmaps when rotated */
+
+    if (pGeode->AccelInfoRec) {
+        if (pGeode->rotation == RR_Rotate_0) {
+            pGeode->AccelInfoRec->Flags = LINEAR_FRAMEBUFFER | OFFSCREEN_PIXMAPS | PIXMAP_CACHE;
+            pGeode->AccelInfoRec->UsingPixmapCache = TRUE;
+            pGeode->AccelInfoRec->maxOffPixWidth = 0;
+            pGeode->AccelInfoRec->maxOffPixHeight = 0;
+        }
+        else {
+            pGeode->AccelInfoRec->Flags = LINEAR_FRAMEBUFFER;
+            pGeode->AccelInfoRec->UsingPixmapCache = FALSE;
+            pGeode->AccelInfoRec->maxOffPixWidth = 1;
+            pGeode->AccelInfoRec->maxOffPixHeight = 1;
+        }
+    }
+
     return TRUE;
+
+error:
+    /* Restore the old rotation */
+    pScrni->displayWidth = curdw;
+
+    if (curr & (RR_Rotate_0 | RR_Rotate_180)) {
+        pScrni->pScreen->width = pScrni->virtualX;
+        pScrni->pScreen->height = pScrni->virtualY;
+    } else {
+        pScrni->pScreen->width = pScrni->virtualY;
+	pScrni->pScreen->height = pScrni->virtualX;
+    }
+
+    pGeode->rotation = curr;
+    return FALSE;
 }
