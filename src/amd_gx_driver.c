@@ -887,18 +887,21 @@ GXSetVideoMode(ScrnInfoPtr pScrni, DisplayModePtr pMode)
     if (pMode->Flags & V_NVSYNC)
 	flags |= 2;
 
-    /* XXX Fixme - for now, we'll use the fixed settings for panel - but I would
-     * like to see these go away too 
-     */
-
     /* XXX Question - why even use set_display_mode at all - shouldn't the
      * mode timings be the same that we advertise? */
 
-    if (pGeode->Panel) {
+    /* Only use the panel mode for built in modes */
+
+    if ((pMode->type && pMode->type != M_T_USERDEF) && pGeode->Panel) {
 	GFX(set_fixed_timings(pGeode->FPBX, pGeode->FPBY,
 		pMode->CrtcHDisplay, pMode->CrtcVDisplay,
 		pScrni->bitsPerPixel));
     } else {
+	if (pGeode->Panel)
+		GFX(set_panel_present(pGeode->FPBX, pGeode->FPBY,
+		pMode->CrtcHDisplay, pMode->CrtcVDisplay,
+		pScrni->bitsPerPixel));
+
 	GFX(set_display_timings(pScrni->bitsPerPixel, flags,
 		pMode->CrtcHDisplay, pMode->CrtcHBlankStart,
 		pMode->CrtcHSyncStart, pMode->CrtcHSyncEnd,
@@ -1489,7 +1492,10 @@ GXValidMode(int scrnIndex, DisplayModePtr pMode, Bool Verbose, int flags)
     GeodeRec *pGeode = GEODEPTR(pScrni);
     int p, ret;
 
-    if (pMode->type != M_T_USERDEF) {
+    /* Not sure if this is an X bug or not - but on my current build,
+     * user defined modes pass a type of 0 */
+
+    if (pMode->type && pMode->type != M_T_USERDEF) {
 
 	if (pGeode->Panel) {
 	    if (pMode->CrtcHDisplay > pGeode->FPBX ||
@@ -1546,6 +1552,8 @@ static void
 GXFreeScreen(int scrnIndex, int flags)
 {
     GeodeRec *pGeode = GEODEPTR(xf86Screens[scrnIndex]);
+
+    /* XXX FIXME - Something segfaults here when no good modes are found */
 
     if (pGeode->useVGA) {
 	if (xf86LoaderCheckSymbol("vgaHWFreeHWRec"))
