@@ -583,8 +583,7 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
     pGeode->tryCompression = TRUE;
 
     pGeode->NoAccel = FALSE;
-    pGeode->CustomMode = FALSE;
-    pGeode->useEXA = FALSE;
+    pGeode->useEXA = TRUE;
 
     if (pGeode->DetectedChipSet == GX_TFT)
 	pGeode->Panel = TRUE;
@@ -650,8 +649,11 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
     panelgeo = xf86GetOptValString(GeodeOptions, GX_OPTION_PANEL_GEOMETRY);
 
     if ((s = xf86GetOptValString(GeodeOptions, GX_OPTION_ACCEL_METHOD))) {
-	if (!xf86NameCmp(s, "EXA"))
-	    pGeode->useEXA = TRUE;
+	if (!xf86NameCmp(s, "XAA"))
+	    pGeode->useEXA = FALSE;
+	else if (xf86NameCmp(s, "EXA"))
+		xf86DrvMsg(pScrni->scrnIndex, X_ERROR,
+		"Unknown accleration method %s.  Defaulting to EXA.\n", s);
     }
 
     xf86DrvMsg(pScrni->scrnIndex, X_INFO,
@@ -770,13 +772,9 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
     xf86LoaderReqSymLists(amdFbSymbols, NULL);
 
     if (pGeode->NoAccel == FALSE) {
-	const char *module = "xaa";
-	const char **symbols = &amdXaaSymbols[0];
-
-	if (pGeode->useEXA) {
-	    module = "exa";
-	    symbols = &amdExaSymbols[0];
-	}
+	const char *module = (pGeode->useEXA) ? "exa" : "xaa";
+	const char **symbols = (pGeode->useEXA) ?
+	&amdExaSymbols[0] : &amdXaaSymbols[0];
 
 	if (!xf86LoadSubModule(pScrni, module)) {
 	    GXFreeRec(pScrni);
