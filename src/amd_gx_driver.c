@@ -487,9 +487,8 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
     pGeode->useVGA = FALSE;
 
     if (xf86LoadSubModule(pScrni, "vgahw")) {
-      if (vgaHWGetHWRec(pScrni)) {	
+      if (vgaHWGetHWRec(pScrni)) {
 	pGeode->useVGA = GXCheckVGA(pScrni);
-	ErrorF("VGA support is %d\n", pGeode->useVGA);
       }
     }
 
@@ -678,9 +677,6 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
 	    pGeode->useVGA = FALSE;
 	}
 #endif
-
-	if (!xf86LoadSubModule(pScrni, "vgahw"))
-	    return FALSE;
 
 	xf86LoaderReqSymLists(amdVgahwSymbols, NULL);
 	pGeode->FBVGAActive = gu2_get_vga_active();
@@ -1090,7 +1086,6 @@ GXEnterGraphics(ScreenPtr pScrn, ScrnInfoPtr pScrni)
 
     if (pGeode->useVGA) {
 	vgaHWPtr pvgaHW = VGAHWPTR(pScrni);
-
 	pGeode->FBBIOSMode = pvgaHW->readCrtc(pvgaHW, 0x040);
     }
 
@@ -1287,21 +1282,18 @@ GXScreenInit(int scrnIndex, ScreenPtr pScrn, int argc, char **argv)
     int maj, min, ret, rotate;
     BOOL shadowfb = TRUE;
 
-    /* FIXME:  VGA stuff - what does this do? */
-
-    /* 
-     * if (pGeode->useVGA) {
-     * if (!vgaHWGetHWRec(pScrni))
-     * return FALSE;
-     * if (!vgaHWMapMem(pScrni))
-     * return FALSE;
-     * 
-     * vgaHWGetIOBase(VGAHWPTR(pScrni));
-     * }
-     */
-
     pGeode->starting = TRUE;
 
+      /* If we are using VGA then go ahead and map the memory */
+
+    if (pGeode->useVGA) {
+
+      if (!vgaHWMapMem(pScrni))
+	return FALSE;
+
+      vgaHWGetIOBase(VGAHWPTR(pScrni));
+    }
+    
     if (!pGeode->NoAccel) {
 
 	if (pGeode->useEXA) {
