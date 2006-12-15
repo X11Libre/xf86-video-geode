@@ -451,6 +451,26 @@ GXMapMem(ScrnInfoPtr pScrni)
     return TRUE;
 }
 
+/* Check to see if VGA exists - we map the space and look for a
+   signature - if it doesn't match exactly, then we assume no VGA.
+*/
+
+static Bool
+GXCheckVGA(ScrnInfoPtr pScrni) {
+
+  char *vgasig = "IBM VGA Compatible";
+  vgaHWPtr pvgaHW = VGAHWPTR(pScrni);
+  int ret;
+
+  if (!vgaHWMapMem(pScrni))
+    return FALSE;
+
+  ret = memcmp(pvgaHW->Base + 0x1E, "IBM VGA Compatible", 18);
+  vgaHWUnmapMem(pScrni);
+
+  return ret ? FALSE : TRUE;
+}
+  
 static Bool
 GXPreInit(ScrnInfoPtr pScrni, int flags)
 {
@@ -469,8 +489,19 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
     if (pGeode == NULL)
 	return FALSE;
 
+    /* Probe for VGA */
+    pGeode->useVGA = FALSE;
+
+    if (xf86LoadSubModule(pScrni, "vgahw")) {
+      if (vgaHWGetHWRec(pScrni)) {	
+	pGeode->useVGA = GXCheckVGA(pScrni);
+	ErrorF("VGA support is %d\n", pGeode->useVGA);
+      }
+    }
+
 #if INT10_SUPPORT
-    pGeode->vesa = xcalloc(sizeof(VESARec), 1);
+    if (pGeode->useVGA)
+      pGeode->vesa = xcalloc(sizeof(VESARec), 1);
 #endif
 
     if (pScrni->numEntities != 1)
@@ -483,9 +514,9 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
 
     /* ISSUE - this won't work without VGA, but its too early to know if we can use VGA or not */
 
-    if (flags & PROBE_DETECT) {
-	GXProbeDDC(pScrni, pGeode->pEnt->index);
-	return TRUE;
+    if (pGeode->useVGA && (flags & PROBE_DETECT)) {
+      GXProbeDDC(pScrni, pGeode->pEnt->index);
+      return TRUE;
     }
 
     pGeode->cpu_version = gfx_detect_cpu();
@@ -549,9 +580,8 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
     xf86ProcessOptions(pScrni->scrnIndex, pScrni->options, GeodeOptions);
 
     /* Set up our various options that may get reversed as we go on */
-    pGeode->useVGA = TRUE;
-    pGeode->FBVGAActive = FALSE;
 
+    pGeode->FBVGAActive = FALSE;
     pGeode->tryHWCursor = TRUE;
     pGeode->tryCompression = TRUE;
 
@@ -567,9 +597,6 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
     pGeode->NoOfImgBuffers = DEFAULT_IMG_LINE_BUFS;
     pGeode->NoOfColorExpandLines = DEFAULT_CLR_LINE_BUFS;
     pGeode->exaBfrSz = DEFAULT_EXA_SCRATCH_BFRSZ;
-
-    if (xf86ReturnOptValBool(GeodeOptions, GX_OPTION_NOVGA, FALSE))
-	pGeode->useVGA = FALSE;
 
     xf86GetOptValBool(GeodeOptions, GX_OPTION_HW_CURSOR,
 	&pGeode->tryHWCursor);

@@ -210,7 +210,6 @@ OptionInfoRec GX_GeodeOptions[] = {
     {GX_OPTION_OSM_CLR_BUFS, "OSMColorExpBuffers", OPTV_INTEGER, {0}, FALSE},
     {GX_OPTION_CUSTOM_MODE, "CustomMode", OPTV_BOOLEAN, {0}, FALSE},
     {GX_OPTION_FBSIZE, "FBSize", OPTV_INTEGER, {0}, FALSE },
-    {GX_OPTION_NOVGA, "NoVGA", OPTV_BOOLEAN, {0}, FALSE },
     {GX_OPTION_PANEL_GEOMETRY, "PanelGeometry", OPTV_STRING, {0}, FALSE },
     {-1, NULL, OPTV_NONE, {0}, FALSE}
 };
