@@ -1,4 +1,4 @@
-/* Copyright (c) 2003-2005 Advanced Micro Devices, Inc.
+/* Copyright (c) 2003-2006 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -233,9 +233,25 @@ GXLoadCursorImage(ScrnInfoPtr pScrni, unsigned char *src)
                     ++rowp;
                     ++mskp;
                 }
-                //(*pGeode->Rotation) (x, y, 32, 32, &newX, &newY);
-		newX = x;
-		newY = y;
+
+		switch(pGeode->rotation) {
+		case RR_Rotate_0:
+			newX = x;
+			newY = y;
+			break;
+		case RR_Rotate_90:
+			 newX = y;
+			 newY = 31 - x;
+			 break;
+		case RR_Rotate_180:
+			newX = 31 - x;
+			newY = 31 - y;
+			break;
+		case RR_Rotate_270:
+			newX = 31 - y;
+			newY = x;
+			break;
+		}
 
                 i = 7 - i;
                 n = 31 - newX;
