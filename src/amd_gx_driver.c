@@ -597,6 +597,10 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
     xf86GetOptValBool(GeodeOptions, GX_OPTION_HW_CURSOR,
 	&pGeode->tryHWCursor);
 
+    if (!xf86GetOptValInteger(GeodeOptions, GX_OPTION_FBSIZE,
+			       &(pGeode->FBAvail)))
+	pGeode->FBAvail = 0;
+
     /* For compatability - allow SWCursor too */
 
     if (xf86ReturnOptValBool(GeodeOptions, GX_OPTION_SW_CURSOR, FALSE))
@@ -703,7 +707,8 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
 	pGeode->FBVGAActive = gu2_get_vga_active();
     }
 
-    pGeode->FBAvail = gfx_get_frame_buffer_size();
+    if (pGeode->FBAvail  == 0)
+	pGeode->FBAvail = gfx_get_frame_buffer_size();
 
     if (pScrni->memPhysBase == 0)
 	pScrni->memPhysBase = gfx_get_frame_buffer_base();
