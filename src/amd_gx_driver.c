@@ -57,7 +57,6 @@
 
 /* Chipset types */
 
-#define GX1 0x1
 #define GX  0x2
 
 #define GX_CRT 0x04 | GX
@@ -413,26 +412,29 @@ GXDoDDC(ScrnInfoPtr pScrni, int index)
     return info;
 }
 
+extern unsigned long gfx_gx2_scratch_base;
+
 static Bool
 GXMapMem(ScrnInfoPtr pScrni)
 {
     GeodeRec *pGeode = GEODEPTR(pScrni);
     int index = pScrni->scrnIndex;
 
-    gfx_virt_regptr = (unsigned char *)xf86MapVidMem(index, VIDMEM_MMIO,
-	gfx_get_cpu_register_base(), pGeode->cpu_reg_size);
+    pciVideoRec *pci = xf86GetPciInfoForEntity(pGeode->pEnt->index);
 
-    if (pGeode->DetectedChipSet & GX)
-	gfx_virt_gpptr = (unsigned char *)xf86MapVidMem(index, VIDMEM_MMIO,
-	    gfx_get_graphics_register_base(), pGeode->gp_reg_size);
-    else
-	gfx_virt_spptr = gfx_virt_regptr;
+    gfx_virt_regptr = (unsigned char *)xf86MapVidMem(index, VIDMEM_MMIO,
+	pci->memBase[2], pci->size[2]);
+
+    gfx_virt_gpptr = (unsigned char *)xf86MapVidMem(index, VIDMEM_MMIO,
+        pci->memBase[1], pci->size[1]);
 
     gfx_virt_vidptr = (unsigned char *)xf86MapVidMem(index, VIDMEM_MMIO,
-	gfx_get_vid_register_base(), pGeode->vid_reg_size);
+	pci->memBase[3], pci->size[3]);
 
     gfx_virt_fbptr = (unsigned char *)xf86MapVidMem(index, VIDMEM_FRAMEBUFFER,
-	pGeode->FBLinearAddr, pGeode->FBAvail);
+	pci->memBase[0], pGeode->FBAvail);
+
+    gfx_gx2_scratch_base = pGeode->FBAvail - 0x4000;
 
     XpressROMPtr = xf86MapVidMem(index, VIDMEM_FRAMEBUFFER, 0xF0000, 0x10000);
 
@@ -442,8 +444,7 @@ GXMapMem(ScrnInfoPtr pScrni)
 	(!gfx_virt_vidptr) || (!gfx_virt_fbptr))
 	return FALSE;
 
-    xf86DrvMsg(index, X_INFO, "Found Geode %lx %lx %lx %p\n",
-	pGeode->cpu_version, pGeode->vid_version,
+    xf86DrvMsg(index, X_INFO, "Found Geode %lx %p\n",
 	pGeode->FBAvail, pGeode->FBBase);
 
     return TRUE;
@@ -475,9 +476,10 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
     GeodePtr pGeode;
     ClockRangePtr GeodeClockRange;
     OptionInfoRec *GeodeOptions = &GX_GeodeOptions[0];
-
+    int ret;
+    QQ_WORD msrValue;
     rgb defaultWeight = { 0, 0, 0 };
-    int ret, modecnt;
+    int modecnt;
     int maj, min;
     char *s, *panelgeo;
     char **modes;
@@ -516,34 +518,17 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
       return TRUE;
     }
 
-    pGeode->cpu_version = gfx_detect_cpu();
+    gfx_msr_init();
 
-    if ((pGeode->cpu_version & 0xFF) == GFX_CPU_REDCLOUD) {
-	int ret;
-	QQ_WORD msrValue;
+    /* Note that we assume that we are on a GX */
 
-	pGeode->DetectedChipSet = GX_CRT;
+    pGeode->DetectedChipSet = GX_CRT;
+    ret = gfx_msr_read(RC_ID_DF, MBD_MSR_CONFIG, &msrValue);
 
-	ret = gfx_msr_read(RC_ID_DF, MBD_MSR_CONFIG, &msrValue);
-
-	if (!ret)
-	    pGeode->DetectedChipSet =
+    if (!ret)
+	pGeode->DetectedChipSet =
 		((msrValue.low & RCDF_CONFIG_FMT_MASK) ==
 		RCDF_CONFIG_FMT_FP) ? GX_TFT : GX_CRT;
-    } else
-	pGeode->DetectedChipSet = GX1;
-
-    pGeode->vid_version = gfx_detect_video();
-    pGeode->FBLinearAddr = gfx_get_frame_buffer_base();
-
-    if (pGeode->DetectedChipSet & GX) {
-	pGeode->cpu_reg_size = 0x4000;
-	pGeode->gp_reg_size = 0x4000;
-	pGeode->vid_reg_size = 0x4000;
-    } else {
-	pGeode->cpu_reg_size = 0x9000;
-	pGeode->vid_reg_size = 0x1000;
-    }
 
     /* Fill in the monitor information */
     pScrni->monitor = pScrni->confScreen->monitor;

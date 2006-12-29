@@ -43,7 +43,6 @@ amd_drv_la_SOURCES = \
         amd_gx_driver.c\
         amd_gx_accel.c \
         amd_gx_cursor.c \
-        amd_gx_dga.c \
         amd_gx_video.c \
         amd_gx_regacc.c \
 	amd_gx_rotate.c \

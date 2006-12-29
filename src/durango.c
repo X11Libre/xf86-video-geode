@@ -49,7 +49,7 @@
 #define GFX_INIT_GU1           0  /* SC1200/GX1        */
 #define GFX_INIT_GU2           1  /* GX                */
 
-#define GFX_MSR_DYNAMIC        1  /* runtime selection */
+#define GFX_MSR_DYNAMIC        0  /* runtime selection */
 #define GFX_MSR_REDCLOUD       1  /* GX */
 
 #define GFX_2DACCEL_DYNAMIC    0       /* runtime selection                                */
@@ -88,10 +88,6 @@
 #include "gfx_priv.h"
 #include "gfx_regs.h"
 #include "gfx_defs.h"
-
-#if GFX_MSR_DYNAMIC
-int gfx_msr_type = 0;
-#endif
 
 unsigned char *gfx_virt_regptr = (unsigned char *)0x40000000;
 unsigned char *gfx_virt_fbptr = (unsigned char *)0x40800000;
