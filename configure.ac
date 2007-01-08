@@ -54,6 +54,12 @@ AC_ARG_ENABLE(geodegx-panel,
 	      [ ], 
 	      [ AMD_CFLAGS="-DPNL_SUP $AMD_CFLAGS" ])
 
+AC_ARG_ENABLE(visibility,
+	      AC_HELP_STRING([--enable-visibility],
+			     [Enable GCC visibility optimizations]),
+			     [ AMD_CFLAGS="$AMD_CFLAGS -fvisibility=hidden" ],
+			     [ : ])
+
 # Checks for extensions
 XORG_DRIVER_CHECK_EXT(RANDR, randrproto)
 XORG_DRIVER_CHECK_EXT(RENDER, renderproto)
