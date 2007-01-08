@@ -131,28 +131,31 @@ dcon_avail(void)
     return cmos_read(440 / 8) & 1;
 }
 
-void
+Bool
 gx_dcon_init(ScrnInfoPtr pScrni)
 {
-
+    GeodeRec *pGeode = GEODEPTR(pScrni);
     int rev = boardrev(pScrni);
     int i;
 
     if (rev == -1) {
 	xf86DrvMsg(pScrni->scrnIndex, X_DEFAULT,
 	    "This is not an OLPC board\n");
-	return;
+	return FALSE;
     }
     if (dcon_avail() == 0) {
 	xf86DrvMsg(pScrni->scrnIndex, X_DEFAULT, "No DCON is present\n");
-	return;
+	return FALSE;
     }
 
     xf86DrvMsg(pScrni->scrnIndex, X_DEFAULT, "OLPC board revision %s\n",
 	rev == REV_TESTB ? "testB" : "testA");
     xf86DrvMsg(pScrni->scrnIndex, X_DEFAULT, "DCON detected.\n");
 
-    /* FIXME:  Panel setup should go here */
+    /* Panel size setup */
+    pGeode->FPBX = DCON_DEFAULT_XRES;
+    pGeode->FPBY = DCON_DEFAULT_YRES;
+
     /* FIXME:  Mode setup should go here */
     /* FIXME:  Controller setup should go here */
 
@@ -170,4 +173,6 @@ gx_dcon_init(ScrnInfoPtr pScrni)
 		((r >> 2) << 16) | ((g >> 1) << 8) | (b >> 2);
 	}
     }
+
+    return TRUE;
 }
