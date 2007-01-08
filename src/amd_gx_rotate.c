@@ -31,7 +31,7 @@
 #include "shadow.h"
 #include "amd.h"
 
-void *
+static void *
 GXWindowLinear(ScreenPtr pScreen, CARD32 row, CARD32 offset, int mode,
     CARD32 * size, void *closure)
 {
@@ -45,40 +45,42 @@ GXWindowLinear(ScreenPtr pScreen, CARD32 row, CARD32 offset, int mode,
 }
 
 static void
-GXGetUpdateFunc(ScrnInfoPtr pScrni, int rotate, ShadowUpdateProc * update)
+GXUpdate(ScreenPtr pScreen, shadowBufPtr pBuf)
 {
-    *update = NULL;
+    ScrnInfoPtr pScrni = xf86Screens[pScreen->myNum];
+    GeodeRec *pGeode = GEODEPTR(pScrni);
+    int rotate = pGeode->rotation;
 
     switch (rotate) {
     case RR_Rotate_90:
 
 	if (pScrni->bitsPerPixel == 8)
-	    *update = shadowUpdateRotate8_90;
+	    shadowUpdateRotate8_90(pScreen, pBuf);
 	else if (pScrni->bitsPerPixel == 16)
-	    *update = shadowUpdateRotate16_90;
+	    shadowUpdateRotate16_90(pScreen, pBuf);
 	else
-	    *update = shadowUpdateRotate32_90;
+	    shadowUpdateRotate32_90(pScreen, pBuf);
 
 	break;
 
     case RR_Rotate_180:
 
 	if (pScrni->bitsPerPixel == 8)
-	    *update = shadowUpdateRotate8_180;
+	    shadowUpdateRotate8_180(pScreen, pBuf);
 	else if (pScrni->bitsPerPixel == 16)
-	    *update = shadowUpdateRotate16_180;
+	    shadowUpdateRotate16_180(pScreen, pBuf);
 	else
-	    *update = shadowUpdateRotate32_180;
+	    shadowUpdateRotate32_180(pScreen, pBuf);
 
 	break;
 
     case RR_Rotate_270:
 	if (pScrni->bitsPerPixel == 8)
-	    *update = shadowUpdateRotate8_270;
+	    shadowUpdateRotate8_270(pScreen, pBuf);
 	else if (pScrni->bitsPerPixel == 16)
-	    *update = shadowUpdateRotate16_270;
+	    shadowUpdateRotate16_270(pScreen, pBuf);
 	else
-	    *update = shadowUpdateRotate32_270;
+	    shadowUpdateRotate32_270(pScreen, pBuf);
 
 	break;
     }
@@ -88,7 +90,6 @@ Bool
 GXRotate(ScrnInfoPtr pScrni, DisplayModePtr mode)
 {
     GeodeRec *pGeode = GEODEPTR(pScrni);
-    ShadowUpdateProc update;
     Rotation curr = pGeode->rotation;
     unsigned int curdw = pScrni->displayWidth;
     PixmapPtr pPixmap;
@@ -130,9 +131,8 @@ GXRotate(ScrnInfoPtr pScrni, DisplayModePtr mode)
 
     if (pGeode->rotation != RR_Rotate_0) {
 
-	GXGetUpdateFunc(pScrni, pGeode->rotation, &update);
 	ret =
-	    shadowAdd(pScrni->pScreen, pPixmap, update, GXWindowLinear,
+	    shadowAdd(pScrni->pScreen, pPixmap, GXUpdate, GXWindowLinear,
 	    pGeode->rotation, NULL);
 
 	/* XXX - FIXME - bail gracefully */
