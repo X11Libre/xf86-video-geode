@@ -35,6 +35,8 @@
 #include "config.h"
 #endif
 
+#include <sys/types.h>
+
 /* Xfree86 header files */
 
 #include "vgaHW.h"
