@@ -729,20 +729,21 @@ GXAllocateMemory(ScrnInfoPtr pScrni, void **memp, int numlines)
 {
   ScreenPtr pScrn = screenInfo.screens[pScrni->scrnIndex];
   GeodeRec *pGeode = GEODEPTR(pScrni);
-  long displayWidth = pGeode->AccelPitch / ((pScrni->bitsPerPixel + 7) / 8);
+  //long displayWidth = pGeode->Pitch / ((pScrni->bitsPerPixel + 7) / 8);
+  int size = numlines * pGeode->displayWidth;
 
 #if XF86EXA
     if (pGeode->useEXA) {
       ExaOffscreenArea *area = *memp;
 
       if (area != NULL) {
-          if (area->size >= (numlines * displayWidth))
+          if (area->size >= size)
 	      return area->offset;
 
 	  exaOffscreenFree(pScrni->pScreen, area);
       }
 
-      area = exaOffscreenAlloc(pScrni->pScreen, numlines * displayWidth, 16,
+      area = exaOffscreenAlloc(pScrni->pScreen, size, 16,
       TRUE, GXVideoSave, NULL);
       *memp = area;
 
@@ -759,13 +760,13 @@ GXAllocateMemory(ScrnInfoPtr pScrni, void **memp, int numlines)
 		return (area->box.y1 * pGeode->Pitch);
 
 
-        if (xf86ResizeOffscreenArea(area, displayWidth, numlines))
+        if (xf86ResizeOffscreenArea(area, pGeode->displayWidth, numlines))
 		return (area->box.y1 * pGeode->Pitch);
 
         xf86FreeOffscreenArea(area);
       }
 
-      new_area = xf86AllocateOffscreenArea(pScrn, displayWidth,
+      new_area = xf86AllocateOffscreenArea(pScrn, pGeode->displayWidth,
 					   numlines, 0, NULL, NULL, NULL);
 
       if (!new_area) {
@@ -774,13 +775,13 @@ GXAllocateMemory(ScrnInfoPtr pScrni, void **memp, int numlines)
         xf86QueryLargestOffscreenArea(pScrn, &max_w, &max_h, 0,
 				      FAVOR_WIDTH_THEN_AREA, PRIORITY_EXTREME);
 
-        if ((max_w < displayWidth) || (max_h < numlines)) {
-	  xf86DrvMsg(pScrni->scrnIndex, X_ERROR, "No room - how sad %x, %x, %x, %x\n", max_w, displayWidth, max_h, numlines);
+        if ((max_w < pGeode->displayWidth) || (max_h < numlines)) {
+	  xf86DrvMsg(pScrni->scrnIndex, X_ERROR, "No room - how sad %x, %x, %x, %x\n", max_w, pGeode->displayWidth, max_h, numlines);
 	  return 0;
 	}
 
         xf86PurgeUnlockedOffscreenAreas(pScrn);
-        new_area = xf86AllocateOffscreenArea(pScrn, displayWidth,
+        new_area = xf86AllocateOffscreenArea(pScrn, pGeode->displayWidth,
 					     numlines, 0, NULL, NULL, NULL);
       }
 
