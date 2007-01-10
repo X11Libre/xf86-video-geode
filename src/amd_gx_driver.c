@@ -469,7 +469,7 @@ GXCheckVGA(ScrnInfoPtr pScrni) {
 
   return ret ? FALSE : TRUE;
 }
-  
+
 static Bool
 GXPreInit(ScrnInfoPtr pScrni, int flags)
 {
@@ -736,7 +736,6 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
 
     if (modecnt <= 0) {
 	xf86DrvMsg(pScrni->scrnIndex, X_ERROR, "No valid modes were found\n");
-	GXFreeRec(pScrni);
 	return FALSE;
     }
 
@@ -744,7 +743,6 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
 
     if (pScrni->modes == NULL) {
 	xf86DrvMsg(pScrni->scrnIndex, X_ERROR, "No valid modes were found\n");
-	GXFreeRec(pScrni);
 	return FALSE;
     }
 
@@ -757,7 +755,6 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
     /* Load the modules we'll need */
 
     if (xf86LoadSubModule(pScrni, "fb") == NULL) {
-	GXFreeRec(pScrni);
 	return FALSE;
     }
 
@@ -769,7 +766,6 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
 	&amdExaSymbols[0] : &amdXaaSymbols[0];
 
 	if (!xf86LoadSubModule(pScrni, module)) {
-	    GXFreeRec(pScrni);
 	    return FALSE;
 	}
 
@@ -778,7 +774,6 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
 
     if (pGeode->tryHWCursor == TRUE) {
 	if (!xf86LoadSubModule(pScrni, "ramdac")) {
-	    GXFreeRec(pScrni);
 	    return FALSE;
 	}
 
@@ -788,7 +783,6 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
     if (xf86RegisterResources(pGeode->pEnt->index, NULL, ResExclusive)) {
 	xf86DrvMsg(pScrni->scrnIndex, X_ERROR,
 	    "Couldn't register the resources.\n");
-	GXFreeRec(pScrni);
 	return FALSE;
     }
 
@@ -1545,7 +1539,8 @@ GXFreeScreen(int scrnIndex, int flags)
 {
     GeodeRec *pGeode = GEODEPTR(xf86Screens[scrnIndex]);
 
-    /* XXX FIXME - Something segfaults here when no good modes are found */
+    if (pGeode == NULL)
+        return;
 
     if (pGeode->useVGA) {
 	if (xf86LoaderCheckSymbol("vgaHWFreeHWRec"))

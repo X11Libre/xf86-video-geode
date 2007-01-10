@@ -303,7 +303,7 @@ GXRandRInit(ScreenPtr pScreen, int rotation)
 	GXRandRGeneration = serverGeneration;
     }
 
-    pRandr = xalloc(sizeof(XF86RandRInfoRec));
+    pRandr = xcalloc(sizeof(XF86RandRInfoRec), 1);
     if (pRandr == NULL)
 	return FALSE;
 
