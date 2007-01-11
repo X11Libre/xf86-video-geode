@@ -87,4 +87,26 @@
 	XvTopToBottom \
    }
 
+/* Borrowed from Trident */
+
+#define FOURCC_RGB565 0x36315652
+#define XVIMAGE_RGB565 \
+   { \
+        FOURCC_RGB565, \
+        XvRGB,\
+        LSBFirst,\
+       {'R','V','1','6',\
+       0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00},\
+       16,\
+       XvPacked,\
+       1,\
+       16, 0xF800, 0x07E0, 0x001F,\
+       0, 0, 0,\
+       0, 0, 0,\
+       0, 0, 0,\
+       {'R','V','B',0,\
+       0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},\
+       XvTopToBottom\
+    }
+
 #endif

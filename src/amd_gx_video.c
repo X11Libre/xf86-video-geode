@@ -117,7 +117,7 @@ extern void GXAccelSync(ScrnInfoPtr pScrni);
 int DeltaX, DeltaY;
 
 unsigned long graphics_lut[256];
-unsigned long *lutptr = NULL;
+static int lutflag = 0;
 
 #define MAKE_ATOM(a) MakeAtom(a, sizeof(a) - 1, TRUE)
 
@@ -236,7 +236,7 @@ static XF86AttributeRec Attributes[NUM_ATTRIBUTES] = {
     {XvSettable | XvGettable, 0, 1, "XV_COLORKEYMODE"}
 };
 
-#define NUM_IMAGES 7
+#define NUM_IMAGES 8
 
 static XF86ImageRec Images[NUM_IMAGES] = {
     XVIMAGE_UYVY,
@@ -245,7 +245,8 @@ static XF86ImageRec Images[NUM_IMAGES] = {
     XVIMAGE_YVYU,
     XVIMAGE_Y800,
     XVIMAGE_I420,
-    XVIMAGE_YV12
+    XVIMAGE_YV12,
+    XVIMAGE_RGB565
 };
 
 typedef struct
@@ -471,13 +472,13 @@ GXStopVideo(ScrnInfoPtr pScrni, pointer data, Bool exit)
             /* If we have saved graphics LUT data - restore it */
 	    /* Otherwise, turn bypass on */
 
-	    if (lutptr != NULL)
-		GFX(set_graphics_palette(lutptr));
-	    else
+	    if (lutflag)
+		GFX(set_graphics_palette(graphics_lut));
+	      else
 	        GFX(set_video_palette_bypass(1));
 
-	    lutptr = NULL;
-        }
+	    lutflag = 0;
+	}
 
         if (pPriv->area) {
 #ifdef XF86EXA
@@ -921,17 +922,19 @@ GXDisplayVideo(ScrnInfoPtr pScrni,
      * off
      */
 
-    dcfg = gfx_read_vid32(DISPLAY_CONFIG);
-    misc = gfx_read_vid32(MISC);
+ 
+    if (id != FOURCC_RGB565) {
+      dcfg = gfx_read_vid32(DISPLAY_CONFIG);
+      misc = gfx_read_vid32(MISC);
 
-    if ((!(misc & 1)) && (!(dcfg & (1 << 21)))) {
-	/* xf86DrvMsg(pScrni->scrnIndex, X_ERROR, "save graphics_lut\n"); */
+      lutflag = ((!(misc & 1)) && (!(dcfg & (1 << 21))));
+
+      if (lutflag) 
 	get_gamma_ram(graphics_lut);
-	lutptr = graphics_lut;
-    }
 
-    /* Set the video gamma ram */
-    GFX(set_video_palette(NULL));
+      /* Set the video gamma ram */
+      GFX(set_video_palette(NULL));
+    }
 
     GFX(set_video_enable(1));
 
@@ -959,6 +962,11 @@ GXDisplayVideo(ScrnInfoPtr pScrni,
         GFX(set_video_format(VIDEO_FORMAT_YVYU));
         GFX(set_video_size(width, height));
         break;
+    case FOURCC_RGB565:
+      GFX(set_video_format(VIDEO_FORMAT_RGB));
+      GFX(set_video_size(width, height));
+      break;
+
     }
 
     if (pGeode->Panel) {
@@ -1122,6 +1130,7 @@ GXPutImage(ScrnInfoPtr pScrni,
         case FOURCC_UYVY:
         case FOURCC_YUY2:
         case FOURCC_Y800:
+	case FOURCC_RGB565:
         default:
             dstPitch = ((width << 1) + 3) & ~3;
             srcPitch = (width << 1);
@@ -1173,6 +1182,7 @@ GXPutImage(ScrnInfoPtr pScrni,
         case FOURCC_UYVY:
         case FOURCC_YUY2:
         case FOURCC_Y800:
+	case FOURCC_RGB565:
         default:
             left <<= 1;
             buf += (top * srcPitch) + left;
@@ -1214,6 +1224,7 @@ GXPutImage(ScrnInfoPtr pScrni,
         break;
     case FOURCC_UYVY:
     case FOURCC_YUY2:
+    case FOURCC_RGB565:
     default:
         GXCopyData422(buf, dst_start, srcPitch, dstPitch, nlines, npixels);
         break;
@@ -1341,12 +1352,12 @@ GXBlockHandler(int i, pointer blockData, pointer pTimeout, pointer pReadmask)
 		/* If we have saved graphics LUT data - restore it */
 		/* Otherwise, turn bypass on */
 
-		if (lutptr != NULL)
-			GFX(set_graphics_palette(lutptr));
+		if (lutflag)
+		  GFX(set_graphics_palette(graphics_lut));
 		else
-			GFX(set_video_palette_bypass(1));
+		  GFX(set_video_palette_bypass(1));
 
-		lutptr = NULL;
+		lutflag = 0;
 
                 pPriv->videoStatus = FREE_TIMER;
                 pPriv->freeTime = currentTime.milliseconds + FREE_DELAY;
