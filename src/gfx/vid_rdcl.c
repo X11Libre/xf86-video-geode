@@ -221,10 +221,17 @@ gfx_set_display_control(int sync_polarities)
 
     /* SET APPROPRIATE SYNC POLARITIES */
 
+    if (PanelEnable) {
+	unsigned int pt2 = READ_VID32(0x408);
+
+	pt2 &= ~((1 << 22) | (1 << 23));
+	WRITE_VID32(0x408, pt2);
+    }
+
     if (sync_polarities & 0x1)
-        dcfg |= RCDF_DCFG_CRT_HSYNC_POL;
-    if (sync_polarities & 0x2)
-        dcfg |= RCDF_DCFG_CRT_VSYNC_POL;
+		dcfg |= RCDF_DCFG_CRT_HSYNC_POL;
+	if (sync_polarities & 0x2)
+		dcfg |= RCDF_DCFG_CRT_VSYNC_POL;
 
     WRITE_VID32(RCDF_DISPLAY_CONFIG, dcfg);
 
