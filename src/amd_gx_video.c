@@ -927,7 +927,7 @@ GXDisplayVideo(ScrnInfoPtr pScrni,
       dcfg = gfx_read_vid32(DISPLAY_CONFIG);
       misc = gfx_read_vid32(MISC);
 
-      lutflag = ((!(misc & 1)) && (!(dcfg & (1 << 21))));
+      lutflag = (!(misc & 1) && (dcfg & (1 << 21)));
 
       if (lutflag) 
 	get_gamma_ram(graphics_lut);
