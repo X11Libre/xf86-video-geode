@@ -39,15 +39,19 @@ amd_drv_la_LDFLAGS = -module -avoid-version
 amd_drv_ladir = @moduledir@/drivers
 
 amd_drv_la_SOURCES = \
+        amd.h \
+        amd_fourcc.h \
+        build_num.h \
+        cim_dev.h \
         amd_driver.c \
         amd_gx_driver.c\
         amd_gx_accel.c \
         amd_gx_cursor.c \
         amd_gx_video.c \
         amd_gx_regacc.c \
-	amd_gx_rotate.c \
-	amd_gx_dcon.c \
-	amd_gx_randr.c \
+        amd_gx_rotate.c \
+        amd_gx_dcon.c \
+        amd_gx_randr.c \
         durango.c \
         panel.c \
         amd_lx_driver.c \
@@ -78,7 +82,6 @@ EXTRA_DIST = \
   \
         gfx/disp_gu1.c \
         gfx/disp_gu2.c \
-        gfx/durango.c \
         gfx/gfx_dcdr.c \
         gfx/gfx_defs.h \
         gfx/gfx_disp.c \
@@ -129,7 +132,10 @@ EXTRA_DIST = \
         panel/pnl_bios.c \
         panel/pnl_defs.h \
         panel/pnl_init.c \
-        panel/readme.txt
+        panel/readme.txt \
+  \
+        amd_gx_vga.c \
+        amd_lx_vga.c
 
 ztv_drv_la_LTLIBRARIES = ztv_drv.la
 ztv_drv_la_LDFLAGS = -module -avoid-version
