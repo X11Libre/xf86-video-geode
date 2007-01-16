@@ -444,6 +444,8 @@ GXMapMem(ScrnInfoPtr pScrni)
 	(!gfx_virt_vidptr) || (!gfx_virt_fbptr))
 	return FALSE;
 
+    pGeode->pExa->memoryBase = pGeode->FBBase;
+
     xf86DrvMsg(index, X_INFO, "Found Geode %lx %p\n",
 	pGeode->FBAvail, pGeode->FBBase);
 
@@ -1311,7 +1313,8 @@ GXScreenInit(int scrnIndex, ScreenPtr pScrn, int argc, char **argv)
 	    } else {
 		ExaDriverPtr pExa = pGeode->pExa;
 
-		pExa->memoryBase = pGeode->FBBase;
+		/* THis is set in GXAllocMem */
+		pExa->memoryBase = 0;
 
 		/* This is set in GXAllocateMemory */
 		pExa->memorySize = 0;
