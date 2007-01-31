@@ -444,7 +444,8 @@ GXMapMem(ScrnInfoPtr pScrni)
 	(!gfx_virt_vidptr) || (!gfx_virt_fbptr))
 	return FALSE;
 
-    pGeode->pExa->memoryBase = pGeode->FBBase;
+    if (!pGeode->NoAccel && pGeode->useEXA)
+        pGeode->pExa->memoryBase = pGeode->FBBase;
 
     xf86DrvMsg(index, X_INFO, "Found Geode %lx %p\n",
 	pGeode->FBAvail, pGeode->FBBase);
