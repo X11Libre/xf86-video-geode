@@ -14,7 +14,7 @@ amd \- Amd video driver \- lx options
 .fi
 .SH DESCRIPTION
 .B amd
-is an XFree86 driver for Advanced Micro Devicess GEODE processor family.
+is an __xservername__ driver for Advanced Micro Devicess GEODE processor family.
 It uses the CIMARRON kit provided by Advanced Micro Devices.
 The driver is accelerated, and provides support for the following 
 framebuffer depths: 8, 16 and 24.
@@ -23,7 +23,7 @@ The
 .B amd
 driver supports GeodeLX (5536 companion chip).
 .SH CONFIGURATION DETAILS
-Please refer to XF86Config(__filemansuffix__) for general configuration
+Please refer to __xconfigfile__(__filemansuffix__) for general configuration
 details.  This section only covers configuration details specific to this
 driver.
 .PP
@@ -297,7 +297,7 @@ amd \- Amd video driver \- gx options
 .fi
 .SH DESCRIPTION
 .B amd
-is an XFree86 driver for Advanced Micro Devices GEODE processor family.
+is an __xservername__ driver for Advanced Micro Devices GEODE processor family.
 It uses the DURANGO kit provided by Advanced Micro Devices.
 The driver is accelerated, and provides support for the following 
 framebuffer depths: 8, 16 and 24.
@@ -307,7 +307,7 @@ The
 driver supports GXLV (5530 companion chip), SC1200, SC1400 and
 GX (5535 companion chip).
 .SH CONFIGURATION DETAILS
-Please refer to XF86Config(__filemansuffix__) for general configuration
+Please refer to __xconfigfile__(__filemansuffix__) for general configuration
 details.  This section only covers configuration details specific to this
 driver.
 .PP
@@ -412,6 +412,6 @@ view on TV. The parameters xx: X-offset, yy: Y-offset, ww: Viewable width,
 hh: Viewable height.
 Default: no TV.
 .SH "SEE ALSO"
-XFree86(1), XF86Config(__filemansuffix__), xf86config(1), Xserver(1), X(__miscmansuffix__)
+__xservername__(1), __xconfigfile__(__filemansuffix__), xorgconfig(1), Xserver(1), X(__miscmansuffix__)
 .SH AUTHOR
 Author: William Morrow
