@@ -1,0 +1,23 @@
+This is the list of things that need to be done
+
+=== LX driver ===
+
+CORE:
+* Compression is pretty much hosed
+* Artifacts are on the screen - they are probably render related
+* Screen panning
+
+EXA:
+* Support a8 as a source or destination (?)
+* Convert masks with an alpha chanel to a8 and a4 masks (?)
+* Support multiple pass operations when a mask is enabled
+* See if we can figure out a way to set the correct alpha when the source
+  format doesn't have an alpha channel but the destination does
+* Handle masks when the source isn't 1x1
+* Rendercheck still has many failures
+* We assume that the destination buffer fits in the scratch buffer during
+  a multipass operation
+
+VIDEO:
+* Support rotated video (rotate the YUV source)
+
