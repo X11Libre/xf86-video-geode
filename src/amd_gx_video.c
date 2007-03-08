@@ -11,7 +11,7 @@
  * all copies or substantial portions of the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * IMPDIs2IED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
  * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
@@ -625,37 +625,6 @@ GXQueryBestSize(ScrnInfoPtr pScrni,
         *p_w = 16384;
 }
 
-static void
-GXCopyGreyscale(unsigned char *src,
-    unsigned char *dst, int srcPitch, int dstPitch, int h, int w)
-{
-    int i;
-    unsigned char *src2 = src;
-    unsigned char *dst2 = dst;
-    unsigned char *dst3;
-    unsigned char *src3;
-
-    dstPitch <<= 1;
-
-    while (h--) {
-        dst3 = dst2;
-        src3 = src2;
-        for (i = 0; i < w; i++) {
-            *dst3++ = *src3++;         /* Copy Y data */
-            *dst3++ = 0x80;            /* Fill UV with 0x80 - greyscale */
-        }
-
-        src3 = src2;
-        for (i = 0; i < w; i++) {
-            *dst3++ = *src3++;         /* Copy Y data */
-            *dst3++ = 0x80;            /* Fill UV with 0x80 - greyscale */
-        }
-
-        dst2 += dstPitch;
-        src2 += srcPitch;
-    }
-}
-
 /*----------------------------------------------------------------------------
  * GXCopyData420
  *
@@ -994,8 +963,9 @@ GXDisplayVideo(ScrnInfoPtr pScrni,
         src_h, drw_w, drw_h, id, offset, pScrni);
 }
 
-#if REINIT
-static Bool
+/* Used by LX as well */
+
+Bool
 RegionsEqual(RegionPtr A, RegionPtr B)
 {
     int *dataA, *dataB;
@@ -1024,7 +994,6 @@ RegionsEqual(RegionPtr A, RegionPtr B)
 
     return TRUE;
 }
-#endif
 
 /*----------------------------------------------------------------------------
  * GXPutImage	:This function writes a single frame of video into a 
@@ -1211,7 +1180,8 @@ GXPutImage(ScrnInfoPtr pScrni,
 #endif
     switch (id) {
     case FOURCC_Y800:
-        GXCopyGreyscale(buf, dst_start, srcPitch, dstPitch, nlines, npixels);
+        /* This is shared between LX and GX, so it lives in amd_common.c */
+        GeodeCopyGreyscale(buf, dst_start, srcPitch, dstPitch, nlines, npixels);
         break;
     case FOURCC_YV12:
     case FOURCC_I420:
@@ -1275,8 +1245,9 @@ GXPutImage(ScrnInfoPtr pScrni,
  *
  *----------------------------------------------------------------------------
  */
-static int
-GXQueryImageAttributes(ScrnInfoPtr pScrni,
+
+int
+GeodeQueryImageAttributes(ScrnInfoPtr pScrni,
     int id, unsigned short *w, unsigned short *h, int *pitches, int *offsets)
 {
     int size;

@@ -1,5 +1,5 @@
-/*
- * Copyright (c) 2006 Advanced Micro Devices, Inc.
+ /*
+  * (c) 2006 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -230,61 +230,138 @@ typedef struct _VESARec
 }
 VESARec;
 
-/* output enable types */
-#define LX_OT_CRT  0x0001
-#define LX_OT_FP   0x0002
-#define LX_OT_VOP  0x0004
-#define LX_OT_DRGB 0x0008
+#define OUTPUT_PANEL 0x01
+#define OUTPUT_CRT   0x02
+#define OUTPUT_TV    0x04
+#define OUTPUT_VOP   0x08
 
 typedef struct _geodeRec
 {
-    /* Private struct for the server */
-    unsigned long cpu_version;
-    unsigned long cpu_revision;
-    unsigned long vid_version;
-    INIT_BASE_ADDRESSES InitBaseAddress;
+  /* Common */
 
-    EntityInfoPtr pEnt;
-    ScreenBlockHandlerProcPtr BlockHandler;     /* needed for video */
-    int DetectedChipSet;
-    int Chipset;
-#ifdef HAVE_LX
-    int cimFd;
-    unsigned long CmdBfrOffset;
-    unsigned long CmdBfrSize;
-    unsigned int EnabledOutput;
-    unsigned long FBTop;
-#endif
-    unsigned long FBLinearAddr;
-    unsigned char *FBBase;
-    unsigned long FBAvail;
-    unsigned long FBOffset;
-    unsigned long FBSize;
-    unsigned long maxWidth, maxHeight;
-    unsigned int cpu_reg_size;
-    unsigned int gp_reg_size;
-    unsigned int vid_reg_size;
-#ifdef HAVE_LX
-    unsigned int vg_reg_size;
-    unsigned int vip_reg_size;
-#endif
-    int Pitch;                         /* display FB pitch */
-    int AccelPitch;                    /* accel pitch (may be ShadowPitch) */
+  int Output;   /* Bitmask indicating the valid output options */
+  
+  Bool HWCursor;
+  Bool NoAccel;
+  Bool useVGA;
+  Bool VGAActive;       /* Flag indicating if LX VGA is active */
+  Bool Compression;
+  Bool useEXA;
 
-    /** new **/
-    int displayPitch;  /* The pitch ofthe visible area */
-    int shadowPitch;   /* The pitch of the shadow area */
-    int displayOffset; /* The offset of the visible area */
-    int displaySize;   /* The size of the visibile area */
+  int rotation;
+  int displayWidth;
+  Bool starting;
+  Bool tryCompression;
+  Bool tryHWCursor;
+  unsigned int shadowSize;
+  unsigned int shadowOffset;
+  
+  DisplayModePtr curMode;
+  VG_COMPRESSION_DATA CBData;
+  
+  unsigned long CursorStartOffset;
+  unsigned int CursorSize;
+  xf86CursorInfoPtr CursorInfo;
+  int CursorXHot;
+  int CursorYHot;
 
-    Bool HWCursor;
-    Bool NoAccel;
-    Bool CustomMode;
-   Bool useVGA;
-    unsigned long VideoKey;
+  /* Geometry information */  
+  unsigned int maxWidth;        /* Maximum possible width of the screen */
+  unsigned int maxHeight;       /* Maximum possible height of the screen */
+  
+  int Pitch;                         /* display FB pitch */
+  
+  int displayPitch;  /* The pitch ofthe visible area */
+  int displayOffset; /* The offset of the visible area */
+  int displaySize;   /* The size of the visibile area */
 
+  int PanelX;
+  int PanelY;
+
+  /* Framebuffer memory */
+
+  unsigned long FBLinearAddr;
+  unsigned char *FBBase;
+  unsigned int FBAvail;
+  unsigned int FBOffset;
+  unsigned int FBSize;
+
+  /* Video information */
+  int video_x;
+  int video_y;
+  short video_w;
+  short video_h;
+  short video_srcw;
+  short video_srch;
+  short video_dstw;
+  short video_dsth;
+  int video_id;
+  int video_offset;
+  ScrnInfoPtr video_scrnptr;
+  BOOL OverlayON;
+  int videoKey;
+
+  /* EXA structures */
+
+  ExaDriverPtr pExa;
+  unsigned int exaBfrOffset;
+  unsigned int exaBfrSz;
+  
+  /* XAA structures */
+  unsigned char **AccelImageWriteBuffers;
+  int NoOfImgBuffers;
+  unsigned char **AccelColorExpandBuffers;
+  int NoOfColorExpandLines;
+  XAAInfoRecPtr AccelInfoRec;
+
+  /* Other structures */
+
+  EntityInfoPtr pEnt;
+  ScreenBlockHandlerProcPtr BlockHandler;     /* needed for video */
+  XF86VideoAdaptorPtr adaptor;
+
+  /* State save structures */
+
+  gfx_vga_struct FBgfxVgaRegs;
+  TVTIMING FBtvtiming;
+  GFX_DISPLAYTIMING FBgfxdisplaytiming;
+  CIM_DISPLAYTIMING FBcimdisplaytiming;
+
+  unsigned int FBTVActive;
+  unsigned int FBSupport;
+  unsigned long FBDisplayOffset;
+  unsigned long PrevDisplayOffset;
+
+  VESARec *vesa;
+  
+  int FBCompressionEnable;
+  VG_COMPRESSION_DATA FBCBData;
+  VG_CURSOR_DATA FBCursor;
+  unsigned long FBCompressionOffset;
+  unsigned short FBCompressionPitch;
+  unsigned short FBCompressionSize;
+  
+  /* Save the Cursor offset of the FB */
+  unsigned long FBCursorOffset;
+  unsigned char FBBIOSMode;
+  
+  /* Hooks */
+
+  void (*WritePixmap) (ScrnInfoPtr pScrni, int x, int y, int w, int h,
+		       unsigned char *src, int srcwidth, int rop,
+		       unsigned int planemask, int trans, int bpp, int depth);
+  
+  void (*PointerMoved) (int index, int x, int y);
+  CloseScreenProcPtr CloseScreen;
+  Bool (*CreateScreenResources)(ScreenPtr);
+
+  /* LX only */
+
+  unsigned long CmdBfrOffset;
+  unsigned long CmdBfrSize;
+
+#ifdef HAVE_TVSUPPORT
     Bool TVSupport;
-#ifdef HAVE_LX
     int tv_encoder;
     int tv_bus_fmt;
     int tv_flags;
@@ -296,159 +373,25 @@ typedef struct _geodeRec
     int tv_vsync_select;
     int tvox, tvoy;
 
-    int FPBiosResX, FPBiosResY;
-    int FPGeomDstSet, FPGeomDstX, FPGeomDstY;
-    int FPGeomActSet, FPGeomActX, FPGeomActY;
-#endif
-#ifdef HAVE_GX
     TVPARAMS TvParam;
 
     int TVOx, TVOy, TVOw, TVOh;
     Bool TV_Overscan_On;
-
-    Bool Panel;
-
-    /* Flatpanel support from Bios */
-    int FPBX;                          /* xres */
-    int FPBY;                          /* yres */
-    int FPBB;                          /* bpp */
-    int FPBF;                          /* freq */
 #endif
+ 
+  /* To be killed! */
+  
+  int FBVGAActive;
+  unsigned int cpySrcOffset;
+  int cpySrcPitch, cpySrcBpp;
+  int cpyDx, cpyDy;
+  unsigned int cmpSrcOffset;
+  int cmpSrcPitch, cmpSrcBpp;
+  unsigned int cmpSrcFmt, cmpDstFmt;
+  int cmpOp;
 
-    int Rotate;
-    void (*Rotation) (int x, int y, int w, int h, int *newX, int *newY);
-    void (*RBltXlat) (int x, int y, int w, int h, int *newX, int *newY);
-
-#ifdef HAVE_GX
-    void (*WritePixmap) (ScrnInfoPtr pScrni, int x, int y, int w, int h,
-        unsigned char *src, int srcwidth, int rop,
-        unsigned int planemask, int trans, int bpp, int depth);
-#endif
-
-    Bool ShadowFB;
-
-#ifdef HAVE_LX
-    unsigned char *ShadowPtr;
-    int ShadowSize;
-    int ShadowPitch;
-    int ShadowInFBMem;
-#endif
-
-    int orig_virtX;                    /* original */
-    int orig_virtY;
-    int HDisplay;                      /* rotated */
-    int VDisplay;
-
-    void (*PointerMoved) (int index, int x, int y);
-    /* CloseScreen function.        */
-    CloseScreenProcPtr CloseScreen;
-
-    Bool Compression;
-#ifdef HAVE_LX
-    VG_COMPRESSION_DATA CBData;
-#endif
-#ifdef HAVE_GX
-    unsigned int CBOffset;
-    unsigned int CBPitch;
-    unsigned int CBSize;
-#endif
-    unsigned long CursorStartOffset;
-    unsigned int CursorSize;
-    xf86CursorInfoPtr CursorInfo;
-    int CursorXHot;
-    int CursorYHot;
-    unsigned long OffscreenStartOffset;
-    unsigned int OffscreenSize;
-
-        /***Image Write structures ***/
-
-    /* offset in video memory for ImageWrite Buffers */
-    unsigned char **AccelImageWriteBuffers;
-    int NoOfImgBuffers;
-    unsigned char **AccelColorExpandBuffers;
-    int NoOfColorExpandLines;
-
-/*****************************************/
-/* Saved Console State */
-#ifdef HAVE_GX
-    gfx_vga_struct FBgfxVgaRegs;
-    TVTIMING FBtvtiming;
-    GFX_DISPLAYTIMING FBgfxdisplaytiming;
-#endif
-#ifdef HAVE_LX
-    CIM_DISPLAYTIMING FBcimdisplaytiming;
-#endif
-    int FBVGAActive;
-    unsigned int FBTVActive;
-    unsigned int FBSupport;
-    unsigned long FBDisplayOffset;
-    unsigned long PrevDisplayOffset;
-
-    VESARec *vesa;
-
-    /* compression */
-    int FBCompressionEnable;
-#ifdef HAVE_LX
-    VG_COMPRESSION_DATA FBCBData;
-    VG_CURSOR_DATA FBCursor;
-#endif
-#ifdef HAVE_GX
-    unsigned long FBCompressionOffset;
-    unsigned short FBCompressionPitch;
-    unsigned short FBCompressionSize;
-
-    /* Save the Cursor offset of the FB */
-    unsigned long FBCursorOffset;
-#endif
-    unsigned char FBBIOSMode;
-/*****************************************/
-
-    XAAInfoRecPtr AccelInfoRec;
-
-    DGAModePtr DGAModes;
-    int numDGAModes;
-    Bool DGAactive;
-    int DGAViewportStatus;
-/*****************************************/
-    int video_x;
-    int video_y;
-    short video_w;
-    short video_h;
-    short video_srcw;
-    short video_srch;
-    short video_dstw;
-    short video_dsth;
-    int video_id;
-    int video_offset;
-    ScrnInfoPtr video_scrnptr;
-    BOOL OverlayON;
-
-    int videoKey;
-    XF86VideoAdaptorPtr adaptor;
-    Bool useEXA;
-#if XF86EXA
-    ExaDriverPtr pExa;
-    unsigned int exaBfrOffset;
-    unsigned int exaBfrSz;
-    unsigned int cpySrcOffset;
-    int cpySrcPitch, cpySrcBpp;
-    int cpyDx, cpyDy;
-    unsigned int cmpSrcOffset;
-    int cmpSrcPitch, cmpSrcBpp;
-    unsigned int cmpSrcFmt, cmpDstFmt;
-    int cmpOp;
-#endif
-
-    DisplayModePtr curMode;
-    int rotation;
-    int displayWidth;
-    Bool starting;
-    Bool tryCompression;
-    Bool tryHWCursor;
-    unsigned int shadowSize;
-    unsigned int shadowOffset;
-
-    Bool (*CreateScreenResources)(ScreenPtr);
+  Bool Panel;
+  
 }
 GeodeRec, *GeodePtr;
 
@@ -460,23 +403,16 @@ enum
     LX_OPTION_HW_CURSOR,
     LX_OPTION_NOCOMPRESSION,
     LX_OPTION_NOACCEL,
-    LX_OPTION_TV_ENCODER,
-    LX_OPTION_TV_BUS_FMT,
-    LX_OPTION_TV_FLAGS,
-    LX_OPTION_TV_601_FLAGS,
-    LX_OPTION_TV_VSYNC_SELECT,
-    LX_OPTION_TV_CONVERSION,
+    LX_OPTION_ACCEL_METHOD,
+    LX_OPTION_EXA_SCRATCH_BFRSZ,
+    LX_OPTION_TV_SUPPORT,
+    LX_OPTION_TV_OUTPUT,
     LX_OPTION_TV_OVERSCAN,
-    LX_OPTION_SHADOW_FB,
     LX_OPTION_ROTATE,
-    LX_OPTION_FLATPANEL,
-    LX_OPTION_CRTENABLE,
+    LX_OPTION_NOPANEL,
     LX_OPTION_COLOR_KEY,
-    LX_OPTION_OSM_IMG_BUFS,
-    LX_OPTION_OSM_CLR_BUFS,
-    LX_OPTION_CUSTOM_MODE,
-    LX_OPTION_FP_DEST_GEOM,
-    LX_OPTION_FP_ACTIVE_GEOM,
+    LX_OPTION_FBSIZE,
+    LX_OPTION_PANEL_GEOMETRY,
     LX_OPTION_DONT_PROGRAM
 }
 LX_GeodeOpts;
@@ -516,5 +452,30 @@ GX_GeodeOpts;
 #define DCON_DEFAULT_BPP     16
 #define DCON_DEFAULT_REFRESH 50
 extern Bool gx_dcon_init(ScrnInfoPtr pScrni);
+
+/* amd_common.c */
+
+void geode_memory_to_screen_blt(unsigned long, unsigned long,
+				unsigned long, unsigned long, long, long, int);
+int GeodeGetRefreshRate(DisplayModePtr);
+void GeodeCopyGreyscale(unsigned char *, unsigned char *, int, int, int, int);
+
+/* amd_gx_video.c */
+
+int
+GeodeQueryImageAttributes(ScrnInfoPtr, int id, unsigned short *w,
+			  unsigned short *h, int *pitches, int *offsets);
+
+
+Bool RegionsEqual(RegionPtr A, RegionPtr B);
+
+/* amd_gx_driver.c */
+
+void GeodeProbeDDC(ScrnInfoPtr pScrni, int index);
+xf86MonPtr GeodeDoDDC(ScrnInfoPtr pScrni, int index);
+int GeodeGetFPGeometry(const char *str, int *width, int *height);
+void GeodePointerMoved(int index, int x, int y);
+void GeodeFreeScreen(int scrnIndex, int flags);
+int GeodeCalculatePitchBytes(unsigned int width, unsigned int bpp);
 
 #endif /* _AMD_GEODE_H_ */

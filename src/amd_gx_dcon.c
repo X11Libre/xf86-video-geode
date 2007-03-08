@@ -153,8 +153,8 @@ gx_dcon_init(ScrnInfoPtr pScrni)
     xf86DrvMsg(pScrni->scrnIndex, X_DEFAULT, "DCON detected.\n");
 
     /* Panel size setup */
-    pGeode->FPBX = DCON_DEFAULT_XRES;
-    pGeode->FPBY = DCON_DEFAULT_YRES;
+    pGeode->PanelX = DCON_DEFAULT_XRES;
+    pGeode->PanelY = DCON_DEFAULT_YRES;
 
     /* FIXME:  Mode setup should go here */
     /* FIXME:  Controller setup should go here */

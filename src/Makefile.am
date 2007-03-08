@@ -40,10 +40,12 @@ amd_drv_ladir = @moduledir@/drivers
 
 amd_drv_la_SOURCES = \
         amd.h \
+	amd_blend.h \
         amd_fourcc.h \
         build_num.h \
         cim_dev.h \
         amd_driver.c \
+	amd_common.c \
         amd_gx_driver.c\
         amd_gx_accel.c \
         amd_gx_cursor.c \
@@ -55,12 +57,12 @@ amd_drv_la_SOURCES = \
         durango.c \
         panel.c \
         amd_lx_driver.c \
-        amd_lx_accel.c \
         amd_lx_cursor.c \
-        amd_lx_dga.c \
         amd_lx_video.c \
-        amd_lx_shadow.c \
         amd_lx_regacc.c \
+	amd_lx_rotate.c \
+	amd_lx_randr.c \
+	amd_lx_exa.c \
         cimarron.c
 
 EXTRA_DIST = \

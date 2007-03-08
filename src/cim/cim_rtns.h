@@ -125,7 +125,10 @@ extern "C"
     void gp_antialiased_text(unsigned long dstoffset, unsigned long srcx,
         unsigned long width, unsigned long height, unsigned char *data,
         long stride, int fourbpp);
-    void gp_masked_blt(unsigned long dstoffset, unsigned long width,
+  void gp_blend_mask_blt(unsigned long dstoffset, unsigned long srcx,
+	unsigned long width, unsigned long height, unsigned char *data,
+        long stride, int operation, int fourbpp);
+  void gp_masked_blt(unsigned long dstoffset, unsigned long width,
         unsigned long height, unsigned long mono_srcx,
         unsigned long color_srcx, unsigned char *mono_mask,
         unsigned char *color_data, long mono_pitch, long color_pitch);

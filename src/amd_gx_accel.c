@@ -56,6 +56,10 @@
 #include "gfx_defs.h"
 #include "gfx_regs.h"
 
+/* Common macros for blend operations are here */
+
+#include "amd_blend.h"
+
 #undef ulong
 typedef unsigned long ulong;
 
@@ -69,7 +73,7 @@ typedef unsigned short ushort;
 typedef unsigned char uchar;
 
 #define CALC_FBOFFSET(x, y) \
-	        (((ulong)(y) * gu2_pitch) + ((ulong)(x) << gu2_xshift))
+	        (((ulong)(y) * gu2_pitch + ((ulong)(x) << gu2_xshift)))
 
 #define FBADDR(x,y)				\
 		((unsigned char *)pGeode->FBBase + CALC_FBOFFSET(x, y))
@@ -162,78 +166,6 @@ static int PDfn_SM[16] = {
     0x22, 0xA2, 0x62, 0xE2, 0x2A, 0xAA, 0x6A, 0xEA,
     0x26, 0xA6, 0x66, 0xE6, 0x2E, 0xAE, 0x6E, 0xEE
 };
-
-#define move0(d,s,n) \
-  __asm__ __volatile__( \
-  "   rep; movsl\n" \
-  : "=&c" (d0), "=&S" (d1), "=&D" (d2) \
-  : "0" (n), "1" (s), "2" (d) \
-  : "memory")
-
-#define move1(d,s,n) \
-  __asm__ __volatile__( \
-  "   rep; movsl\n" \
-  "   movsb\n" \
-  : "=&c" (d0), "=&S" (d1), "=&D" (d2) \
-  : "0" (n), "1" (s), "2" (d) \
-  : "memory")
-
-#define move2(d,s,n) \
-  __asm__ __volatile__( \
-  "   rep; movsl\n" \
-  "   movsw\n" \
-  : "=&c" (d0), "=&S" (d1), "=&D" (d2) \
-  : "0" (n), "1" (s), "2" (d) \
-  : "memory")
-
-#define move3(d,s,n) \
-  __asm__ __volatile__( \
-  "   rep; movsl\n" \
-  "   movsw\n" \
-  "   movsb\n" \
-  : "=&c" (d0), "=&S" (d1), "=&D" (d2) \
-  : "0" (n), "1" (s), "2" (d) \
-  : "memory")
-
-static void
-amd_memory_to_screen_blt(unsigned long src, unsigned long dst,
-    unsigned long sp, unsigned long dp, long w, long h, int bpp)
-{
-    int d0, d1, d2;
-    int n = w * (bpp >> 3);
-    int m = n >> 2;
-
-    switch (n & 3) {
-    case 0:
-        while (--h >= 0) {
-            move0(dst, src, m);
-            src += sp;
-            dst += dp;
-        }
-        break;
-    case 1:
-        while (--h >= 0) {
-            move1(dst, src, m);
-            src += sp;
-            dst += dp;
-        }
-        break;
-    case 2:
-        while (--h >= 0) {
-            move2(dst, src, m);
-            src += sp;
-            dst += dp;
-        }
-        break;
-    case 3:
-        while (--h >= 0) {
-            move3(dst, src, m);
-            src += sp;
-            dst += dp;
-        }
-        break;
-    }
-}
 
 /*----------------------------------------------------------------------------
  * GXAccelSync.
@@ -331,13 +263,13 @@ GXSubsequentSolidFillRect(ScrnInfoPtr pScrni, int x, int y, int w, int h)
     gfx_pattern_fill(x, y, w, h);
 #else
     {
-        unsigned int offset = CALC_FBOFFSET(x, y);
-        unsigned int size = (w << 16) | h;
-
-        GU2_WAIT_PENDING;
-        WRITE_GP32(MGP_DST_OFFSET, offset);
-        WRITE_GP32(MGP_WID_HEIGHT, size);
-        WRITE_GP32(MGP_BLT_MODE, BLT_MODE);
+      unsigned int offset = CALC_FBOFFSET(x, y);
+      unsigned int size = (w << 16) | h;
+      
+      GU2_WAIT_PENDING;
+      WRITE_GP32(MGP_DST_OFFSET, offset);
+      WRITE_GP32(MGP_WID_HEIGHT, size);
+      WRITE_GP32(MGP_BLT_MODE, BLT_MODE);
     }
 #endif
 }
@@ -1493,7 +1425,7 @@ GXWritePixmap(ScrnInfoPtr pScrni, int x, int y, int w, int h,
         rop &= 0x0F;
         if (rop == GXcopy && trans == -1) {
             gfx_wait_until_idle();
-            amd_memory_to_screen_blt((unsigned long)src,
+            geode_memory_to_screen_blt((unsigned long)src,
                 (unsigned long)FBADDR(x, y), srcwidth, pGeode->Pitch, w,
                 h, bpp);
         } else {
@@ -1515,12 +1447,6 @@ GXWritePixmap(ScrnInfoPtr pScrni, int x, int y, int w, int h,
 #endif /* if GX_WRITE_PIXMAP_SUPPORT */
 
 #if XF86EXA
-#define GEODEPTR_FROM_PIXMAP(x)		\
-		GEODEPTR(xf86Screens[(x)->drawable.pScreen->myNum])
-#define GEODEPTR_FROM_SCREEN(x)		\
-		GEODEPTR(xf86Screens[(x)->myNum])
-#define GEODEPTR_FROM_PICTURE(x)	\
-		GEODEPTR(xf86Screens[(x)->pDrawable->pScreen->myNum])
 
 static void
 amd_gx_exa_WaitMarker(ScreenPtr pScreen, int Marker)
@@ -1543,7 +1469,7 @@ amd_gx_exa_UploadToScreen(PixmapPtr pDst, int x, int y, int w, int h,
 
     dst += y * dst_pitch + x * (bpp >> 3);
     GU2_WAIT_BUSY;
-    amd_memory_to_screen_blt((unsigned long)src, (unsigned long)dst,
+    geode_memory_to_screen_blt((unsigned long)src, (unsigned long)dst,
         src_pitch, dst_pitch, w, h, bpp);
     return TRUE;
 }
@@ -1558,7 +1484,7 @@ amd_gx_exa_DownloadFromScreen(PixmapPtr pSrc, int x, int y, int w, int h,
 
     src += y * src_pitch + x * (bpp >> 3);
     GU2_WAIT_BUSY;
-    amd_memory_to_screen_blt((unsigned long)src, (unsigned long)dst,
+    geode_memory_to_screen_blt((unsigned long)src, (unsigned long)dst,
         src_pitch, dst_pitch, w, h, bpp);
     return TRUE;
 }
@@ -1711,57 +1637,6 @@ unsigned int amd_gx_exa_alpha_ops[] =
     (SRC_DST | A0_B1a | a_A),          /*                  + (dst(1-A) */
     (SRC_DST | A1_B1a | a_C), 0,       /* add      (src*1 + dst*1) */
 };
-
-#define usesPasses(op) (((		\
-   ( 1 << PictOpAtop ) | 		\
-   ( 1 << PictOpAtopReverse ) | \
-   ( 1 << PictOpXor ) | 		\
-   0 ) >> (op)) & 1)
-
-/* pass1 or pass2 */
-#define usesSrcAlpha(op) ((( 		\
-   ( 1 << PictOpOver ) | 			\
-   ( 1 << PictOpInReverse  ) | 		\
-   ( 1 << PictOpOutReverse  ) | 	\
-   ( 1 << PictOpAtop ) | 			\
-   ( 1 << PictOpAtopReverse ) | 	\
-   ( 1 << PictOpXor ) | 			\
-   0 ) >> (op)) & 1)
-
-/* pass1 or pass2 */
-#define usesDstAlpha(op) ((( 		\
-   ( 1 << PictOpOverReverse ) | 	\
-   ( 1 << PictOpIn ) | 				\
-   ( 1 << PictOpOut ) | 			\
-   ( 1 << PictOpAtop ) | 			\
-   ( 1 << PictOpAtopReverse ) | 	\
-   ( 1 << PictOpXor ) | 			\
-   0 ) >> (op)) & 1)
-
-/* non 2 pass ops */
-#define usesChanB0(op) ((( 			\
-   ( 1 << PictOpOver ) | 			\
-   ( 1 << PictOpOverReverse ) | 	\
-   ( 1 << PictOpIn ) | 				\
-   ( 1 << PictOpInReverse ) | 		\
-   ( 1 << PictOpOut ) | 			\
-   ( 1 << PictOpOutReverse ) | 		\
-   ( 1 << PictOpAdd ) | 			\
-   0 ) >> (op)) & 1)
-
-/* pass 1 ops */
-#define usesChanB1(op) ((( 			\
-   ( 1 << PictOpAtop ) | 			\
-   ( 1 << PictOpAtopReverse ) | 	\
-   ( 1 << PictOpXor ) | 			\
-   0 ) >> (op)) & 1)
-
-/* pass 2 ops */
-#define usesChanB2(op) ((( 			\
-   ( 1 << PictOpAtop ) | 			\
-   ( 1 << PictOpAtopReverse ) | 	\
-   ( 1 << PictOpXor ) | 			\
-   0 ) >> (op)) & 1)
 
 typedef struct
 {

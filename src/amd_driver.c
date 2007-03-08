@@ -54,23 +54,7 @@
 
 #define RC_MAX_DEPTH 24
 
-/* Frame buffer stuff */
-#if CFB
-/*
- * If using cfb, cfb.h is required.  Select the others for the bpp values
- * the driver supports.
- */
-#define PSZ 8                          /* needed for cfb.h */
-#include "cfb.h"
-#undef PSZ
-#include "cfb16.h"
-#include "cfb24.h"
-#include "cfb32.h"
-#else
 #include "fb.h"
-#endif
-
-#include "shadowfb.h"
 
 /* Machine independent stuff */
 #include "mipointer.h"
@@ -169,25 +153,19 @@ OptionInfoRec LX_GeodeOptions[] = {
     {LX_OPTION_HW_CURSOR, "HWcursor", OPTV_BOOLEAN, {0}, FALSE},
     {LX_OPTION_NOCOMPRESSION, "NoCompression", OPTV_BOOLEAN, {0}, FALSE},
     {LX_OPTION_NOACCEL, "NoAccel", OPTV_BOOLEAN, {0}, FALSE},
-    {LX_OPTION_TV_ENCODER, "TV_Encoder", OPTV_ANYSTR, {0}, FALSE},
-    {LX_OPTION_TV_BUS_FMT, "TV_Bus_Fmt", OPTV_ANYSTR, {0}, FALSE},
-    {LX_OPTION_TV_FLAGS, "TV_Flags", OPTV_ANYSTR, {0}, FALSE},
-    {LX_OPTION_TV_601_FLAGS, "TV_601_Flags", OPTV_ANYSTR, {0}, FALSE},
-    {LX_OPTION_TV_VSYNC_SELECT, "TV_Vsync_Select", OPTV_ANYSTR, {0}, FALSE},
-    {LX_OPTION_TV_CONVERSION, "TV_Conversion", OPTV_ANYSTR, {0}, FALSE},
-    {LX_OPTION_TV_OVERSCAN, "TV_Overscan", OPTV_ANYSTR, {0}, FALSE},
-    {LX_OPTION_SHADOW_FB, "ShadowFB", OPTV_BOOLEAN, {0}, FALSE},
+    {LX_OPTION_ACCEL_METHOD, "AccelMethod", OPTV_STRING, {0}, FALSE},
+    {LX_OPTION_TV_SUPPORT, "TV", OPTV_ANYSTR, {0}, FALSE},
+    {LX_OPTION_TV_OUTPUT, "TV_Output", OPTV_ANYSTR, {0}, FALSE},
+    {LX_OPTION_TV_OVERSCAN, "TVOverscan", OPTV_ANYSTR, {0}, FALSE},
     {LX_OPTION_ROTATE, "Rotate", OPTV_ANYSTR, {0}, FALSE},
-    {LX_OPTION_FLATPANEL, "FlatPanel", OPTV_BOOLEAN, {0}, FALSE},
-    {LX_OPTION_CRTENABLE, "CrtEnable", OPTV_BOOLEAN, {0}, FALSE},
+    {LX_OPTION_NOPANEL, "NoPanel", OPTV_BOOLEAN, {0}, FALSE},
     {LX_OPTION_COLOR_KEY, "ColorKey", OPTV_INTEGER, {0}, FALSE},
-    {LX_OPTION_OSM_IMG_BUFS, "OSMImageBuffers", OPTV_INTEGER, {0}, FALSE},
-    {LX_OPTION_OSM_CLR_BUFS, "OSMColorExpBuffers", OPTV_INTEGER, {0}, FALSE},
-    {LX_OPTION_CUSTOM_MODE, "CustomMode", OPTV_BOOLEAN, {0}, FALSE},
-    {LX_OPTION_FP_DEST_GEOM, "FPDestGeom", OPTV_ANYSTR, {0}, FALSE},
-    {LX_OPTION_FP_ACTIVE_GEOM, "FPActiveGeom", OPTV_ANYSTR, {0}, FALSE},
+    {LX_OPTION_EXA_SCRATCH_BFRSZ, "ExaScratch", OPTV_INTEGER, {0}, FALSE},
+    {LX_OPTION_FBSIZE, "FBSize", OPTV_INTEGER, {0}, FALSE },
+    {LX_OPTION_PANEL_GEOMETRY, "PanelGeometry", OPTV_STRING, {0}, FALSE },
     {-1, NULL, OPTV_NONE, {0}, FALSE}
 };
+
 #endif
 
 #ifdef HAVE_GX
@@ -250,21 +228,11 @@ const char *amdInt10Symbols[] = {
     NULL
 };
 
-#if CFB
-const char *amdCfbSymbols[] = {
-    "cfbScreenInit",
-    "cfb16ScreenInit",
-    "cfb24ScreenInit",
-    "cfb32ScreenInit",
-    NULL
-};
-#else
 const char *amdFbSymbols[] = {
     "fbScreenInit",
     "fbPictureInit",
     NULL
 };
-#endif
 
 const char *amdXaaSymbols[] = {
     "XAADestroyInfoRec",
@@ -287,11 +255,6 @@ const char *amdRamdacSymbols[] = {
     "xf86InitCursor",
     "xf86CreateCursorInfoRec",
     "xf86DestroyCursorInfoRec",
-    NULL
-};
-
-const char *amdShadowSymbols[] = {
-    "ShadowFBInit",
     NULL
 };
 
@@ -353,13 +316,8 @@ AmdSetup(pointer Module, pointer Options, int *ErrorMajor, int *ErrorMinor)
          * module might refer to.
          */
         LoaderRefSymLists(amdVgahwSymbols, amdVbeSymbols,
-#if CFB
-            amdCfbSymbols,
-#else
-            amdFbSymbols,
-#endif
-            amdXaaSymbols,
-            amdInt10Symbols, amdRamdacSymbols, amdShadowSymbols, NULL);
+            amdFbSymbols, amdXaaSymbols,
+            amdInt10Symbols, amdRamdacSymbols, NULL);
         return (pointer) TRUE;
     }
 
