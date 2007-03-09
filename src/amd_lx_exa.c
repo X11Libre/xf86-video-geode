@@ -76,7 +76,7 @@ static struct {
 
   int op;
   int repeat;
-  unsigned int fourBpp;  
+  unsigned int fourBpp;
   unsigned int bufferOffset;
   struct exa_format_t *srcFormat;
   struct exa_format_t *dstFormat;
@@ -471,8 +471,13 @@ static Bool lx_check_composite(int op, PicturePtr pSrc, PicturePtr pMsk,
 
   /* Check that the operation is supported */
 
-  if (op > PictOpAdd) 
+  if (op > PictOpAdd)
     return FALSE;
+
+  if (usesPasses(op)) {
+	if (pGeode->exaBfrOffset == 0 || !pMsk)
+		return FALSE;
+  }
 
   /* Check that the filter matches what we support */
 
@@ -490,20 +495,15 @@ static Bool lx_check_composite(int op, PicturePtr pSrc, PicturePtr pMsk,
 
   /* We don't handle transforms */
 
-  if (pSrc->transform) 
-    return FALSE;
-
-  /* We only support single pass operations at this point */
-
-  if (pMsk && usesPasses(op)) 
+  if (pSrc->transform)
     return FALSE;
 
 
   /* XXX - I don't understand PICT_a8 enough - so I'm punting */
-  
+
   if (pSrc->format == PICT_a8 || pDst->format == PICT_a8)
     return FALSE;
-  
+
   return TRUE;
 }
 
@@ -539,7 +539,7 @@ static Bool lx_prepare_composite(int op, PicturePtr pSrc, PicturePtr pMsk,
     ErrorF("EXA: Dest needs alpha bits\n");
     return FALSE;
   }
-  
+
   /* FIXME:  See a way around this! */
 
   if (srcFmt->alphabits == 0 && dstFmt->alphabits != 0)
@@ -593,12 +593,12 @@ static Bool lx_prepare_composite(int op, PicturePtr pSrc, PicturePtr pMsk,
 
     /* If the direction is reversed, then remember the source */
 
-    if (direction == 1) 
+    if (direction == 1)
       exaScratch.srcPixmap = pxSrc;
 
     /* Extract the source color to use */
 
-    if (direction == 0) 
+    if (direction == 0)
       srcColor = lx_get_source_color(pSrc, 0, 0, pDst->format);
     else
       srcColor = lx_get_source_color(pDst, 0, 0, pSrc->format);
@@ -607,7 +607,7 @@ static Bool lx_prepare_composite(int op, PicturePtr pSrc, PicturePtr pMsk,
 
     gp_declare_blt (0);
     gp_set_solid_source (srcColor);
-    gp_write_parameters();    
+    gp_write_parameters();
   }
   else {
     if (usesPasses(op))
@@ -618,7 +618,7 @@ static Bool lx_prepare_composite(int op, PicturePtr pSrc, PicturePtr pMsk,
     exaScratch.srcOffset = exaGetPixmapOffset(pxSrc);
     exaScratch.srcPitch = exaGetPixmapPitch(pxSrc);
     exaScratch.srcBpp = (pxSrc->drawable.bitsPerPixel + 7) / 8;
-    
+
     exaScratch.srcWidth = pSrc->pDrawable->width;
     exaScratch.srcHeight = pSrc->pDrawable->height;
   }
@@ -651,37 +651,24 @@ int lx_get_bpp_from_format(int format) {
   return 0;
 }
 
-int lx_get_alpha_one(int format) 
-{
-  switch(format) {
-  case CIMGP_SOURCE_FMT_8_8_8_8:
-  case CIMGP_SOURCE_FMT_32BPP_BGR:
-    return 0xFF << 16;
-    
-  case CIMGP_SOURCE_FMT_4_4_4_4:
-    return 0xF << 12;
-    
-  case CIMGP_SOURCE_FMT_1_5_5_5:
-  case CIMGP_SOURCE_FMT_15BPP_BGR:
-    return 1 << 15;
-  }
-  
-  return 0;
-}
-  
+/* BGR needs to be set in the source for it to take - so adjust the source
+ * to enable BGR if the two formats are different, and disable it if they
+ * are the same
+ */
+
 static lx_set_source_format(int srcFormat, int dstFormat)
 {
-  /* If BGR is set in the destination, then move the BGR bit to the source */
-  /* If they are both BGR, then don't set the bit */
-  
-  if (!(srcFormat & 0x10) && (dstFormat & 0x10)) 
+  if (!(srcFormat & 0x10) && (dstFormat & 0x10))
     gp_set_source_format(srcFormat | 0x10);
   else if ((srcFormat & 0x10) && (dstFormat & 0x10))
     gp_set_source_format(srcFormat & ~0x10);
   else
     gp_set_source_format(srcFormat);
 }
-    
+
+/* Note - this is the preferred onepass method.  The other will remain
+ * ifdefed out until such time that we are sure its not needed
+ */
 
 #if 1
 
@@ -703,7 +690,7 @@ lx_composite_onepass(PixmapPtr pxDst, unsigned long dstOffset,
   gp_set_strides(exaGetPixmapPitch(pxDst), exaScratch.srcPitch);
 
   lx_set_source_format(exaScratch.srcFormat->fmt, exaScratch.dstFormat->fmt);
-  
+
   gp_set_alpha_operation(opPtr->operation, opPtr->type, opPtr->channel,
 			 apply, 0);
 
@@ -780,7 +767,7 @@ lx_composite_convert(PixmapPtr pxDst, unsigned long dstOffset,
   gp_set_strides(exaGetPixmapPitch(pxDst), exaGetPixmapPitch(pxDst));
 
   gp_screen_to_screen_blt(exaScratch.bufferOffset, dstOffset, width, height, 0);
-  
+
   /* Step 2 - Do the original blend */
 
   lx_composite_onepass(pxDst, exaScratch.bufferOffset, srcOffset, width, height);
@@ -810,7 +797,13 @@ lx_composite_multipass(PixmapPtr pxDst, unsigned long dstOffset, unsigned long s
   int sbpp = lx_get_bpp_from_format(exaScratch.srcFormat->fmt);
   int apply;
 
-  /* Copy the destination to the scratch buffer, and convert it to the source format */
+  /* Wait until the GP is idle - this will ensure that the scratch buffer
+   * isn't occupied */
+
+  gp_wait_until_idle();
+
+  /* Copy the destination to the scratch buffer, and convert it to the
+   * source format */
 
   gp_declare_blt(0);
 
@@ -818,13 +811,15 @@ lx_composite_multipass(PixmapPtr pxDst, unsigned long dstOffset, unsigned long s
   gp_set_source_format(exaScratch.dstFormat->fmt);
   gp_set_raster_operation(0xCC);
   gp_set_strides(exaScratch.srcPitch, exaGetPixmapPitch(pxDst));
-  gp_screen_to_screen_convert(exaScratch.bufferOffset, dstOffset, width, height, 0);
+  gp_screen_to_screen_convert(exaScratch.bufferOffset, dstOffset,
+  width, height, 0);
 
   /* Do the first blend from the source to the scratch buffer */
 
-  gp_declare_blt(0);
+  gp_declare_blt(CIMGP_BLTFLAGS_HAZARD);
   gp_set_bpp(sbpp);
   gp_set_source_format(exaScratch.srcFormat->fmt);
+  gp_set_strides(exaScratch.srcPitch, exaScratch.srcPitch);
 
   opPtr = &lx_alpha_ops[exaScratch.op * 2];
 
@@ -834,7 +829,6 @@ lx_composite_multipass(PixmapPtr pxDst, unsigned long dstOffset, unsigned long s
   gp_set_alpha_operation(opPtr->operation, opPtr->type, opPtr->channel,
 	apply, 0);
 
-  gp_set_strides(exaScratch.srcPitch, exaScratch.srcPitch);
   gp_screen_to_screen_blt(exaScratch.bufferOffset, srcOffset, width, height, 0);
 
   /* Finally, do the second blend back to the destination */
@@ -844,22 +838,21 @@ lx_composite_multipass(PixmapPtr pxDst, unsigned long dstOffset, unsigned long s
   apply = (exaScratch.dstFormat->alphabits == 0) ?
     CIMGP_APPLY_BLEND_TO_RGB : CIMGP_APPLY_BLEND_TO_ALL;
 
-  gp_declare_blt(0);
+  gp_declare_blt(CIMGP_BLTFLAGS_HAZARD);
   gp_set_bpp(lx_get_bpp_from_format(exaScratch.dstFormat->fmt));
 
-  /* The only way to kick BGR is to set it in the source */
-  
   lx_set_source_format(exaScratch.srcFormat->fmt, exaScratch.dstFormat->fmt);
 
   gp_set_alpha_operation(opPtr->operation, opPtr->type, opPtr->channel,
 			 apply, 0);
 
-  gp_screen_to_screen_convert(dstOffset, exaScratch.bufferOffset, width, height, 0);
+  gp_screen_to_screen_convert(dstOffset, exaScratch.bufferOffset,
+  width, height, 0);
 }
 
 static void
-lx_do_composite_mask(PixmapPtr pxDst, unsigned long dstOffset, unsigned int maskOffset, 
-		    int width, int height) 
+lx_do_composite_mask(PixmapPtr pxDst, unsigned long dstOffset,
+			unsigned int maskOffset, int width, int height)
 {
   GeodeRec *pGeode = GEODEPTR_FROM_PIXMAP(pxDst);
   unsigned char *data = pGeode->FBBase + maskOffset;
@@ -878,15 +871,12 @@ lx_do_composite_mask(PixmapPtr pxDst, unsigned long dstOffset, unsigned int mask
   (exaGetPixmapPitch((px)) * (y)) + \
   ((((px)->drawable.bitsPerPixel + 7) / 8) * (x)) )
 
-
 static void
 lx_do_composite(PixmapPtr pxDst, int srcX, int srcY, int maskX,
 		int maskY, int dstX, int dstY, int width, int height) {
 
   struct blend_ops_t *opPtr = &lx_alpha_ops[exaScratch.op * 2];
 
-  unsigned int dstBpp = (pxDst->drawable.bitsPerPixel + 7) / 8;
-  unsigned int dstPitch = exaGetPixmapPitch(pxDst);
   unsigned int dstOffset, srcOffset;
 
   unsigned int opX = dstX;
@@ -894,38 +884,39 @@ lx_do_composite(PixmapPtr pxDst, int srcX, int srcY, int maskX,
   unsigned int opWidth = width;
   unsigned int opHeight = height;
 
-  if (exaScratch.type == COMP_TYPE_MASK) 
-    srcOffset = exaScratch.srcOffset + (maskY * exaScratch.srcPitch) + 
+  if (exaScratch.type == COMP_TYPE_MASK)
+    srcOffset = exaScratch.srcOffset + (maskY * exaScratch.srcPitch) +
       (maskX * exaScratch.srcBpp);
   else
-    srcOffset = exaScratch.srcOffset + (srcY * exaScratch.srcPitch) + 
+    srcOffset = exaScratch.srcOffset + (srcY * exaScratch.srcPitch) +
       (srcX * exaScratch.srcBpp);
-  
+
   /* Adjust the width / height of the operation the size of the source */
-    
+
   if (exaScratch.srcWidth < width)
     opWidth = exaScratch.srcWidth;
-  
+
   if (exaScratch.srcHeight < height)
     opHeight = exaScratch.srcHeight;
-  
+
   while(1) {
-    dstOffset = GetPixmapOffset(pxDst, dstX, dstY);
-    
+    dstOffset = GetPixmapOffset(pxDst, opX, opY);
+
     switch(exaScratch.type) {
     case COMP_TYPE_MASK: {
       int direction = (opPtr->channel == CIMGP_CHANNEL_A_SOURCE) ? 0 : 1;
-      
+
       if (direction == 1) {
 	dstOffset = GetPixmapOffset(exaScratch.srcPixmap, dstX,dstY);
-	lx_do_composite_mask(exaScratch.srcPixmap, dstOffset, srcOffset, opWidth, opHeight);
+	lx_do_composite_mask(exaScratch.srcPixmap, dstOffset, srcOffset,
+		opWidth, opHeight);
       }
       else {
 	lx_do_composite_mask(pxDst, dstOffset, srcOffset, opWidth, opHeight);
       }
     }
       break;
-      
+
     case COMP_TYPE_ONEPASS:
       lx_composite_onepass(pxDst, dstOffset, srcOffset, opWidth, opHeight);
       break;
@@ -937,21 +928,21 @@ lx_do_composite(PixmapPtr pxDst, int srcX, int srcY, int maskX,
 
     if (!exaScratch.repeat)
       break;
-    
+
     opX += opWidth;
-    
+
     if (opX >= dstX + width) {
       opX = dstX;
       opY += opHeight;
-      
+
       if (opY >= dstY + height)
 	break;
     }
-    
+
     opWidth = ((dstX + width) - opX) > exaScratch.srcWidth ?
       exaScratch.srcWidth : (dstX + width) - opX;
     opHeight  = ((dstY + height) - opY) > exaScratch.srcHeight ?
-      exaScratch.srcHeight : (dstY + height) - opY;    
+      exaScratch.srcHeight : (dstY + height) - opY;
   }
 }
 

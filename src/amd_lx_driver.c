@@ -299,7 +299,7 @@ LXAllocateMemory(ScreenPtr pScrn, ScrnInfoPtr pScrni, int rotate)
 
 	  fboffset += size;
 	  fbavail -= size;
-	  
+
 	  pGeode->Compression = TRUE;
 	} else {
 	    xf86DrvMsg(pScrni->scrnIndex, X_ERROR,
@@ -325,11 +325,13 @@ LXAllocateMemory(ScreenPtr pScrn, ScrnInfoPtr pScrni, int rotate)
 
     /* Try to set up some EXA scratch memory for blending */
 
+    pGeode->exaBfrOffset = 0;
+
     if (!pGeode->NoAccel) {
       if (pGeode->exaBfrSz > 0 && pGeode->exaBfrSz <= fbavail) {
 	pGeode->exaBfrOffset = fboffset;
-	fboffset += pGeode->exaBfrOffset;
-	fbavail -= pGeode->exaBfrOffset;
+	fboffset += pGeode->exaBfrSz;
+	fbavail -= pGeode->exaBfrSz;
       }
     }
 
@@ -981,17 +983,17 @@ LXCloseScreen(int scrnIndex, ScreenPtr pScrn)
     LXUnmapMem(pScrni);
 
     if (pGeode->useVGA)
-      vgaHWUnmapMem(pScrn);
+      vgaHWUnmapMem(pScrni);
 
-    Scrni->PointerMoved = pGeode->PointerMoved;
+    pScrni->PointerMoved = pGeode->PointerMoved;
     pScrn->CloseScreen = pGeode->CloseScreen;
-    
+
     if (pScrn->CloseScreen)
       return (*pScrn->CloseScreen)(scrnIndex, pScrn);
 
     return TRUE;
 }
-  
+
 static Bool
 LXEnterGraphics(ScreenPtr pScrn, ScrnInfoPtr pScrni)
 {

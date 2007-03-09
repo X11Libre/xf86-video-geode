@@ -6,6 +6,10 @@ CORE:
 * Compression is pretty much hosed
 * Artifacts are on the screen - they are probably render related
 * Screen panning
+* VT switching causes instablity
+
+MOUSE:
+* Mouse is munged in 24bpp mode
 
 EXA:
 * Support a8 as a source or destination (?)

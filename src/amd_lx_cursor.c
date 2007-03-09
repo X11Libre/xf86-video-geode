@@ -23,13 +23,6 @@
  * software without specific prior written permission.
  * */
 
-/*
- * File Contents:   Xfree cursor implementation routines for geode HWcursor 
- *                  init.setting cursor color,image etc. are done here.
- * 
- * Project:         Geode Xfree Frame buffer device driver.
- * */
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -53,21 +46,6 @@ extern void LXSetVideoPosition(int x, int y, int width, int height,
     short src_w, short src_h, short drw_w,
     short drw_h, int id, int offset, ScrnInfoPtr pScrn);
 
-/*----------------------------------------------------------------------------
-* LXHWCursorInit.
- *
- * Description	:This function sets the cursor information by probing the
- * 				hardware.
- *
- * Parameters.
- *     pScrn	:Screeen pointer structure.
- *
- * Returns		:TRUE on success and FALSE on Failure
- *
- * Comments		:Geode supports the hardware_cursor,no need to enable SW
- *              cursor.
- *----------------------------------------------------------------------------
- */
 Bool
 LXHWCursorInit(ScreenPtr pScrn)
 {
@@ -86,55 +64,23 @@ LXHWCursorInit(ScreenPtr pScrn)
     infoPtr->Flags = HARDWARE_CURSOR_BIT_ORDER_MSBFIRST |
         HARDWARE_CURSOR_TRUECOLOR_AT_8BPP |
         HARDWARE_CURSOR_SOURCE_MASK_NOT_INTERLEAVED;
-    /* cursor info ptr is intiallized with the values obtained from
-     * * durnago calls
-     */
+
     infoPtr->SetCursorColors = LXSetCursorColors;
     infoPtr->SetCursorPosition = LXSetCursorPosition;
     infoPtr->LoadCursorImage = LXLoadCursorImage;
     infoPtr->HideCursor = LXHideCursor;
     infoPtr->ShowCursor = LXShowCursor;
     infoPtr->UseHWCursor = LXUseHWCursor;
+
     return (xf86InitCursor(pScrn, infoPtr));
 }
 
-/*----------------------------------------------------------------------------
- * LXSetCursorColors.
- *
- * Description	:This function sets the cursor foreground and background
- *              colors
- * Parameters:
- *    pScrn:	Screeen pointer structure.
- *    bg:		Specifies the color value of cursor background color.
- *    fg:		Specifies the color value of cursor foreground color.
- * 
- * Returns:	none.
- *
- * Comments:	The integer color value passed by this function is
- *              converted into  * RGB  value by the gfx_set_color routines.
- *----------------------------------------------------------------------------
- */
 static void
 LXSetCursorColors(ScrnInfoPtr pScrni, int bg, int fg)
 {
   vg_set_mono_cursor_colors(bg, fg);
 }
 
-/*----------------------------------------------------------------------------
- * LXSetCursorPosition.
- *
- * Description	:This function sets the cursor co -ordinates and enable the
- *               cursor.
- *
- * Parameters:
- *		pScrn: 	Screeen pointer structure.
- *    	    x:  Specifies the x-cordinates of the cursor.
- *    	    y: 	Specifies the y co-ordinate of the cursor.
- *    	   
- * Returns: none.
- *
- *----------------------------------------------------------------------------
- */
 static void
 LXSetCursorPosition(ScrnInfoPtr pScrni, int x, int y)
 {
@@ -154,19 +100,19 @@ LXSetCursorPosition(ScrnInfoPtr pScrni, int x, int y)
       newX = savex; newY = savey;
       hsx= 31; hsy = 31;
       break;
-      
+
     case RR_Rotate_90:
       newX = savey;
       newY = pScrni->pScreen->width - savex;
       hsx= 31; hsy = 0;
       break;
-      
+
     case RR_Rotate_180:
       newX = pScrni->pScreen->width - savex;
-      newY = pScrni->pScreen->height - savey;      
+      newY = pScrni->pScreen->height - savey;
       hsx = 0; hsy = 0;
       break;
-      
+
     case RR_Rotate_270:
       newX = pScrni->pScreen->height - savey;
       newY = savex;
@@ -177,30 +123,16 @@ LXSetCursorPosition(ScrnInfoPtr pScrni, int x, int y)
     newX -= pScrni->frameX0;
     newY -= pScrni->frameY0;
 
-    { 
+    {
       VG_PANNING_COORDINATES panning;
       vg_set_cursor_position(newX + hsx, newY + hsy, &panning);
    }
- 
+
     vg_set_cursor_enable(1);
 
     /* FIXME:  Adjust for video panning? */
 }
 
-/*----------------------------------------------------------------------------
- * LXLoadCursorImage
- *
- * Description:	This function loads the 32x32 cursor pattern.The shape
- *              and color is set by AND and XOR masking of arrays of 32
- *              DWORD.
- * Parameters:
- *    pScrn: 	Screeen pointer structure.
- *    src: 		Specifies cursor data.
- *    
- * Returns: 	none
- *
- *----------------------------------------------------------------------------
- */
 void
 LXLoadCursorImage(ScrnInfoPtr pScrni, unsigned char *src)
 {
@@ -259,61 +191,18 @@ LXLoadCursorImage(ScrnInfoPtr pScrni, unsigned char *src)
     vg_set_mono_cursor_shape32(pGeode->CursorStartOffset,&andMask[0],&xorMask[0],31,31);
 }
 
-/*----------------------------------------------------------------------------
- * LXHideCursor.
- *
- * Description:	This function will disable the cursor.
- *
- * Parameters:
- *    	pScrn: 	Handles to the Screeen pointer structure.
- *
- * Returns: 	none.
- *
- * Comments:	_set_cursor enable function is hardcoded to disable
- *				the cursor.
- *----------------------------------------------------------------------------
- */
 void
 LXHideCursor(ScrnInfoPtr pScrni)
 {
     vg_set_cursor_enable(0);
 }
 
-/*----------------------------------------------------------------------------
- * LXShowCursor
- *
- * Description	:This function will enable  the cursor.
- *
- * Parameters:
- *	pScrn		:Handles to the Screeen pointer structure.
- *
- * Returns      :none
- *
- * Comments		:gfx_set_cursor enable function is hardcoded to enable the
- * 				cursor
- *----------------------------------------------------------------------------
- */
 void
 LXShowCursor(ScrnInfoPtr pScrni)
 {
     vg_set_cursor_enable(1);
 }
 
-/*----------------------------------------------------------------------------
- * LXUseHwCursor.
- *
- * Description	:This function will sets the hardware cursor flag in
- *              pscreen  structure.
- *
- * Parameters.
- *		pScrn	:Handles to the Screeen pointer structure.
- *
- * Returns		:none
- *
- * Comments		:none
- *
- *----------------------------------------------------------------------------
- */
 static Bool
 LXUseHWCursor(ScreenPtr pScrn, CursorPtr pCurs)
 {
