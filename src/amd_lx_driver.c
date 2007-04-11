@@ -376,6 +376,60 @@ LXSaveScreen(ScreenPtr pScrn, int mode)
     return TRUE;
 }
 
+/* This is an overly complex MSR read mechanism */
+
+/* From Cimarron - the VSAII read/write methods - we use these as fallback */
+
+#define LX_MSR_READ(adr,lo,hi)              \
+     __asm__ __volatile__(                      \
+        " mov $0x0AC1C, %%edx\n"                \
+        " mov $0xFC530007, %%eax\n"             \
+        " out %%eax,%%dx\n"                     \
+        " add $2,%%dl\n"                        \
+        " in %%dx, %%ax"                        \
+        : "=a" (lo), "=d" (hi)                  \
+        : "c" (adr))
+
+#define LX_MSR_WRITE(adr,high,low) \
+  { int d0, d1, d2, d3, d4;        \
+  __asm__ __volatile__(            \
+    " push %%ebx\n"                \
+    " mov $0x0AC1C, %%edx\n"       \
+    " mov $0xFC530007, %%eax\n"    \
+    " out %%eax,%%dx\n"            \
+    " add $2,%%dl\n"               \
+    " mov %6, %%ebx\n"             \
+    " mov %7, %0\n"                \
+    " mov %5, %3\n"                \
+    " xor %2, %2\n"                \
+    " xor %1, %1\n"                \
+    " out %%ax, %%dx\n"            \
+    " pop %%ebx\n"                 \
+    : "=a"(d0),"=&D"(d1),"=&S"(d2), \
+      "=c"(d3),"=d"(d4)  \
+    : "1"(adr),"2"(high),"3"(low)); \
+  }
+
+static void
+LXReadMSR(unsigned long addr, unsigned long *lo, unsigned long *hi)
+{
+  if (GeodeReadMSR(addr, lo, hi) == -1) {
+    unsigned int l, h;
+
+    LX_MSR_READ(addr, l, h);
+    *lo = l;
+    *hi = h;
+  }
+}
+
+static void
+LXWriteMSR(unsigned long addr, unsigned long lo, unsigned long hi)
+{
+  if (GeodeWriteMSR(addr, lo, hi) == -1)
+    LX_MSR_WRITE(addr, lo, hi);
+}
+
+
 static Bool
 LXMapMem(ScrnInfoPtr pScrni)
 {
@@ -418,6 +472,12 @@ LXMapMem(ScrnInfoPtr pScrni)
     XpressROMPtr = xf86MapVidMem(index, VIDMEM_FRAMEBUFFER, 0xF0000, 0x10000);
 
     pGeode->FBBase = cim_fb_ptr;
+
+    /* This may not be the best place to do this */
+    /* Set up the MSR read/write hooks for cimarron */
+
+    cim_rdmsr = LXReadMSR;
+    cim_wrmsr = LXWriteMSR;
 
     if (!pGeode->NoAccel)
       pGeode->pExa->memoryBase = pGeode->FBBase;

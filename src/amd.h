@@ -478,4 +478,8 @@ void GeodePointerMoved(int index, int x, int y);
 void GeodeFreeScreen(int scrnIndex, int flags);
 int GeodeCalculatePitchBytes(unsigned int width, unsigned int bpp);
 
+/* amd_msr.c */
+int GeodeReadMSR(unsigned long addr, unsigned long *lo, unsigned long *hi);
+int GeodeWriteMSR(unsigned long addr, unsigned long lo, unsigned long hi);
+
 #endif /* _AMD_GEODE_H_ */

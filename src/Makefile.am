@@ -46,6 +46,7 @@ amd_drv_la_SOURCES = \
         cim_dev.h \
         amd_driver.c \
 	amd_common.c \
+	amd_msr.c \
         amd_gx_driver.c\
         amd_gx_accel.c \
         amd_gx_cursor.c \

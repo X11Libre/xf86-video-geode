@@ -177,67 +177,8 @@ gfx_outd(unsigned short port, unsigned long data)
     : "1"(msr | adr),"2"(*(high)),"3"(*(low))); \
   }
 
-static int lnx_msr_open(void)
-{
-  static int msrfd = 0;
-
-  if (msrfd == 0) {
-    msrfd = open("/dev/cpu/0/msr", O_RDWR);
-    if (msrfd == -1)
-      ErrorF("Unable to open /dev/cpu/0/msr: %d\n", errno);
-  }
-
-  return msrfd;
-}
-
-/* These are the preferred method (in Linux) to read the MSRs */
-
-int lnx_msr_read(unsigned long addr, unsigned long *hi, unsigned long *lo)
-{
-  unsigned int data[2];
-  int fd = lnx_msr_open();
-  int ret;
-
-  if (fd == -1)
-    return - 1;
-
-  ret = lseek64(fd, (off64_t) addr, SEEK_SET);
-
-  if (ret == -1) {
-    return -1;
-  }
-
-  ret = read(fd, (void *) data, sizeof(data));
-
-  if (ret != 8) {
-    return -1;
-  }
-
-  *hi = data[1];
-  *lo = data[0];
-
-  return 0;
-}
-
-int lnx_msr_write(unsigned long addr, unsigned long *hi, unsigned long *lo)
-{
-  unsigned int data[2];
-  int fd = lnx_msr_open();
-
-  if (fd == -1)
-    return - 1;
-
-  if (lseek64(fd, (off64_t) addr, SEEK_SET) == -1)
-    return -1;
-
-  data[0] = *lo;
-  data[1] = *hi;
-
-  if (write(fd, (void *) data, 8) != 8)
-    return -1;
-
-  return 0;
-}
+extern int GeodeWriteMSR(unsigned long, unsigned long, unsigned long);
+extern int GeodeReadMSR(unsigned long, unsigned long *, unsigned long *);
 
 void gfx_msr_asm_write(unsigned short reg, unsigned long addr,
 unsigned long *hi, unsigned long *lo)
@@ -245,7 +186,7 @@ unsigned long *hi, unsigned long *lo)
   static int msr_method = 0;
 
   if (msr_method == 0) {
-    if (!(lnx_msr_write(addr | reg, hi, lo)))
+    if (!GeodeWriteMSR(addr | reg, *lo, *hi))
       return;
 
     msr_method = 1;
@@ -261,7 +202,7 @@ unsigned long *hi, unsigned long *lo)
   static int msr_method = 0;
 
   if (msr_method == 0) {
-    if (!(lnx_msr_read(addr | reg, hi, lo)))
+    if (!GeodeReadMSR(addr | reg, lo, hi))
       return;
 
     ErrorF("Unable to read the MSR - reverting to the VSA method.\n");

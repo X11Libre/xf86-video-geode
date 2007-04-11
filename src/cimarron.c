@@ -132,6 +132,7 @@
 #define CIMARRON_MSR_VSA_IO                0
 #define CIMARRON_MSR_ABSTRACTED_ASM        1
 #define CIMARRON_MSR_KERNEL_ROUTINE        0
+#define CIMARRON_MSR_HOOKS                 1
 
 #define CIMARRON_INCLUDE_IO_MACROS
 #define CIMARRON_IO_DIRECT_ACCESS          0
@@ -172,6 +173,14 @@ unsigned char *cim_cmd_ptr = (unsigned char *)0;
 unsigned char *cim_vid_ptr = (unsigned char *)0;
 unsigned char *cim_vip_ptr = (unsigned char *)0;
 unsigned char *cim_vg_ptr = (unsigned char *)0;
+
+/* Define hooks for reading and writing MSRs - this is a major hack
+ * to share the MSR code with the GX code */
+
+#ifdef CIMARRON_MSR_HOOKS
+void (*cim_rdmsr)(unsigned long, unsigned long *, unsigned long *);
+void (*cim_wrmsr)(unsigned long, unsigned long, unsigned long);
+#endif
 
 /*----------------------------------------------------------------------*/
 /* INCLUDE RELEVANT CIMARRON HEADERS                                    */
