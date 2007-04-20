@@ -130,7 +130,7 @@
 #define CIMARRON_INCLUDE_MSR_MACROS
 #define CIMARRON_MSR_DIRECT_ASM            0
 #define CIMARRON_MSR_VSA_IO                0
-#define CIMARRON_MSR_ABSTRACTED_ASM        1
+#define CIMARRON_MSR_ABSTRACTED_ASM        0
 #define CIMARRON_MSR_KERNEL_ROUTINE        0
 #define CIMARRON_MSR_HOOKS                 1
 

@@ -227,41 +227,6 @@ lx_set_custom_mode(GeodeRec *pGeode, DisplayModePtr pMode, int bpp)
   return vg_set_custom_mode(&mode, bpp);
 }
 
-void LXGetOutputs(GeodeRec *pGeode)
-{
-  Q_WORD msr;
-
-  msr_read64(MSR_DEVICE_GEODELX_DF, MSR_GEODELINK_CONFIG, &msr);
-
-  /* XXX: VOP is always on? */
-
-  pGeode->Output = OUTPUT_VOP;
-
-  switch((msr.low >> 3) & 0x07) {
-  case 4:
-  case 2:
-  case 0:
-    pGeode->Output = OUTPUT_CRT;
-    break;
-  case 1:
-  case 3:
-  case 5:
-    pGeode->Output = OUTPUT_PANEL;
-
-    if ((msr.low & 0x8000) != 0)
-      pGeode->Output |= OUTPUT_CRT;
-    break;
-
-  case 6:
-    /* VOP */
-    break;
-
-  default:
-    ErrorF("Geode LX - unusual output strap %x\'n", msr.low);
-    break;
-  }
-}
-
 static Bool
 LXAllocateMemory(ScreenPtr pScrn, ScrnInfoPtr pScrni, int rotate)
 {
@@ -296,7 +261,8 @@ LXAllocateMemory(ScreenPtr pScrn, ScrnInfoPtr pScrni, int rotate)
 
 	if (size <= fbavail) {
 	  pGeode->CBData.compression_offset = fboffset;
-
+	  pGeode->CBData.size = LX_CB_PITCH;
+	  pGeode->CBData.pitch = LX_CB_PITCH;
 	  fboffset += size;
 	  fbavail -= size;
 
@@ -473,12 +439,6 @@ LXMapMem(ScrnInfoPtr pScrni)
 
     pGeode->FBBase = cim_fb_ptr;
 
-    /* This may not be the best place to do this */
-    /* Set up the MSR read/write hooks for cimarron */
-
-    cim_rdmsr = LXReadMSR;
-    cim_wrmsr = LXWriteMSR;
-
     if (!pGeode->NoAccel)
       pGeode->pExa->memoryBase = pGeode->FBBase;
 
@@ -563,6 +523,9 @@ LXPreInit(ScrnInfoPtr pScrni, int flags)
 	    return TRUE;
     }
 
+    cim_rdmsr = LXReadMSR;
+    cim_wrmsr = LXWriteMSR;
+
     /* Detect the chipset with Cimarron */
 
     init_detect_cpu(&cpuver, &cpurev);
@@ -572,10 +535,11 @@ LXPreInit(ScrnInfoPtr pScrni, int flags)
 		"No Geode LX chipset was detected.\n");
 
 
-    /* Check the straps to figure out what is attached - these can be changed by
-       config options */
+    /* By default, we support panel and CRT - the config file should
+     * disable the ones we don't want
+     */
 
-    LXGetOutputs(pGeode);
+    pGeode->Output = OUTPUT_PANEL | OUTPUT_CRT;
 
     /* Fill in the monitor information */
     pScrni->monitor = pScrni->confScreen->monitor;
@@ -698,7 +662,7 @@ LXPreInit(ScrnInfoPtr pScrni, int flags)
 	      return FALSE;
 	    
 	    xf86LoaderReqSymLists(amdInt10Symbols, NULL);
-	    
+
 	    pVesa = pGeode->vesa;
 
 	    if ((pVesa->pInt = xf86InitInt10(pGeode->pEnt->index)) == NULL) {
@@ -1237,8 +1201,6 @@ LXScreenInit(int scrnIndex, ScreenPtr pScrn, int argc, char **argv)
     BOOL shadowfb = TRUE;
 
     pGeode->starting = TRUE;
-
-    ErrorF("SCREENINIT!\n");
 
     /* If we are using VGA then go ahead and map the memory */
 
