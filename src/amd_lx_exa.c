@@ -666,6 +666,19 @@ static lx_set_source_format(int srcFormat, int dstFormat)
     gp_set_source_format(srcFormat);
 }
 
+/* If we are converting colors and we need the channel A alpha,
+ * then use a special alpha type that preserves the alpha before
+ * converting the format
+ */
+
+static inline int get_op_type(struct exa_format_t *src,
+			      struct exa_format_t *dst, int type)
+{
+	return (type == CIMGP_CHANNEL_A_ALPHA &&
+		src->alphabits != dst->alphabits) ?
+			CIMGP_CONVERTED_ALPHA : type;
+}
+
 /* Note - this is the preferred onepass method.  The other will remain
  * ifdefed out until such time that we are sure its not needed
  */
@@ -677,7 +690,7 @@ lx_composite_onepass(PixmapPtr pxDst, unsigned long dstOffset,
 	unsigned long srcOffset, int width, int height)
 {
   struct blend_ops_t *opPtr;
-  int apply;
+  int apply, type;
 
   opPtr = &lx_alpha_ops[exaScratch.op * 2];
 
@@ -691,8 +704,10 @@ lx_composite_onepass(PixmapPtr pxDst, unsigned long dstOffset,
 
   lx_set_source_format(exaScratch.srcFormat->fmt, exaScratch.dstFormat->fmt);
 
-  gp_set_alpha_operation(opPtr->operation, opPtr->type, opPtr->channel,
-			 apply, 0);
+  type = get_op_type(exaScratch.srcFormat, exaScratch.dstFormat, opPtr->type);
+
+  gp_set_alpha_operation(opPtr->operation, type,
+			 opPtr->channel, apply, 0);
 
   gp_screen_to_screen_convert(dstOffset, srcOffset, width, height, 0);
 }
@@ -706,7 +721,7 @@ lx_composite_onepass(PixmapPtr pxDst, unsigned long dstOffset,
 		unsigned long srcOffset, int width, int height)
 {
   struct blend_ops_t *opPtr;
-  int apply;
+  int apply, type;
   int sbpp = lx_get_bpp_from_format(exaScratch.srcFormat->fmt);
 
   /* Copy the destination into the scratch buffer */
@@ -731,7 +746,9 @@ lx_composite_onepass(PixmapPtr pxDst, unsigned long dstOffset,
   gp_declare_blt (0);
   gp_set_bpp(sbpp);
 
-  gp_set_alpha_operation(opPtr->operation, opPtr->type, opPtr->channel,
+  type = get_op_type(exaScratch.srcFormat, exaScrach.dstFormat, opPtr->type);
+
+  gp_set_alpha_operation(opPtr->operation, type, opPtr->channel,
 			 apply, 0);
 
   gp_set_strides(exaScratch.srcPitch, exaScratch.srcPitch);
@@ -795,7 +812,7 @@ lx_composite_multipass(PixmapPtr pxDst, unsigned long dstOffset, unsigned long s
 {
   struct blend_ops_t *opPtr;
   int sbpp = lx_get_bpp_from_format(exaScratch.srcFormat->fmt);
-  int apply;
+  int apply, type;
 
   /* Wait until the GP is idle - this will ensure that the scratch buffer
    * isn't occupied */
@@ -826,8 +843,9 @@ lx_composite_multipass(PixmapPtr pxDst, unsigned long dstOffset, unsigned long s
   apply = (exaScratch.srcFormat->alphabits == 0) ?
     CIMGP_APPLY_BLEND_TO_RGB : CIMGP_APPLY_BLEND_TO_ALL;
 
-  gp_set_alpha_operation(opPtr->operation, opPtr->type, opPtr->channel,
-	apply, 0);
+  /* If we're destroying the source alpha bits, then make sure we
+   * use the alpha before the color conversion
+   */
 
   gp_screen_to_screen_blt(exaScratch.bufferOffset, srcOffset, width, height, 0);
 
@@ -843,7 +861,9 @@ lx_composite_multipass(PixmapPtr pxDst, unsigned long dstOffset, unsigned long s
 
   lx_set_source_format(exaScratch.srcFormat->fmt, exaScratch.dstFormat->fmt);
 
-  gp_set_alpha_operation(opPtr->operation, opPtr->type, opPtr->channel,
+  type = get_op_type(exaScratch.srcFormat, exaScratch.dstFormat, opPtr->type);
+
+  gp_set_alpha_operation(opPtr->operation, type, opPtr->channel,
 			 apply, 0);
 
   gp_screen_to_screen_convert(dstOffset, exaScratch.bufferOffset,
