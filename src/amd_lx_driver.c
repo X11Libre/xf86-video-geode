@@ -505,8 +505,6 @@ LXPreInit(ScrnInfoPtr pScrni, int flags)
       }
     }
 
-    pGeode->useVGA = TRUE;
-
     if (pGeode->useVGA)
       pGeode->vesa = xcalloc(sizeof(VESARec), 1);
 
@@ -651,6 +649,9 @@ LXPreInit(ScrnInfoPtr pScrni, int flags)
 
     xf86DrvMsg(pScrni->scrnIndex, X_INFO, " PANEL: %s\n",
 	pGeode->Output & OUTPUT_PANEL ? "YES" : "NO");
+
+    xf86DrvMsg(pScrni->scrnIndex, X_INFO, " VGA: %s\n",
+	pGeode->useVGA ? "YES" : "NO");
 
     /* Set up VGA */
     if (pGeode->useVGA) {

@@ -152,18 +152,18 @@ LXAllocateVidMem(ScrnInfoPtr pScrni, void **memp, int size)
 }
 
 static void
-LXSetColorkey(ScrnInfoPtr pScrni, GeodePortPrivRec * pPriv) 
+LXSetColorkey(ScrnInfoPtr pScrni, GeodePortPrivRec * pPriv)
 {
   int red, green, blue;
   unsigned long key;
-  
+
   switch (pScrni->depth) {
   case 8:
     vg_get_display_palette_entry(pPriv->colorKey & 0xFF, &key);
     red = ((key >> 16) & 0xFF);
     green = ((key >> 8) & 0xFF);
     blue = (key & 0xFF);
-    break; 
+    break;
   case 16:
     red = (pPriv->colorKey & pScrni->mask.red) >>
       pScrni->offset.red << (8 - pScrni->weight.red);
@@ -177,7 +177,7 @@ LXSetColorkey(ScrnInfoPtr pScrni, GeodePortPrivRec * pPriv)
      * function is providing the offset by 1 more. So we take
      * this as a special case and subtract 1 for > 16
      */
-    
+
     red = (pPriv->colorKey & pScrni->mask.red) >>
       (pScrni->offset.red - 1) << (8 - pScrni->weight.red);
     green = (pPriv->colorKey & pScrni->mask.green) >>
@@ -187,12 +187,9 @@ LXSetColorkey(ScrnInfoPtr pScrni, GeodePortPrivRec * pPriv)
     break;
   }
 
-  if (pPriv->colorKeyMode != 0)
-    df_set_video_color_key((blue | (green << 8) | (red << 16)),
-			   0xFFFFFF, 1);
-  else
-    df_set_video_color_key(0, 0, 1);
-  
+  df_set_video_color_key((blue | (green << 8) | (red << 16)),
+	0xFFFFFF, (pPriv->colorKeyMode == 0));
+
   REGION_EMPTY(pScrni->pScreen, &pPriv->clip);
 }
 
