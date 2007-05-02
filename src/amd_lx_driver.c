@@ -244,9 +244,11 @@ LXAllocateMemory(ScreenPtr pScrn, ScrnInfoPtr pScrni, int rotate)
 	pGeode->displayPitch =
 	    ((pScrni->virtualX + 3) & ~3) * (pScrni->bitsPerPixel >> 3);
 
-    pGeode->Pitch = pGeode->displayPitch;
     pGeode->displayWidth = pGeode->displayPitch / bytpp;
-    pScrni->displayWidth = pGeode->displayWidth;
+
+
+    /* Sets pGeode->Pitch and pScrni->displayWidth based on the rotate settings */
+    LXSetRotatePitch(pScrni);
 
     fbavail = pGeode->FBAvail - GP3_SCRATCH_BUFFER_SIZE;
 

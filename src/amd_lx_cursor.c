@@ -101,7 +101,7 @@ LXSetCursorPosition(ScrnInfoPtr pScrni, int x, int y)
       hsx= 31; hsy = 31;
       break;
 
-    case RR_Rotate_90:
+    case RR_Rotate_270:
       newX = savey;
       newY = pScrni->pScreen->width - savex;
       hsx= 31; hsy = 0;
@@ -113,7 +113,7 @@ LXSetCursorPosition(ScrnInfoPtr pScrni, int x, int y)
       hsx = 0; hsy = 0;
       break;
 
-    case RR_Rotate_270:
+    case RR_Rotate_90:
       newX = pScrni->pScreen->height - savey;
       newY = savex;
       hsx= 0; hsy= 31;
@@ -161,7 +161,7 @@ LXLoadCursorImage(ScrnInfoPtr pScrni, unsigned char *src)
 			newX = x;
 			newY = y;
 			break;
-		case RR_Rotate_90:
+		case RR_Rotate_270:
 			 newX = y;
 			 newY = 31 - x;
 			 break;
@@ -169,7 +169,7 @@ LXLoadCursorImage(ScrnInfoPtr pScrni, unsigned char *src)
 			newX = 31 - x;
 			newY = 31 - y;
 			break;
-		case RR_Rotate_270:
+		case RR_Rotate_90:
 			newX = 31 - y;
 			newY = x;
 			break;

@@ -68,7 +68,10 @@ LXUpdateFunc(ScreenPtr pScreen, shadowBufPtr pBuf)
 
   /* Set up the blt */
 
+  gp_wait_until_idle();
   gp_declare_blt(0);
+
+  gp_set_bpp(pScrni->bitsPerPixel);
 
   switch(shaBpp) {
 	case 8:
@@ -79,12 +82,12 @@ LXUpdateFunc(ScreenPtr pScreen, shadowBufPtr pBuf)
 		gp_set_source_format(CIMGP_SOURCE_FMT_0_5_6_5);
 		break;
 
+	case 24:
 	case 32:
 		gp_set_source_format(CIMGP_SOURCE_FMT_8_8_8_8);
 		break;
   }
 
-  gp_set_bpp(pScrni->bitsPerPixel);
   gp_set_raster_operation(0xCC);
   gp_write_parameters();
 
@@ -128,10 +131,42 @@ LXUpdateFunc(ScreenPtr pScreen, shadowBufPtr pBuf)
     dstOffset = pGeode->displayOffset +
       (dy * pGeode->displayPitch) + (dx * (pScrni->bitsPerPixel >> 3));
 
-    gp_declare_blt(0);
+    gp_declare_blt(CIMGP_BLTFLAGS_HAZARD);
     gp_set_strides(pGeode->displayPitch, pGeode->Pitch);
     gp_rotate_blt(dstOffset, srcOffset, w, h, degrees);
+    pbox++;
   }
+}
+
+Bool LXSetRotatePitch(ScrnInfoPtr pScrni)
+{
+  GeodeRec *pGeode = GEODEPTR(pScrni);
+  switch (pGeode->rotation) {
+  case RR_Rotate_0:
+    pScrni->displayWidth = pGeode->displayWidth;
+    break;
+
+  case RR_Rotate_90:
+    pScrni->displayWidth = pScrni->pScreen->width;
+    break;
+
+    case RR_Rotate_180:
+      pScrni->displayWidth = pGeode->displayWidth;
+      break;
+
+    case RR_Rotate_270:
+      pScrni->displayWidth = pScrni->pScreen->width;
+      break;
+  }
+
+  /* Set the new drawing pitch */
+
+  if (pGeode->Compression)
+    pGeode->Pitch = LXCalculatePitchBytes(pScrni->displayWidth,
+					  pScrni->bitsPerPixel);
+  else
+    pGeode->Pitch = (pScrni->displayWidth *
+		     (pScrni->bitsPerPixel >> 3));
 }
 
 Bool
@@ -154,36 +189,7 @@ LXRotate(ScrnInfoPtr pScrni, DisplayModePtr mode)
 
     shadowRemove(pScrni->pScreen, NULL);
 
-    switch (pGeode->rotation) {
-    case RR_Rotate_0:
-	ErrorF("Rotate to 0 degrees\n");
-	pScrni->displayWidth = pGeode->displayWidth;
-	break;
-
-    case RR_Rotate_90:
-	ErrorF("Rotate to 90 degrees\n");
-	pScrni->displayWidth = pScrni->pScreen->width;
-	break;
-
-    case RR_Rotate_180:
-	ErrorF("Rotate to 180 degrees\n");
-	pScrni->displayWidth = pGeode->displayWidth;
-	break;
-
-    case RR_Rotate_270:
-	ErrorF("Rotate to 270 degrees\n");
-	pScrni->displayWidth = pScrni->pScreen->width;
-	break;
-    }
-
-    /* Set the new drawing pitch */
-
-    if (pGeode->Compression)
-		pGeode->Pitch = LXCalculatePitchBytes(pScrni->displayWidth,
-		 pScrni->bitsPerPixel);
-	else
-		pGeode->Pitch = (pScrni->displayWidth *
-		(pScrni->bitsPerPixel >> 3));
+    LXSetRotatePitch(pScrni);
 
     if (pGeode->rotation != RR_Rotate_0) {
 
@@ -201,6 +207,8 @@ LXRotate(ScrnInfoPtr pScrni, DisplayModePtr mode)
 	pScrni->fbOffset = pGeode->displayOffset;
     else
 	pScrni->fbOffset = pGeode->shadowOffset;
+
+    vg_set_display_offset(pScrni->fbOffset);
 
     pScrni->pScreen->ModifyPixmapHeader(pPixmap,
 	pScrni->pScreen->width,
