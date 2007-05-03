@@ -104,8 +104,6 @@ static void GXQueryBestSize(ScrnInfoPtr, Bool,
 static int GXPutImage(ScrnInfoPtr, short, short, short, short, short, short,
     short, short, int, unsigned char *, short, short, Bool,
     RegionPtr, pointer, DrawablePtr pDraw);
-static int GXQueryImageAttributes(ScrnInfoPtr, int, unsigned short *,
-    unsigned short *, int *, int *);
 
 static void GXBlockHandler(int, pointer, pointer, pointer);
 void GXSetVideoPosition(int x, int y, int width, int height,
@@ -405,7 +403,7 @@ GXSetupImageVideo(ScreenPtr pScrn)
     adapt->GetPortAttribute = GXGetPortAttribute;
     adapt->QueryBestSize = GXQueryBestSize;
     adapt->PutImage = GXPutImage;
-    adapt->QueryImageAttributes = GXQueryImageAttributes;
+    adapt->QueryImageAttributes = GeodeQueryImageAttributes;
 
     pPriv->filter = 0;
     pPriv->colorKey = pGeode->videoKey;
