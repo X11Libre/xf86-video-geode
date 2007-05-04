@@ -154,7 +154,7 @@ Bool LXSetRotatePitch(ScrnInfoPtr pScrni)
     break;
 
   case RR_Rotate_90:
-    pScrni->displayWidth = pScrni->pScreen->width;
+    pScrni->displayWidth = pGeode->displayWidth;
     break;
 
     case RR_Rotate_180:
@@ -162,7 +162,7 @@ Bool LXSetRotatePitch(ScrnInfoPtr pScrni)
       break;
 
     case RR_Rotate_270:
-      pScrni->displayWidth = pScrni->pScreen->width;
+      pScrni->displayWidth = pGeode->displayWidth;
       break;
   }
 
