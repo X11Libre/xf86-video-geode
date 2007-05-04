@@ -236,7 +236,7 @@ LXAllocateMemory(ScreenPtr pScrn, ScrnInfoPtr pScrni, int rotate)
     unsigned int fboffset, fbavail;
     unsigned int size;
     unsigned int bytpp = (pScrni->bitsPerPixel + 7) / 8;
-    BOOL ret = TRUE;
+    Bool ret = TRUE;
 
     if (pGeode->tryCompression)
 	pGeode->displayPitch =
@@ -331,6 +331,8 @@ LXAllocateMemory(ScreenPtr pScrn, ScrnInfoPtr pScrni, int rotate)
        pGeode->pExa->offScreenBase = fboffset;
        pGeode->pExa->memorySize = fboffset + fbavail;
     }
+
+    return ret;
 }
 
 static Bool

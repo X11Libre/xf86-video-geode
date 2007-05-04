@@ -141,7 +141,14 @@ LXUpdateFunc(ScreenPtr pScreen, shadowBufPtr pBuf)
 Bool LXSetRotatePitch(ScrnInfoPtr pScrni)
 {
   GeodeRec *pGeode = GEODEPTR(pScrni);
-  switch (pGeode->rotation) {
+  int rotation = LXGetRotation(pScrni->pScreen);
+
+  /* We can't depend on  the value of pGeode->rotation here, because
+   * it might not have been set yet.  Use what RandR is telling us,
+   * instead
+   */
+
+  switch (rotation) {
   case RR_Rotate_0:
     pScrni->displayWidth = pGeode->displayWidth;
     break;
