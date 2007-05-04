@@ -289,7 +289,7 @@ LXGetRotation(ScreenPtr pScreen)
 {
     XF86RandRInfoPtr pRandr = XF86RANDRINFO(pScreen);
 
-    return pRandr->rotation;
+    return pRandr ? pRandr->rotation : RR_Rotate_0;
 }
 
 Bool
