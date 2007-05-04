@@ -427,6 +427,9 @@ LXMapMem(ScrnInfoPtr pScrni)
     cim_fb_ptr = (unsigned char *)xf86MapPciMem(index, VIDMEM_FRAMEBUFFER,
 						tag, pci->memBase[0], pGeode->FBAvail + CIM_CMD_BFR_SZ);
 
+    if (pScrni->memPhysBase == 0)
+      pScrni->memPhysBase = pci->memBase[0];
+
     cmd_bfr_phys = pci->memBase[0] + pGeode->CmdBfrOffset;
     cim_cmd_base_ptr = cim_fb_ptr + pGeode->CmdBfrOffset;
 
@@ -484,7 +487,6 @@ LXPreInit(ScrnInfoPtr pScrni, int flags)
     GeodePtr pGeode;
     ClockRangePtr GeodeClockRange;
     OptionInfoRec *GeodeOptions = &LX_GeodeOptions[0];
-    INIT_BASE_ADDRESSES addr;
     int ret;
     unsigned long cpuver, cpurev;
     QQ_WORD msrValue;
@@ -529,9 +531,8 @@ LXPreInit(ScrnInfoPtr pScrni, int flags)
     cim_rdmsr = LXReadMSR;
     cim_wrmsr = LXWriteMSR;
 
-    /* Detect the chipset with Cimarron */
-
-    init_detect_cpu(&cpuver, &cpurev);
+    /* Set up the Cimarron MSR tables */
+    msr_init_table();
 
     if (cpuver & 0xFF != CIM_CPU_GEODELX)
       xf86DrvMsg(pScrni->scrnIndex, X_ERROR,
@@ -678,13 +679,18 @@ LXPreInit(ScrnInfoPtr pScrni, int flags)
 	    }
     }
 
-    init_read_base_addresses(&addr);
+    /* Read the amount of framebuffer memory */
 
-    if (pGeode->FBAvail  == 0)
-	pGeode->FBAvail = addr.framebuffer_size;
+    if (pGeode->FBAvail  == 0) {
+        unsigned long value;
+	OUTW(0xAC1C, 0xFC53);
+	OUTW(0xAC1C, 0x0200);
 
-    if (pScrni->memPhysBase == 0)
-      pScrni->memPhysBase = addr.framebuffer_base;
+	value = (unsigned long)(INW(0xAC1E)) & 0xFE;
+
+	pGeode->FBAvail = value << 20;
+    }
+
 
     pScrni->fbOffset = 0;
 
