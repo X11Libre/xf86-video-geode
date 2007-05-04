@@ -141,32 +141,8 @@ LXUpdateFunc(ScreenPtr pScreen, shadowBufPtr pBuf)
 Bool LXSetRotatePitch(ScrnInfoPtr pScrni)
 {
   GeodeRec *pGeode = GEODEPTR(pScrni);
-  int rotation = LXGetRotation(pScrni->pScreen);
 
-  /* We can't depend on  the value of pGeode->rotation here, because
-   * it might not have been set yet.  Use what RandR is telling us,
-   * instead
-   */
-
-  switch (rotation) {
-  case RR_Rotate_0:
-    pScrni->displayWidth = pGeode->displayWidth;
-    break;
-
-  case RR_Rotate_90:
-    pScrni->displayWidth = pGeode->displayWidth;
-    break;
-
-    case RR_Rotate_180:
-      pScrni->displayWidth = pGeode->displayWidth;
-      break;
-
-    case RR_Rotate_270:
-      pScrni->displayWidth = pGeode->displayWidth;
-      break;
-  }
-
-  /* Set the new drawing pitch */
+  pScrni->displayWidth = pGeode->displayWidth;
 
   if (pGeode->Compression)
     pGeode->Pitch = LXCalculatePitchBytes(pScrni->displayWidth,
