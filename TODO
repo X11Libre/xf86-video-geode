@@ -1,27 +1,19 @@
-This is the list of things that need to be done
+General:
 
-=== LX driver ===
+* Add automagic probing of the fb driver (for memory size)
+* Write the man page
 
-CORE:
-* Compression is pretty much hosed
-* Artifacts are on the screen - they are probably render related
-* Screen panning
-* VT switching causes instablity
+GX:
 
-MOUSE:
-* Mouse is munged in 24bpp mode
+* Fix the options so they are sane (i.e eliminate one of SWCursor or HWCursor)
+* TV support
+* Fix the rotate text strings (CCW?)
+* Whitespace / indenting
+* Don't crash when rotating when playing video
 
-EXA:
-* Support a8 as a source or destination (?)
-* Convert masks with an alpha chanel to a8 and a4 masks (?)
-* Support multiple pass operations when a mask is enabled
-* See if we can figure out a way to set the correct alpha when the source
-  format doesn't have an alpha channel but the destination does
-* Handle masks when the source isn't 1x1
-* Rendercheck still has many failures
-* We assume that the destination buffer fits in the scratch buffer during
-  a multipass operation
+LX:
 
-VIDEO:
-* Support rotated video (rotate the YUV source)
-
+* Fix the options so they are sane
+* TV support (VOP)
+* Rotated video
+* ARGB cursor
