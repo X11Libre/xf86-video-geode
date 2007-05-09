@@ -61,8 +61,6 @@ LXUpdateFunc(ScreenPtr pScreen, shadowBufPtr pBuf)
   ScrnInfoPtr pScrni = xf86Screens[pScreen->myNum];
   GeodeRec *pGeode = GEODEPTR(pScrni);
 
-  unsigned int srcBase;
-
   fbGetDrawable (&pShadow->drawable, shaBits, shaStride, shaBpp, shaXoff,
 		shaYoff);
 
@@ -145,11 +143,12 @@ Bool LXSetRotatePitch(ScrnInfoPtr pScrni)
   pScrni->displayWidth = pGeode->displayWidth;
 
   if (pGeode->Compression)
-    pGeode->Pitch = LXCalculatePitchBytes(pScrni->displayWidth,
+    pGeode->Pitch = GeodeCalculatePitchBytes(pScrni->displayWidth,
 					  pScrni->bitsPerPixel);
   else
     pGeode->Pitch = (pScrni->displayWidth *
 		     (pScrni->bitsPerPixel >> 3));
+  return TRUE;
 }
 
 Bool

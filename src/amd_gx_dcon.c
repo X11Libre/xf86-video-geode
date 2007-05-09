@@ -98,7 +98,7 @@ eccmd(ScrnInfoPtr pScrni, unsigned char cmd)
 static int
 boardrev(ScrnInfoPtr pScrni)
 {
-    int i, ret;
+    int ret;
 
     ret = eccmd(pScrni, 0x09);
 

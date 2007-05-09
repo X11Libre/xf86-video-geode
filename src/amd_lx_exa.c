@@ -287,7 +287,6 @@ static unsigned int lx_get_source_color(PicturePtr pSrc, int x, int y, int dstFo
 static Bool
 lx_prepare_solid(PixmapPtr pxMap, int alu, Pixel planemask, Pixel fg)
 {
-  GeodeRec *pGeode = GEODEPTR_FROM_PIXMAP(pxMap);
   int pitch = exaGetPixmapPitch(pxMap);
   int op = (planemask == ~0U) ? SDfn[alu] : SDfn_PM[alu];
 
@@ -304,6 +303,7 @@ lx_prepare_solid(PixmapPtr pxMap, int alu, Pixel planemask, Pixel fg)
   gp_set_solid_source(fg);
   gp_set_strides(pitch, pitch);
   gp_write_parameters();
+  return TRUE;
 }
 
 static void
@@ -321,7 +321,6 @@ static Bool
 lx_prepare_copy( PixmapPtr pxSrc, PixmapPtr pxDst, int dx, int dy,
 		 int alu, Pixel planemask)
 {
-  GeodeRec *pGeode = GEODEPTR_FROM_PIXMAP(pxDst);
   int dpitch = exaGetPixmapPitch(pxDst);
   int op = (planemask == ~0U) ? SDfn[alu] : SDfn_PM[alu];
 
@@ -341,6 +340,7 @@ lx_prepare_copy( PixmapPtr pxSrc, PixmapPtr pxDst, int dx, int dy,
 
   gp_set_strides(dpitch, exaScratch.srcPitch);
   gp_write_parameters();
+  return TRUE;
 }
 
 static void
@@ -513,7 +513,6 @@ static Bool lx_prepare_composite(int op, PicturePtr pSrc, PicturePtr pMsk,
 {
   GeodeRec *pGeode = GEODEPTR_FROM_PIXMAP(pxDst);
   const struct exa_format_t *srcFmt, *dstFmt;
-  int apply;
 
   /* Get the formats for the source and destination */
 
@@ -656,7 +655,7 @@ int lx_get_bpp_from_format(int format) {
  * are the same
  */
 
-static lx_set_source_format(int srcFormat, int dstFormat)
+static void lx_set_source_format(int srcFormat, int dstFormat)
 {
   if (!(srcFormat & 0x10) && (dstFormat & 0x10))
     gp_set_source_format(srcFormat | 0x10);

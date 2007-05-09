@@ -438,9 +438,8 @@ static void
 GXSubsequentMono8x8PatternFillRect(ScrnInfoPtr pScrni, int patx, int paty,
     int x, int y, int w, int h)
 {
-    DBLOG(2,
-        "GXSubsequentMono8x8PatternFillRect() pat %#x,%#x at %d,%d %dx%d\n",
-        patx, paty, x, y, w, h);
+    DEBUGMSG(1, (0, X_INFO, "%s() pat %#x,%#x at %d,%d %dx%d\n",
+        __func__, patx, paty, x, y, w, h));
 #ifndef OPT_ACCEL
     gfx_pattern_fill(x, y, w, h);
 #else
@@ -481,8 +480,8 @@ static void
 GXSetupForScreenToScreenCopy(ScrnInfoPtr pScrni, int xdir, int ydir, int rop,
     uint planemask, int trans_color)
 {
-    DBLOG(2, "GXSetupForScreenToScreenCopy() xd%d yd%d rop %#x %#x %#x\n",
-        xdir, ydir, rop, planemask, trans_color);
+    DEBUGMSG(1, (0, X_INFO, "%s() xd%d yd%d rop %#x %#x %#x\n",
+        __func__, xdir, ydir, rop, planemask, trans_color));
     rop &= 0x0F;
 #ifndef OPT_ACCEL
     {
@@ -542,8 +541,8 @@ static void
 GXSubsequentScreenToScreenCopy(ScrnInfoPtr pScrni,
     int x1, int y1, int x2, int y2, int w, int h)
 {
-    DBLOG(2, "GXSubsequentScreenToScreenCopy() from %d,%d to %d,%d %dx%d\n",
-        x1, y1, x2, y2, w, h);
+    DEBUGMSG(1, (0, X_INFO, "%s() from %d,%d to %d,%d %dx%d\n",
+        __func__, x1, y1, x2, y2, w, h));
 #ifndef OPT_ACCEL
     {
         int flags = 0;
@@ -617,8 +616,8 @@ GXSetupForScanlineImageWrite(ScrnInfoPtr pScrni, int rop, uint planemask,
 {
     GeodeRec *pGeode = GEODEPTR(pScrni);
 
-    DBLOG(2, "GXSetupForScanlineImageWrite() rop %#x %#x %#x %d %d\n",
-        rop, planemask, trans_color, bpp, depth);
+    DEBUGMSG(1, (0, X_INFO, "%s() rop %#x %#x %#x %d %d\n",
+        __func__, rop, planemask, trans_color, bpp, depth));
     rop &= 0x0F;
     /* transparency is a parameter to set_rop, but set...pattern clears
      * transparency */
@@ -651,8 +650,8 @@ static void
 GXSubsequentScanlineImageWriteRect(ScrnInfoPtr pScrni,
     int x, int y, int w, int h, int skipleft)
 {
-    DBLOG(2, "GXSubsequentScanlineImageWriteRect() rop %d,%d %dx%d %d\n", x,
-        y, w, h, skipleft);
+    DEBUGMSG(1, (0, X_INFO, "%s() rop %d,%d %dx%d %d\n",
+        __func__, x, y, w, h, skipleft));
     giwr.x = x;
     giwr.y = y;
     giwr.w = w;
@@ -691,7 +690,7 @@ GXSubsequentImageWriteScanline(ScrnInfoPtr pScrni, int bufno)
 #endif
 
 #if GX_ONE_LINE_AT_A_TIME
-    DBLOG(3, "GXSubsequentImageWriteScanline() %d\n", bufno);
+    DEBUGMSG(1, (0, X_INFO, "%s() %d\n", __func__, bufno));
 #if !GX_USE_OFFSCRN_MEM
     offset = pGeode->AccelImageWriteBuffers[bufno] - pGeode->FBBase;
     gfx2_screen_to_screen_blt(offset, CALC_FBOFFSET(giwr.x, giwr.y), giwr.w,
@@ -704,7 +703,7 @@ GXSubsequentImageWriteScanline(ScrnInfoPtr pScrni, int bufno)
 #else /* if GX_ONE_LINE_AT_A_TIME */
     int blt_height;
 
-    DBLOG(3, "GXSubsequentImageWriteScanline() %d\n", bufno);
+    DEBUGMSG(1, (0, X_INFO, "%s() %d\n", __func__, bufno));
 
     if ((blt_height = pGeode->NoOfImgBuffers) > giwr.h)
         blt_height = giwr.h;
@@ -752,9 +751,8 @@ GXSetupForScanlineCPUToScreenColorExpandFill(ScrnInfoPtr pScrni,
     GeodeRec *pGeode = GEODEPTR(pScrni);
     ulong srcpitch;
 
-    DBLOG(2,
-        "GXSetupForScanlineCPUToScreenColorExpandFill() fg %#x bg %#x "
-        "rop %#x %#x\n", fg, bg, rop, planemask);
+    DEBUGMSG(1, (0, X_INFO, "%s() fg %#x bg %#x rop %#x %#x\n",
+        __func__, fg, bg, rop, planemask));
     rop &= 0x0F;
     srcpitch = ((pGeode->Pitch + 31) >> 5) << 2;
 #ifndef OPT_ACCEL
@@ -803,9 +801,8 @@ static void
 GXSubsequentScanlineCPUToScreenColorExpandFill(ScrnInfoPtr pScrni,
     int x, int y, int w, int h, int skipleft)
 {
-    DBLOG(2,
-        "GXSubsequentScanlineCPUToScreenColorExpandFill() %d,%d %dx%d %d\n",
-        x, y, w, h, skipleft);
+    DEBUGMSG(1, (0, X_INFO, "%s() %d,%d %dx%d %d\n",
+        __func__, x, y, w, h, skipleft));
     gc2s.x = x;
     gc2s.y = y;
     gc2s.w = w;
@@ -845,7 +842,7 @@ GXSubsequentColorExpandScanline(ScrnInfoPtr pScrni, int bufno)
 {
     GeodeRec *pGeode = GEODEPTR(pScrni);
 
-    DBLOG(3, "GXSubsequentColorExpandScanline() %d\n", bufno);
+    DEBUGMSG(1, (0, X_INFO, "%s() %d\n", __func__, bufno));
 #ifndef OPT_ACCEL
     {
 #if GX_ONE_LINE_AT_A_TIME
@@ -929,9 +926,8 @@ static void
 GXSetupForScreenToScreenColorExpandFill(ScrnInfoPtr pScrni, int fg, int bg,
     int rop, uint planemask)
 {
-    DBLOG(2,
-        "GXSetupForScreenToScreenColorExpandFill() fg %#x bg %#x "
-        "rop %#x %#x\n", fg, bg, rop, planemask);
+    DEBUGMSG(1, (0, X_INFO, "%s() fg %#x bg %#x rop %#x %#x\n",
+        __func__, fg, bg, rop, planemask));
     rop &= 0x0F;
 #ifndef OPT_ACCEL
     {
@@ -983,9 +979,8 @@ static void
 GXSubsequentScreenToScreenColorExpandFill(ScrnInfoPtr pScrni,
     int x, int y, int w, int h, int srcx, int srcy, int offset)
 {
-    DBLOG(2,
-        "GXSubsequentScreenToScreenColorExpandFill() %d,%d %dx%d %d,%d %d\n",
-        x, y, w, h, srcx, srcy, offset);
+    DEBUGMSG(1, (0, X_INFO, "%s() %d,%d %dx%d %d,%d %d\n",
+        __func__, x, y, w, h, srcx, srcy, offset));
 #ifndef OPT_ACCEL
     gfx2_mono_expand_blt(CALC_FBOFFSET(srcx, srcy), offset, 0,
         CALC_FBOFFSET(x, y), w, h, 0);
@@ -1047,7 +1042,8 @@ static unsigned short vmode[] = {
 static void
 GXSetupForSolidLine(ScrnInfoPtr pScrni, int color, int rop, uint planemask)
 {
-    DBLOG(2, "GXSetupForSolidLine() %#x %#x %#x\n", color, rop, planemask);
+    DEBUGMSG(1, (0, X_INFO, "%s() %#x %#x %#x\n",
+        __func__, color, rop, planemask));
     rop &= 0x0F;
 #ifndef OPT_ACCEL
     gfx_set_solid_pattern(color);
@@ -1098,8 +1094,8 @@ GXSubsequentSolidBresenhamLine(ScrnInfoPtr pScrni, int x1, int y1,
 {
     long axial, diagn;
 
-    DBLOG(2, "GXSubsequentSolidBresenhamLine() %d,%d %d %d, %d %d, %d\n",
-        x1, y1, absmaj, absmin, err, len, octant);
+    DEBUGMSG(1, (0, X_INFO, "%s() %d,%d %d %d, %d %d, %d\n",
+        __func__, x1, y1, absmaj, absmin, err, len, octant));
     if (len <= 0)
         return;
     axial = absmin;
@@ -1145,8 +1141,8 @@ GXSubsequentSolidTwoPointLine(ScrnInfoPtr pScrni, int x0, int y0,
     long dx, dy, dmaj, dmin, octant, bias;
     long axial, diagn, err, len;
 
-    DBLOG(2, "GXSubsequentSolidTwoPointLine() %d,%d %d,%d, %#x\n",
-        x0, y0, x1, y1, flags);
+    DEBUGMSG(1, (0, X_INFO, "%s() %d,%d %d,%d, %#x\n",
+        __func__, x0, y0, x1, y1, flags));
 
     if ((dx = x1 - x0) < 0)
         dx = -dx;
@@ -1216,7 +1212,8 @@ static void
 GXSubsequentSolidHorVertLine(ScrnInfoPtr pScrni,
     int x, int y, int len, int dir)
 {
-    DBLOG(2, "GXSubsequentHorVertLine() %d,%d %d %d\n", x, y, len, dir);
+    DEBUGMSG(1, (0, X_INFO, "%s() %d,%d %d %d\n",
+        __func__, x, y, len, dir));
 #ifndef OPT_ACCEL
     if (dir == DEGREES_0)
         gfx_pattern_fill(x, y, len, 1);
@@ -1680,7 +1677,6 @@ static Bool
 amd_gx_exa_CheckComposite(int op, PicturePtr pSrc, PicturePtr pMsk,
     PicturePtr pDst)
 {
-    amd_gx_exa_fmt_t *sfp, *dfp;
     GeodeRec *pGeode = GEODEPTR_FROM_PICTURE(pDst);
 
     if (op > gxPictOpMAX)
@@ -1741,7 +1737,7 @@ amd_gx_exa_Composite(PixmapPtr pxDst, int srcX, int srcY, int maskX,
     int op, current_line, max_lines, lines, pass, scratchPitch;
     unsigned int srcOffset, srcOfs, srcPitch, srcPch, srcBpp;
     unsigned int dstOffset, dstOfs, dstPitch, dstPch, dstBpp;
-    unsigned int sizes, strides, blt_mode, rop, pitch;
+    unsigned int sizes, strides, blt_mode, rop;
     GeodeRec *pGeode = GEODEPTR_FROM_PIXMAP(pxDst);
 
     //ErrorF("amd_gx_exa_Composite() from %d,%d to %d,%d %dx%d\n",

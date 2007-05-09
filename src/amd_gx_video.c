@@ -92,7 +92,6 @@ GXSetVideoPosition()
 #else
 
 #define DBUF 1
-void GXInitVideo(ScreenPtr pScrn);
 void GXResetVideo(ScrnInfoPtr pScrni);
 static XF86VideoAdaptorPtr GXSetupImageVideo(ScreenPtr);
 static void GXInitOffscreenImages(ScreenPtr);
@@ -684,7 +683,6 @@ GXCopyData422(unsigned char *src, unsigned char *dst,
 static void
 GXVideoSave(ScreenPtr pScreen, ExaOffscreenArea *area) {
 	ScrnInfoPtr pScrni = xf86Screens[pScreen->myNum];
-	GeodeRec *pGeode = GEODEPTR(pScrni);
 	GeodePortPrivRec *pPriv = GET_PORT_PRIVATE(pScrni);
 
 	if (area == pPriv->area)

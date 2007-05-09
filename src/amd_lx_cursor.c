@@ -35,12 +35,8 @@
 #include "amd.h"
 
 /* Forward declarations of the functions */
-Bool LXHWCursorInit(ScreenPtr pScrn);
 static void LXSetCursorColors(ScrnInfoPtr pScrni, int bg, int fg);
 static void LXSetCursorPosition(ScrnInfoPtr pScrni, int x, int y);
-void LXLoadCursorImage(ScrnInfoPtr pScrni, unsigned char *src);
-void LXHideCursor(ScrnInfoPtr pScrni);
-void LXShowCursor(ScrnInfoPtr pScrni);
 static Bool LXUseHWCursor(ScreenPtr pScrn, CursorPtr pCurs);
 extern void LXSetVideoPosition(int x, int y, int width, int height,
     short src_w, short src_h, short drw_w,
@@ -84,7 +80,6 @@ LXSetCursorColors(ScrnInfoPtr pScrni, int bg, int fg)
 static void
 LXSetCursorPosition(ScrnInfoPtr pScrni, int x, int y)
 {
-    static unsigned long panOffset = 0;
     GeodeRec *pGeode = GEODEPTR(pScrni);
     int savex, savey;
     int newX, newY;

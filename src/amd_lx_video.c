@@ -123,7 +123,6 @@ LXVideoSave(ScreenPtr pScreen, ExaOffscreenArea *area)
 {
   ScrnInfoPtr pScrni = xf86Screens[pScreen->myNum];
   
-  GeodeRec *pGeode = GEODEPTR(pScrni);
   GeodePortPrivRec *pPriv = GET_PORT_PRIVATE(pScrni);
   
   if (area == pPriv->area)
@@ -134,7 +133,6 @@ LXVideoSave(ScreenPtr pScreen, ExaOffscreenArea *area)
 static unsigned int
 LXAllocateVidMem(ScrnInfoPtr pScrni, void **memp, int size)
 {
-  GeodeRec *pGeode = GEODEPTR(pScrni);
   ExaOffscreenArea *area = *memp;
   
   if (area != NULL) {
@@ -359,7 +357,8 @@ LXCopyPacked(ScrnInfoPtr pScrni, int id, unsigned char *buf,
 
   return TRUE;
 }
-  
+
+void  
 LXDisplayVideo(ScrnInfoPtr pScrni, int id, short width, short height, 
 	       BoxPtr dstBox, short srcW, short srcH, short drawW, short drawH)
 {
@@ -762,7 +761,6 @@ LXDisplaySurface(XF86SurfacePtr surface,
   ScrnInfoPtr pScrni = surface->pScrn;
   GeodePortPrivRec *portPriv = GET_PORT_PRIVATE(pScrni);
   
-  INT32 x1, y1, x2, y2;
   BoxRec dstBox;
 
   dstBox.x1 = drawX;
@@ -770,7 +768,7 @@ LXDisplaySurface(XF86SurfacePtr surface,
   dstBox.y1 = drawY;
   dstBox.y2 = drawY + drawH;
 
-  if (drawW <= 0 | drawH <=0)
+  if ((drawW <= 0) | (drawH <=0))
     return Success;
 
   /* Is this still valid? */
@@ -806,7 +804,7 @@ LXAllocateSurface(ScrnInfoPtr pScrni, int id, unsigned short w,
 {
   GeodeRec *pGeode = GEODEPTR(pScrni);
   void * area = NULL;
-  int pitch, fbpitch, lines;
+  int pitch, lines;
   unsigned offset;
   struct OffscreenPrivRec *pPriv;
 
@@ -819,8 +817,12 @@ LXAllocateSurface(ScrnInfoPtr pScrni, int id, unsigned short w,
   pitch = ((w << 1) + 15) & ~15;
   lines = ((pitch * h) + (pGeode->Pitch - 1)) /  pGeode->Pitch;
   
-  if (!(offset = LXVidAllocMem(pScrni, &area, lines)))
+  offset = LXAllocateVidMem(pScrni, &area, lines);
+
+  if (offset == 0) {
+    ErrorF("Error while allocating an offscreen region.\n");
     return BadAlloc;
+  }
 
   surface->width = w;
   surface->height = h;

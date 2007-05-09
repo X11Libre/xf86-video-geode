@@ -34,6 +34,7 @@
 
 #include "vgaHW.h"
 #include "xf86int10.h"
+#include <X11/extensions/randr.h>
 
 #include "xf86xv.h"
 
@@ -481,5 +482,44 @@ int GeodeCalculatePitchBytes(unsigned int width, unsigned int bpp);
 /* amd_msr.c */
 int GeodeReadMSR(unsigned long addr, unsigned long *lo, unsigned long *hi);
 int GeodeWriteMSR(unsigned long addr, unsigned long lo, unsigned long hi);
+
+/* amd_gx_cursor.c */
+Bool GXHWCursorInit(ScreenPtr pScrn);
+void GXLoadCursorImage(ScrnInfoPtr pScrni, unsigned char *src);
+void GXHideCursor(ScrnInfoPtr pScrni);
+void GXShowCursor(ScrnInfoPtr pScrni);
+
+/* amd_gx_randr.c */
+Rotation GXGetRotation(ScreenPtr pScreen);
+Bool GXRandRInit(ScreenPtr pScreen, int rotation);
+
+/* amd_gx_rotate.c */
+Bool GXRotate(ScrnInfoPtr pScrni, DisplayModePtr mode);
+
+/* amd_gx_accel.c */
+Bool GXAccelInit(ScreenPtr pScrn);
+
+/* amd_gx_video.c */
+void GXInitVideo(ScreenPtr pScrn);
+
+/* amd_lx_cursor.c */
+Bool LXHWCursorInit(ScreenPtr pScrn);
+void LXLoadCursorImage(ScrnInfoPtr pScrni, unsigned char *src);
+void LXHideCursor(ScrnInfoPtr pScrni);
+void LXShowCursor(ScrnInfoPtr pScrni);
+
+/* amd_lx_randr.c */
+Rotation LXGetRotation(ScreenPtr pScreen);
+Bool LXRandRInit(ScreenPtr pScreen, int rotation);
+
+/* amd_lx_rotate.c */
+Bool LXSetRotatePitch(ScrnInfoPtr pScrni);
+Bool LXRotate(ScrnInfoPtr pScrni, DisplayModePtr mode);
+
+/* amd_lx_exa.c */
+Bool LXExaInit(ScreenPtr pScreen);
+
+/* amd_lx_video.c */
+void LXInitVideo(ScreenPtr pScrn);
 
 #endif /* _AMD_GEODE_H_ */

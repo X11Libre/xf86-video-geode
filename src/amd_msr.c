@@ -4,6 +4,7 @@
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/errno.h>
+#include "os.h"
 
 static int _msr_open(void)
 {

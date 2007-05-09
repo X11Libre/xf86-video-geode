@@ -39,6 +39,7 @@
 #include "xf86cmap.h"
 #include "compiler.h"
 #include "mipointer.h"
+#include "shadow.h"
 #include <X11/extensions/randr.h>
 #include "fb.h"
 #include "miscstruct.h"
@@ -294,10 +295,11 @@ GXAllocateMemory(ScreenPtr pScrn, ScrnInfoPtr pScrni, int rotate)
 	  xf86DrvMsg(pScrni->scrnIndex, X_INFO,
 		     "Cache disabled - no offscreen memory available.\n");
       } else
-	xf86DrvMsgp(pScrni->scrnIndex, X_INFO,
+	xf86DrvMsg(pScrni->scrnIndex, X_INFO,
 		    "XAA offscreen memory has already been allocated.\n");
     }
   }
+  return ret;
 }
 
 static Bool
@@ -353,7 +355,7 @@ GXMapMem(ScrnInfoPtr pScrni)
   if (!pGeode->NoAccel && pGeode->useEXA)
     pGeode->pExa->memoryBase = pGeode->FBBase;
 
-  xf86DrvMsg(index, X_INFO, "Found Geode %lx %p\n",
+  xf86DrvMsg(index, X_INFO, "Found Geode %x %p\n",
 	     pGeode->FBAvail, pGeode->FBBase);
 
   return TRUE;
@@ -366,14 +368,14 @@ GXMapMem(ScrnInfoPtr pScrni)
 static Bool
 GXCheckVGA(ScrnInfoPtr pScrni) {
 
-  char *vgasig = "IBM VGA Compatible";
+  const char *vgasig = "IBM VGA Compatible";
   vgaHWPtr pvgaHW = VGAHWPTR(pScrni);
   int ret;
 
   if (!vgaHWMapMem(pScrni))
     return FALSE;
 
-  ret = memcmp(pvgaHW->Base + 0x1E, "IBM VGA Compatible", 18);
+  ret = memcmp(pvgaHW->Base + 0x1E, vgasig, strlen(vgasig));
   vgaHWUnmapMem(pScrni);
 
   return ret ? FALSE : TRUE;
@@ -389,9 +391,7 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
   QQ_WORD msrValue;
   rgb defaultWeight = { 0, 0, 0 };
   int modecnt;
-  int maj, min;
   char *s, *panelgeo;
-  char **modes;
 
   pGeode = pScrni->driverPrivate = xnfcalloc(sizeof(GeodeRec), 1);
 
@@ -559,7 +559,7 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
     pGeode->Panel = TRUE;
   } else if (pGeode->Panel) {
     if (panelgeo != NULL) {
-      if (GXGetFPInfo(panelgeo, &pGeode->PanelX, &pGeode->PanelY))
+      if (GeodeGetFPGeometry(panelgeo, &pGeode->PanelX, &pGeode->PanelY))
 	pGeode->Panel = FALSE;
     }
 #ifdef PNL_SUP
@@ -1188,7 +1188,6 @@ GXScreenInit(int scrnIndex, ScreenPtr pScrn, int argc, char **argv)
   GeodeRec *pGeode = GEODEPTR(pScrni);
   XF86ModReqInfo shadowReq;
   int maj, min, ret, rotate;
-  BOOL shadowfb = TRUE;
 
   pGeode->starting = TRUE;
 
@@ -1453,7 +1452,7 @@ GXSetupChipsetFPtr(ScrnInfoPtr pScrn)
 }
 
 /* ====== Common functions ======
-/* These are all the common functions that we use for both GX and LX - They live here
+ * These are all the common functions that we use for both GX and LX - They live here
  * because most of them came along for the GX first, and then were adapted to the LX.
  *  We could move these to a common function, but there is no hurry
  * ============================== */ 

@@ -42,12 +42,8 @@
 #include "amd.h"
 
 /* Forward declarations of the functions */
-Bool GXHWCursorInit(ScreenPtr pScrn);
 static void GXSetCursorColors(ScrnInfoPtr pScrni, int bg, int fg);
 static void GXSetCursorPosition(ScrnInfoPtr pScrni, int x, int y);
-void GXLoadCursorImage(ScrnInfoPtr pScrni, unsigned char *src);
-void GXHideCursor(ScrnInfoPtr pScrni);
-void GXShowCursor(ScrnInfoPtr pScrni);
 static Bool GXUseHWCursor(ScreenPtr pScrn, CursorPtr pCurs);
 extern void GXSetVideoPosition(int x, int y, int width, int height,
     short src_w, short src_h, short drw_w,

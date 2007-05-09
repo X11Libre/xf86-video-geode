@@ -65,6 +65,7 @@
 #include "cim_defs.h"
 #include "cim_regs.h"
 #include "amd.h"
+#include "shadow.h"
 
 /* Bring in VGA functions */
 #include "amd_lx_vga.c"
@@ -176,7 +177,6 @@ static int
 lx_set_custom_mode(GeodeRec *pGeode, DisplayModePtr pMode, int bpp)
 {
   VG_DISPLAY_MODE mode;
-  int flags = 0;
 
   memset(&mode, 0, sizeof(mode));
 
@@ -450,7 +450,7 @@ LXMapMem(ScrnInfoPtr pScrni)
     if (!pGeode->NoAccel)
       pGeode->pExa->memoryBase = pGeode->FBBase;
 
-    xf86DrvMsg(index, X_INFO, "Geode LX video memory %lx bytes at %p\n",
+    xf86DrvMsg(index, X_INFO, "Geode LX video memory %x bytes at %p\n",
 	pGeode->FBAvail, pGeode->FBBase);
 
     return TRUE;
@@ -465,14 +465,14 @@ LXCheckVGA(ScrnInfoPtr pScrni) {
 
   char bfr[19];
 
-  char *vgasig = "IBM VGA Compatible";
+  const char *vgasig = "IBM VGA Compatible";
   vgaHWPtr pvgaHW = VGAHWPTR(pScrni);
   int ret;
 
   if (!vgaHWMapMem(pScrni))
     return FALSE;
 
-  ret = memcmp(pvgaHW->Base + 0x1E, "IBM VGA Compatible", 18);
+  ret = memcmp(pvgaHW->Base + 0x1E, vgasig, strlen(vgasig));
   memcpy(bfr, pvgaHW->Base + 0x1E, 18);
   vgaHWUnmapMem(pScrni);
 
@@ -487,14 +487,10 @@ LXPreInit(ScrnInfoPtr pScrni, int flags)
     GeodePtr pGeode;
     ClockRangePtr GeodeClockRange;
     OptionInfoRec *GeodeOptions = &LX_GeodeOptions[0];
-    int ret;
-    unsigned long cpuver, cpurev;
-    QQ_WORD msrValue;
+    unsigned long cpuver;
     rgb defaultWeight = { 0, 0, 0 };
     int modecnt;
-    int maj, min;
     char *s, *panelgeo = NULL;
-    char **modes;
 
     pGeode = pScrni->driverPrivate = xnfcalloc(sizeof(GeodeRec), 1);
 
@@ -534,7 +530,7 @@ LXPreInit(ScrnInfoPtr pScrni, int flags)
     /* Set up the Cimarron MSR tables */
     msr_init_table();
 
-    if (cpuver & 0xFF != CIM_CPU_GEODELX)
+    if ((cpuver & 0xFF) != CIM_CPU_GEODELX)
       xf86DrvMsg(pScrni->scrnIndex, X_ERROR,
 		"No Geode LX chipset was detected.\n");
 
@@ -683,10 +679,10 @@ LXPreInit(ScrnInfoPtr pScrni, int flags)
 
     if (pGeode->FBAvail  == 0) {
         unsigned long value;
-	OUTW(0xAC1C, 0xFC53);
-	OUTW(0xAC1C, 0x0200);
+	cim_outw(0xAC1C, 0xFC53);
+	cim_outw(0xAC1C, 0x0200);
 
-	value = (unsigned long)(INW(0xAC1E)) & 0xFE;
+	value = (unsigned long)(cim_inw(0xAC1E)) & 0xFE;
 
 	pGeode->FBAvail = value << 20;
     }
@@ -1210,7 +1206,6 @@ LXScreenInit(int scrnIndex, ScreenPtr pScrn, int argc, char **argv)
     GeodeRec *pGeode = GEODEPTR(pScrni);
     XF86ModReqInfo shadowReq;
     int maj, min, ret, rotate;
-    BOOL shadowfb = TRUE;
 
     pGeode->starting = TRUE;
 
