@@ -50,7 +50,7 @@ GEODELINK_NODE msr_dev_lookup[MSR_DEVICE_EMPTY];
 int
 msr_init_table(void)
 {
-    Q_WORD msr_value;
+    Q_WORD msr_value = {0, 0};
     unsigned int i, j;
     int return_value = CIM_STATUS_OK;
 
@@ -157,7 +157,7 @@ msr_create_geodelink_table(GEODELINK_NODE * gliu_nodes)
     int glcp_count = 0;
     int usb_count = 0;
     int mpci_count = 0;
-    Q_WORD msr_value;
+    Q_WORD msr_value = {0, 0};
 
     /* ALL THREE GLIUS ARE IN ONE ARRAY                               */
     /* Entries 0-7 contain the port information for GLIU0, entries    */
