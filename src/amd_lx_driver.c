@@ -487,7 +487,6 @@ LXPreInit(ScrnInfoPtr pScrni, int flags)
     GeodePtr pGeode;
     ClockRangePtr GeodeClockRange;
     OptionInfoRec *GeodeOptions = &LX_GeodeOptions[0];
-    unsigned long cpuver;
     rgb defaultWeight = { 0, 0, 0 };
     int modecnt;
     char *s, *panelgeo = NULL;
@@ -529,11 +528,6 @@ LXPreInit(ScrnInfoPtr pScrni, int flags)
 
     /* Set up the Cimarron MSR tables */
     msr_init_table();
-
-    if ((cpuver & 0xFF) != CIM_CPU_GEODELX)
-      xf86DrvMsg(pScrni->scrnIndex, X_ERROR,
-		"No Geode LX chipset was detected.\n");
-
 
     /* By default, we support panel and CRT - the config file should
      * disable the ones we don't want

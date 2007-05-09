@@ -762,7 +762,7 @@ static Bool
 GXSetVideoMode(ScrnInfoPtr pScrni, DisplayModePtr pMode)
 {
   GeodeRec *pGeode = GEODEPTR(pScrni);
-  int flags;
+  int flags = 0;
 
   pScrni->vtSema = TRUE;
 

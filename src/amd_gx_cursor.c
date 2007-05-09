@@ -145,6 +145,8 @@ GXSetCursorPosition(ScrnInfoPtr pScrni, int x, int y)
     savey = y + pScrni->frameY0;
 
     switch(pGeode->rotation) {
+    default:
+      ErrorF("%s:%d invalid rotation %d\n", __func__, __LINE__, pGeode->rotation);
     case RR_Rotate_0:
       newX = savex; newY = savey;
       break;
@@ -231,6 +233,9 @@ GXLoadCursorImage(ScrnInfoPtr pScrni, unsigned char *src)
                 }
 
 		switch(pGeode->rotation) {
+		default:
+                    ErrorF("%s:%d invalid rotation %d\n", __func__, __LINE__,
+                        pGeode->rotation);
 		case RR_Rotate_0:
 			newX = x;
 			newY = y;

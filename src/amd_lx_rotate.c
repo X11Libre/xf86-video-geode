@@ -99,6 +99,14 @@ LXUpdateFunc(ScreenPtr pScreen, shadowBufPtr pBuf)
     srcOffset += (y * pGeode->Pitch)  + (x * (shaBpp >> 3));
 
     switch(pGeode->rotation) {
+    case RR_Rotate_0:
+      dx = x;
+      dy = y;
+      dw = w;
+      dh = h;
+      degrees = 0;
+      break;
+
     case RR_Rotate_90:
       dx = (pScrni->pScreen->height - 1) - (y + (h-1));
       dy = x;

@@ -407,7 +407,7 @@ AmdProbe(DriverPtr drv, int flags)
     GDevPtr *devSections = NULL;
     int *usedChips = NULL;
     int i;
-    void (*drvr_setup) (ScrnInfoPtr pScrni);
+    void (*drvr_setup) (ScrnInfoPtr pScrni) = NULL;
 
     DEBUGMSG(1, (0, X_INFO, "AmdProbe: Probing for supported devices!\n"));
     /*
@@ -462,12 +462,15 @@ AmdProbe(DriverPtr drv, int flags)
                                 break;
 #endif
                             default:
-                                return FALSE;
+				break;
                             }
                             break;
                         }
                     }
                     xfree(pEnt);
+                    if (drvr_setup == NULL)
+                    	return FALSE;
+
                     DEBUGMSG(1, (0, X_INFO, "AmdProbe: CPUDetected %d!\n",
                             CPUDetected));
 
