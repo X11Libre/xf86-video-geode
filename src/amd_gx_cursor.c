@@ -1,4 +1,4 @@
-/* Copyright (c) 2003-2005 Advanced Micro Devices, Inc.
+/* Copyright (c) 2003-2006 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -42,12 +42,8 @@
 #include "amd.h"
 
 /* Forward declarations of the functions */
-Bool GXHWCursorInit(ScreenPtr pScrn);
 static void GXSetCursorColors(ScrnInfoPtr pScrni, int bg, int fg);
 static void GXSetCursorPosition(ScrnInfoPtr pScrni, int x, int y);
-void GXLoadCursorImage(ScrnInfoPtr pScrni, unsigned char *src);
-void GXHideCursor(ScrnInfoPtr pScrni);
-void GXShowCursor(ScrnInfoPtr pScrni);
 static Bool GXUseHWCursor(ScreenPtr pScrn, CursorPtr pCurs);
 extern void GXSetVideoPosition(int x, int y, int width, int height,
     short src_w, short src_h, short drw_w,
@@ -140,11 +136,42 @@ GXSetCursorPosition(ScrnInfoPtr pScrni, int x, int y)
 {
     static unsigned long panOffset = 0;
     GeodeRec *pGeode = GEODEPTR(pScrni);
+    int savex, savey;
     int newX, newY;
 
-    (*pGeode->Rotation) (x, y, pGeode->HDisplay, pGeode->VDisplay, &newX,
-        &newY);
-    (*pGeode->RBltXlat) (newX, newY, 32, 32, &newX, &newY);
+    /* Adjust xf86HWCursor messing about */
+
+    savex = x + pScrni->frameX0;
+    savey = y + pScrni->frameY0;
+
+    switch(pGeode->rotation) {
+    default:
+      ErrorF("%s:%d invalid rotation %d\n", __func__, __LINE__, pGeode->rotation);
+    case RR_Rotate_0:
+      newX = savex; newY = savey;
+      break;
+      
+    case RR_Rotate_90:
+      newX = savey;
+      newY = pScrni->pScreen->width - savex;
+      break;
+      
+    case RR_Rotate_180:
+      newX = pScrni->pScreen->width - savex;
+      newY = pScrni->pScreen->height - savey;
+      break;
+      
+    case RR_Rotate_270:
+      newX = pScrni->pScreen->height - savey;
+      newY = savex;
+      break;
+    }
+
+    newX += pScrni->frameX0;
+    newY += pScrni->frameY0;
+
+    //ErrorF("Turned (%d,%d) into (%d,%d)\n", x,y,newX, newY);
+
     if (newX < -31)
         newX = -31;
     if (newY < -31)
@@ -204,7 +231,29 @@ GXLoadCursorImage(ScrnInfoPtr pScrni, unsigned char *src)
                     ++rowp;
                     ++mskp;
                 }
-                (*pGeode->Rotation) (x, y, 32, 32, &newX, &newY);
+
+		switch(pGeode->rotation) {
+		default:
+                    ErrorF("%s:%d invalid rotation %d\n", __func__, __LINE__,
+                        pGeode->rotation);
+		case RR_Rotate_0:
+			newX = x;
+			newY = y;
+			break;
+		case RR_Rotate_90:
+			 newX = y;
+			 newY = 31 - x;
+			 break;
+		case RR_Rotate_180:
+			newX = 31 - x;
+			newY = 31 - y;
+			break;
+		case RR_Rotate_270:
+			newX = 31 - y;
+			newY = x;
+			break;
+		}
+
                 i = 7 - i;
                 n = 31 - newX;
                 andMask[newY] |= (((mskb >> i) & 1) << n);
@@ -281,10 +330,7 @@ static Bool
 GXUseHWCursor(ScreenPtr pScrn, CursorPtr pCurs)
 {
     ScrnInfoPtr pScrni = XF86SCRNINFO(pScrn);
+    GeodeRec *pGeode = GEODEPTR(pScrni);
 
-    if (pScrni->currentMode->Flags & V_DBLSCAN)
-        return FALSE;
-    return TRUE;
+    return pGeode->HWCursor;
 }
-
-/* End of File */

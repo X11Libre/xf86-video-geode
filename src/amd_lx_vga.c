@@ -25,7 +25,7 @@
  */
 
 /*
- * This file contains routines to set modes using the VGA registers.  
+ * This file contains routines to set modes using the VGA registers.
  * Since this file is for the first generation graphics unit, it interfaces
  * to SoftVGA registers.  It works for both VSA1 and VSA2.
  */
@@ -38,8 +38,5 @@ int
 gu3_get_vga_active(void)
 {
     int data = READ_REG32(DC3_GENERAL_CFG);
-
-    if (data & DC3_GCFG_VGAE)
-        return 1;
-    return 0;
+    return (data & DC3_GCFG_VGAE) ? 1 : 0;
 }

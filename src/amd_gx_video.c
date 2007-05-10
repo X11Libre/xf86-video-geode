@@ -11,7 +11,7 @@
  * all copies or substantial portions of the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * IMPDIs2IED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
  * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
@@ -39,6 +39,9 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+
+#include <stdlib.h>
+#include <string.h>
 
 #include "xf86.h"
 #include "xf86_OSproc.h"
@@ -89,7 +92,6 @@ GXSetVideoPosition()
 #else
 
 #define DBUF 1
-void GXInitVideo(ScreenPtr pScrn);
 void GXResetVideo(ScrnInfoPtr pScrni);
 static XF86VideoAdaptorPtr GXSetupImageVideo(ScreenPtr);
 static void GXInitOffscreenImages(ScreenPtr);
@@ -101,8 +103,6 @@ static void GXQueryBestSize(ScrnInfoPtr, Bool,
 static int GXPutImage(ScrnInfoPtr, short, short, short, short, short, short,
     short, short, int, unsigned char *, short, short, Bool,
     RegionPtr, pointer, DrawablePtr pDraw);
-static int GXQueryImageAttributes(ScrnInfoPtr, int, unsigned short *,
-    unsigned short *, int *, int *);
 
 static void GXBlockHandler(int, pointer, pointer, pointer);
 void GXSetVideoPosition(int x, int y, int width, int height,
@@ -114,7 +114,7 @@ extern void GXAccelSync(ScrnInfoPtr pScrni);
 int DeltaX, DeltaY;
 
 unsigned long graphics_lut[256];
-unsigned long *lutptr = NULL;
+static int lutflag = 0;
 
 #define MAKE_ATOM(a) MakeAtom(a, sizeof(a) - 1, TRUE)
 
@@ -233,7 +233,7 @@ static XF86AttributeRec Attributes[NUM_ATTRIBUTES] = {
     {XvSettable | XvGettable, 0, 1, "XV_COLORKEYMODE"}
 };
 
-#define NUM_IMAGES 7
+#define NUM_IMAGES 8
 
 static XF86ImageRec Images[NUM_IMAGES] = {
     XVIMAGE_UYVY,
@@ -242,7 +242,8 @@ static XF86ImageRec Images[NUM_IMAGES] = {
     XVIMAGE_YVYU,
     XVIMAGE_Y800,
     XVIMAGE_I420,
-    XVIMAGE_YV12
+    XVIMAGE_YV12,
+    XVIMAGE_RGB565
 };
 
 typedef struct
@@ -401,7 +402,7 @@ GXSetupImageVideo(ScreenPtr pScrn)
     adapt->GetPortAttribute = GXGetPortAttribute;
     adapt->QueryBestSize = GXQueryBestSize;
     adapt->PutImage = GXPutImage;
-    adapt->QueryImageAttributes = GXQueryImageAttributes;
+    adapt->QueryImageAttributes = GeodeQueryImageAttributes;
 
     pPriv->filter = 0;
     pPriv->colorKey = pGeode->videoKey;
@@ -468,13 +469,13 @@ GXStopVideo(ScrnInfoPtr pScrni, pointer data, Bool exit)
             /* If we have saved graphics LUT data - restore it */
 	    /* Otherwise, turn bypass on */
 
-	    if (lutptr != NULL)
-		GFX(set_graphics_palette(lutptr));
-	    else
+	    if (lutflag)
+		GFX(set_graphics_palette(graphics_lut));
+	      else
 	        GFX(set_video_palette_bypass(1));
 
-	    lutptr = NULL;
-        }
+	    lutflag = 0;
+	}
 
         if (pPriv->area) {
 #ifdef XF86EXA
@@ -621,37 +622,6 @@ GXQueryBestSize(ScrnInfoPtr pScrni,
         *p_w = 16384;
 }
 
-static void
-GXCopyGreyscale(unsigned char *src,
-    unsigned char *dst, int srcPitch, int dstPitch, int h, int w)
-{
-    int i;
-    unsigned char *src2 = src;
-    unsigned char *dst2 = dst;
-    unsigned char *dst3;
-    unsigned char *src3;
-
-    dstPitch <<= 1;
-
-    while (h--) {
-        dst3 = dst2;
-        src3 = src2;
-        for (i = 0; i < w; i++) {
-            *dst3++ = *src3++;         /* Copy Y data */
-            *dst3++ = 0x80;            /* Fill UV with 0x80 - greyscale */
-        }
-
-        src3 = src2;
-        for (i = 0; i < w; i++) {
-            *dst3++ = *src3++;         /* Copy Y data */
-            *dst3++ = 0x80;            /* Fill UV with 0x80 - greyscale */
-        }
-
-        dst2 += dstPitch;
-        src2 += srcPitch;
-    }
-}
-
 /*----------------------------------------------------------------------------
  * GXCopyData420
  *
@@ -713,7 +683,6 @@ GXCopyData422(unsigned char *src, unsigned char *dst,
 static void
 GXVideoSave(ScreenPtr pScreen, ExaOffscreenArea *area) {
 	ScrnInfoPtr pScrni = xf86Screens[pScreen->myNum];
-	GeodeRec *pGeode = GEODEPTR(pScrni);
 	GeodePortPrivRec *pPriv = GET_PORT_PRIVATE(pScrni);
 
 	if (area == pPriv->area)
@@ -726,20 +695,21 @@ GXAllocateMemory(ScrnInfoPtr pScrni, void **memp, int numlines)
 {
   ScreenPtr pScrn = screenInfo.screens[pScrni->scrnIndex];
   GeodeRec *pGeode = GEODEPTR(pScrni);
-  long displayWidth = pGeode->AccelPitch / ((pScrni->bitsPerPixel + 7) / 8);
+  //long displayWidth = pGeode->Pitch / ((pScrni->bitsPerPixel + 7) / 8);
+  int size = numlines * pGeode->displayWidth;
 
 #if XF86EXA
     if (pGeode->useEXA) {
       ExaOffscreenArea *area = *memp;
 
       if (area != NULL) {
-          if (area->size >= (numlines * displayWidth))
+          if (area->size >= size)
 	      return area->offset;
 
 	  exaOffscreenFree(pScrni->pScreen, area);
       }
 
-      area = exaOffscreenAlloc(pScrni->pScreen, numlines * displayWidth, 16,
+      area = exaOffscreenAlloc(pScrni->pScreen, size, 16,
       TRUE, GXVideoSave, NULL);
       *memp = area;
 
@@ -756,13 +726,13 @@ GXAllocateMemory(ScrnInfoPtr pScrni, void **memp, int numlines)
 		return (area->box.y1 * pGeode->Pitch);
 
 
-        if (xf86ResizeOffscreenArea(area, displayWidth, numlines))
+        if (xf86ResizeOffscreenArea(area, pGeode->displayWidth, numlines))
 		return (area->box.y1 * pGeode->Pitch);
 
         xf86FreeOffscreenArea(area);
       }
 
-      new_area = xf86AllocateOffscreenArea(pScrn, displayWidth,
+      new_area = xf86AllocateOffscreenArea(pScrn, pGeode->displayWidth,
 					   numlines, 0, NULL, NULL, NULL);
 
       if (!new_area) {
@@ -771,13 +741,13 @@ GXAllocateMemory(ScrnInfoPtr pScrni, void **memp, int numlines)
         xf86QueryLargestOffscreenArea(pScrn, &max_w, &max_h, 0,
 				      FAVOR_WIDTH_THEN_AREA, PRIORITY_EXTREME);
 
-        if ((max_w < displayWidth) || (max_h < numlines)) {
-	  xf86DrvMsg(pScrni->scrnIndex, X_ERROR, "No room - how sad %x, %x, %x, %x\n", max_w, displayWidth, max_h, numlines);
+        if ((max_w < pGeode->displayWidth) || (max_h < numlines)) {
+	  xf86DrvMsg(pScrni->scrnIndex, X_ERROR, "No room - how sad %x, %x, %x, %x\n", max_w, pGeode->displayWidth, max_h, numlines);
 	  return 0;
 	}
 
         xf86PurgeUnlockedOffscreenAreas(pScrn);
-        new_area = xf86AllocateOffscreenArea(pScrn, displayWidth,
+        new_area = xf86AllocateOffscreenArea(pScrn, pGeode->displayWidth,
 					     numlines, 0, NULL, NULL, NULL);
       }
 
@@ -917,17 +887,19 @@ GXDisplayVideo(ScrnInfoPtr pScrni,
      * off
      */
 
-    dcfg = gfx_read_vid32(DISPLAY_CONFIG);
-    misc = gfx_read_vid32(MISC);
+ 
+    if (id != FOURCC_RGB565) {
+      dcfg = gfx_read_vid32(DISPLAY_CONFIG);
+      misc = gfx_read_vid32(MISC);
 
-    if ((!(misc & 1)) && (!(dcfg & (1 << 21)))) {
-	/* xf86DrvMsg(pScrni->scrnIndex, X_ERROR, "save graphics_lut\n"); */
+      lutflag = (!(misc & 1) && (dcfg & (1 << 21)));
+
+      if (lutflag) 
 	get_gamma_ram(graphics_lut);
-	lutptr = graphics_lut;
-    }
 
-    /* Set the video gamma ram */
-    GFX(set_video_palette(NULL));
+      /* Set the video gamma ram */
+      GFX(set_video_palette(NULL));
+    }
 
     GFX(set_video_enable(1));
 
@@ -955,6 +927,11 @@ GXDisplayVideo(ScrnInfoPtr pScrni,
         GFX(set_video_format(VIDEO_FORMAT_YVYU));
         GFX(set_video_size(width, height));
         break;
+    case FOURCC_RGB565:
+      GFX(set_video_format(VIDEO_FORMAT_RGB));
+      GFX(set_video_size(width, height));
+      break;
+
     }
 
     if (pGeode->Panel) {
@@ -982,8 +959,9 @@ GXDisplayVideo(ScrnInfoPtr pScrni,
         src_h, drw_w, drw_h, id, offset, pScrni);
 }
 
-#if REINIT
-static Bool
+/* Used by LX as well */
+
+Bool
 RegionsEqual(RegionPtr A, RegionPtr B)
 {
     int *dataA, *dataB;
@@ -1012,7 +990,6 @@ RegionsEqual(RegionPtr A, RegionPtr B)
 
     return TRUE;
 }
-#endif
 
 /*----------------------------------------------------------------------------
  * GXPutImage	:This function writes a single frame of video into a 
@@ -1118,6 +1095,7 @@ GXPutImage(ScrnInfoPtr pScrni,
         case FOURCC_UYVY:
         case FOURCC_YUY2:
         case FOURCC_Y800:
+	case FOURCC_RGB565:
         default:
             dstPitch = ((width << 1) + 3) & ~3;
             srcPitch = (width << 1);
@@ -1169,6 +1147,7 @@ GXPutImage(ScrnInfoPtr pScrni,
         case FOURCC_UYVY:
         case FOURCC_YUY2:
         case FOURCC_Y800:
+	case FOURCC_RGB565:
         default:
             left <<= 1;
             buf += (top * srcPitch) + left;
@@ -1197,7 +1176,8 @@ GXPutImage(ScrnInfoPtr pScrni,
 #endif
     switch (id) {
     case FOURCC_Y800:
-        GXCopyGreyscale(buf, dst_start, srcPitch, dstPitch, nlines, npixels);
+        /* This is shared between LX and GX, so it lives in amd_common.c */
+        GeodeCopyGreyscale(buf, dst_start, srcPitch, dstPitch, nlines, npixels);
         break;
     case FOURCC_YV12:
     case FOURCC_I420:
@@ -1210,6 +1190,7 @@ GXPutImage(ScrnInfoPtr pScrni,
         break;
     case FOURCC_UYVY:
     case FOURCC_YUY2:
+    case FOURCC_RGB565:
     default:
         GXCopyData422(buf, dst_start, srcPitch, dstPitch, nlines, npixels);
         break;
@@ -1260,8 +1241,9 @@ GXPutImage(ScrnInfoPtr pScrni,
  *
  *----------------------------------------------------------------------------
  */
-static int
-GXQueryImageAttributes(ScrnInfoPtr pScrni,
+
+int
+GeodeQueryImageAttributes(ScrnInfoPtr pScrni,
     int id, unsigned short *w, unsigned short *h, int *pitches, int *offsets)
 {
     int size;
@@ -1337,12 +1319,12 @@ GXBlockHandler(int i, pointer blockData, pointer pTimeout, pointer pReadmask)
 		/* If we have saved graphics LUT data - restore it */
 		/* Otherwise, turn bypass on */
 
-		if (lutptr != NULL)
-			GFX(set_graphics_palette(lutptr));
+		if (lutflag)
+		  GFX(set_graphics_palette(graphics_lut));
 		else
-			GFX(set_video_palette_bypass(1));
+		  GFX(set_video_palette_bypass(1));
 
-		lutptr = NULL;
+		lutflag = 0;
 
                 pPriv->videoStatus = FREE_TIMER;
                 pPriv->freeTime = currentTime.milliseconds + FREE_DELAY;

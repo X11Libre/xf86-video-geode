@@ -1,12 +1,11 @@
-/*
- * Copyright (c) 2006 Advanced Micro Devices, Inc.
+/* Copyright (c) 2007 Advanced Micro Devices, Inc.
  *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to
+ * deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
@@ -16,232 +15,82 @@
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
  * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
- * DEALINGS IN THE SOFTWARE.
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
  *
  * Neither the name of the Advanced Micro Devices, Inc. nor the names of its
  * contributors may be used to endorse or promote products derived from this
  * software without specific prior written permission.
  */
 
-/*
- * File Contents: This file consists of main Xfree video supported routines.
- *
- * Project:       Geode Xfree Frame buffer device driver.
- *
- */
-
-/* 
- * Fixes & Extensions to support Y800 greyscale modes 
- * Alan Hourihane <alanh@fairlite.demon.co.uk>
- */
+/* TODO:
+   Add rotation
+   Add back in double buffering?
+   
+*/
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 
-#ifndef AMD_V4L2_VIDEO
+#include <stdlib.h>
+#include <string.h>
+
 #include "xf86.h"
 #include "xf86_OSproc.h"
 #include "xf86Resources.h"
-#include "xf86_ansic.h"
 #include "compiler.h"
 #include "xf86PciInfo.h"
 #include "xf86Pci.h"
 #include "xf86fbman.h"
 #include "regionstr.h"
+#include "dixstruct.h"
 
 #include "amd.h"
-#include "Xv.h"
-#include "xaa.h"
-#include "xaalocal.h"
-#include "dixstruct.h"
+#include "xf86xv.h"
+#include <X11/extensions/Xv.h>
 #include "fourcc.h"
 #include "amd_fourcc.h"
 
-#if DEBUGLVL>0
-#define DBLOG(n,s...) do { if((DEBUGLVL)>=(n)) fprintf(zdfp,s); } while(0)
-#include "xf86_ansic.h"
-extern FILE *zdfp;
-#else
-#define DBLOG(n,s...) do {} while(0)
-#endif
-
-#define OFF_DELAY 	200            /* milliseconds */
-#define FREE_DELAY 	60000
-
-#define OFF_TIMER 	0x01
-#define FREE_TIMER	0x02
+#define OFF_DELAY 		200
+#define FREE_DELAY 		60000
+#define OFF_TIMER 		0x01
+#define FREE_TIMER		0x02
 #define CLIENT_VIDEO_ON	0x04
-
 #define TIMER_MASK      (OFF_TIMER | FREE_TIMER)
-#define XV_PROFILE 0
-#define REINIT  1
-
-#ifndef XvExtension
-void
-LXInitVideo(ScreenPtr pScrn)
-{
-}
-
-void
-LXResetVideo(ScrnInfoPtr pScrni)
-{
-}
-
-void
-LXSetVideoPosition(int x, int y, int width, int height,
-    short src_w, short src_h, short drw_w,
-    short drw_h, int id, int offset, ScrnInfoPtr pScrni)
-{
-}
-#else
-
-#define DBUF 1
-void LXInitVideo(ScreenPtr pScrn);
-void LXResetVideo(ScrnInfoPtr pScrni);
-static XF86VideoAdaptorPtr LXSetupImageVideo(ScreenPtr);
-static void LXInitOffscreenImages(ScreenPtr);
-static void LXStopVideo(ScrnInfoPtr, pointer, Bool);
-static int LXSetPortAttribute(ScrnInfoPtr, Atom, INT32, pointer);
-static int LXGetPortAttribute(ScrnInfoPtr, Atom, INT32 *, pointer);
-static void LXQueryBestSize(ScrnInfoPtr, Bool,
-    short, short, short, short, unsigned int *, unsigned int *, pointer);
-static int LXPutImage(ScrnInfoPtr, short, short, short, short, short, short,
-    short, short, int, unsigned char *, short, short, Bool,
-    RegionPtr, pointer);
-static int LXQueryImageAttributes(ScrnInfoPtr, int, unsigned short *,
-    unsigned short *, int *, int *);
-
-static void LXBlockHandler(int, pointer, pointer, pointer);
-void LXSetVideoPosition(int x, int y, int width, int height,
-    short src_w, short src_h, short drw_w,
-    short drw_h, int id, int offset, ScrnInfoPtr pScrni);
-
-extern void LXAccelSync(ScrnInfoPtr pScrni);
 
 #define MAKE_ATOM(a) MakeAtom(a, sizeof(a) - 1, TRUE)
+#define ARRAY_SIZE(a) (sizeof((a)) / (sizeof(*(a))))
 
-static Atom xvColorKey, xvColorKeyMode, xvFilter;
-
-#if DBUF
-static Atom xvDoubleBuffer;
-#endif
-
-/*----------------------------------------------------------------------------
- * LXInitVideo
- *
- * Description:  This is the initialization routine. It creates a new video
- *               adapter and calls LXSetupImageVideo to initialize it by
- *				 filling XF86VideoAdaptorREc. Then it lists the existing
- *				 adaptors and adds the new one to it. Finally the list of
- *				 XF86VideoAdaptorPtr pointers are passed to the
- *				 xf86XVScreenInit().
- *
- * Parameters.
- * ScreenPtr
- *		pScrn	:Screen handler pointer having screen information.
- *
- * Returns		:none
- *
- * Comments		:none
- *
-*----------------------------------------------------------------------------
-*/
-void
-LXInitVideo(ScreenPtr pScrn)
-{
-    GeodeRec *pGeode;
-    ScrnInfoPtr pScrni = xf86Screens[pScrn->myNum];
-
-    DBLOG(1, "LXInitVideo()\n");
-
-    pGeode = GEODEPTR(pScrni);
-
-    if (!pGeode->NoAccel) {
-        XF86VideoAdaptorPtr *adaptors, *newAdaptors = NULL;
-        XF86VideoAdaptorPtr newAdaptor = NULL;
-
-        int num_adaptors;
-
-        newAdaptor = LXSetupImageVideo(pScrn);
-        LXInitOffscreenImages(pScrn);
-
-        num_adaptors = xf86XVListGenericAdaptors(pScrni, &adaptors);
-
-        if (newAdaptor) {
-            if (!num_adaptors) {
-                num_adaptors = 1;
-                adaptors = &newAdaptor;
-            } else {
-                newAdaptors =          /* need to free this someplace */
-                    xalloc((num_adaptors +
-                        1) * sizeof(XF86VideoAdaptorPtr *));
-                if (newAdaptors) {
-                    memcpy(newAdaptors, adaptors, num_adaptors *
-                        sizeof(XF86VideoAdaptorPtr));
-                    newAdaptors[num_adaptors] = newAdaptor;
-                    adaptors = newAdaptors;
-                    num_adaptors++;
-                }
-            }
-        }
-
-        if (num_adaptors)
-            xf86XVScreenInit(pScrn, adaptors, num_adaptors);
-
-        if (newAdaptors)
-            xfree(newAdaptors);
-    }
-}
-
-/* client libraries expect an encoding */
 static XF86VideoEncodingRec DummyEncoding[1] = {
-    {
-            0,
-            "XV_IMAGE",
-            1024, 1024,
-            {1, 1}
-        }
+  { 0, "XV_IMAGE", 1024, 1024, {1, 1} }
 };
 
-#define NUM_FORMATS 4
-
-static XF86VideoFormatRec Formats[NUM_FORMATS] = {
-    {8, PseudoColor}, {15, TrueColor}, {16, TrueColor}, {24, TrueColor}
+static XF86VideoFormatRec Formats[] = {
+  {8, PseudoColor}, {15, TrueColor}, {16, TrueColor}, {24, TrueColor}
 };
 
-#if DBUF
-#define NUM_ATTRIBUTES 4
-#else
-#define NUM_ATTRIBUTES 3
-#endif
-
-static XF86AttributeRec Attributes[NUM_ATTRIBUTES] = {
-#if DBUF
-    {XvSettable | XvGettable, 0, 1, "XV_DOUBLE_BUFFER"},
-#endif
-    {XvSettable | XvGettable, 0, (1 << 24) - 1, "XV_COLORKEY"},
-    {XvSettable | XvGettable, 0, 1, "XV_FILTER"},
-    {XvSettable | XvGettable, 0, 1, "XV_COLORKEYMODE"}
+static XF86AttributeRec Attributes[] = {
+  {XvSettable | XvGettable, 0, (1 << 24) - 1, "XV_COLORKEY"},
+  {XvSettable | XvGettable, 0, 1, "XV_FILTER"},
+  {XvSettable | XvGettable, 0, 1, "XV_COLORKEYMODE"}
 };
 
 static XF86ImageRec Images[] = {
-    XVIMAGE_UYVY,
-    XVIMAGE_YUY2,
-    XVIMAGE_Y2YU,
-    XVIMAGE_YVYU,
-    XVIMAGE_Y800,
-    XVIMAGE_I420,
-    XVIMAGE_YV12
+  XVIMAGE_UYVY,
+  XVIMAGE_YUY2,
+  XVIMAGE_Y2YU,
+  XVIMAGE_YVYU,
+  XVIMAGE_Y800,
+  XVIMAGE_I420,
+  XVIMAGE_YV12,
+  XVIMAGE_RGB565
 };
-
-#define NUM_IMAGES (sizeof(Images)/sizeof(Images[0]));
 
 typedef struct
 {
-    FBAreaPtr area;
-    FBLinearPtr linear;
+    void *area;
+    int offset;
     RegionRec clip;
     CARD32 filter;
     CARD32 colorKey;
@@ -249,982 +98,547 @@ typedef struct
     CARD32 videoStatus;
     Time offTime;
     Time freeTime;
-#if DBUF
-    Bool doubleBuffer;
-    int currentBuffer;
-#endif
-}
-GeodePortPrivRec, *GeodePortPrivPtr;
+} GeodePortPrivRec, *GeodePortPrivPtr;
 
 #define GET_PORT_PRIVATE(pScrni) \
    (GeodePortPrivRec *)((GEODEPTR(pScrni))->adaptor->pPortPrivates[0].ptr)
 
-/*----------------------------------------------------------------------------
- * LXSetColorKey
- *
- * Description	:This function reads the color key for the pallete and
- *				  sets the video color key register.
- *
- * Parameters.
- * ScreenInfoPtr
- *		pScrni	:Screen  pointer having screen information.
- *		pPriv	:Video port private data
- *
- * Returns		:none
- *
- * Comments		:none
- *
-*----------------------------------------------------------------------------
-*/
-static INT32
-LXSetColorkey(ScrnInfoPtr pScrni, GeodePortPrivRec * pPriv)
+static void
+LXCopyFromSys(GeodeRec *pGeode, unsigned char *src, unsigned int dst,	      
+	      int dstPitch, int srcPitch, int h, int w) 
 {
-    int red, green, blue;
-    unsigned long key;
 
-    switch (pScrni->depth) {
-    case 8:
-        vg_get_display_palette_entry(pPriv->colorKey & 0xFF, &key);
-        red = ((key >> 16) & 0xFF);
-        green = ((key >> 8) & 0xFF);
-        blue = (key & 0xFF);
-        break;
-    case 16:
-        red = (pPriv->colorKey & pScrni->mask.red) >>
-            pScrni->offset.red << (8 - pScrni->weight.red);
-        green = (pPriv->colorKey & pScrni->mask.green) >>
-            pScrni->offset.green << (8 - pScrni->weight.green);
-        blue = (pPriv->colorKey & pScrni->mask.blue) >>
-            pScrni->offset.blue << (8 - pScrni->weight.blue);
-        break;
-    default:
-        /* for > 16 bpp we send in the mask in xf86SetWeight. This
-         * function is providing the offset by 1 more. So we take 
-         * this as a special case and subtract 1 for > 16
-         */
-        red = (pPriv->colorKey & pScrni->mask.red) >>
-            (pScrni->offset.red - 1) << (8 - pScrni->weight.red);
-        green = (pPriv->colorKey & pScrni->mask.green) >>
-            (pScrni->offset.green - 1) << (8 - pScrni->weight.green);
-        blue = (pPriv->colorKey & pScrni->mask.blue) >>
-            (pScrni->offset.blue - 1) << (8 - pScrni->weight.blue);
-        break;
-    }
-
-    DBLOG(1, "LXSetColorkey() %08x %d\n", blue | (green << 8) | (red << 16),
-        pPriv->colorKeyMode);
-    if (pPriv->colorKeyMode != 0)
-        df_set_video_color_key((blue | (green << 8) | (red << 16)),
-            0xFFFFFF, 1);
-    else
-        df_set_video_color_key(0, 0, 1);
-
-    REGION_EMPTY(pScrni->pScreen, &pPriv->clip);
-
-    return 0;
+  gp_declare_blt(0);
+  gp_set_bpp(16);
+  
+  gp_set_raster_operation(0xCC);
+  gp_set_strides(dstPitch, srcPitch);
+  gp_set_solid_pattern(0);
+  
+  gp_color_bitmap_to_screen_blt(dst, 0, w, h, src, srcPitch);
 }
 
-/*----------------------------------------------------------------------------
- * LXResetVideo
- *
- * Description	: This function resets the video
- *
- * Parameters.
- * ScreenInfoPtr
- *		pScrni	:Screen  pointer having screen information.
- *
- * Returns		:None
- *
- * Comments		:none
- *
-*----------------------------------------------------------------------------
+static void
+LXVideoSave(ScreenPtr pScreen, ExaOffscreenArea *area) 
+{
+  ScrnInfoPtr pScrni = xf86Screens[pScreen->myNum];
+  
+  GeodePortPrivRec *pPriv = GET_PORT_PRIVATE(pScrni);
+  
+  if (area == pPriv->area)
+    pPriv->area = NULL;
+}
+
+
+static unsigned int
+LXAllocateVidMem(ScrnInfoPtr pScrni, void **memp, int size)
+{
+  ExaOffscreenArea *area = *memp;
+  
+  if (area != NULL) {
+    if (area->size >= size) 
+      return area->offset;
+    
+    exaOffscreenFree(pScrni->pScreen, area);
+  }
+  
+  area = exaOffscreenAlloc(pScrni->pScreen, size, 16, TRUE, 
+			   LXVideoSave, NULL);
+  
+  *memp = area;
+  return (area == NULL) ? 0 : area->offset;
+}
+
+static void
+LXSetColorkey(ScrnInfoPtr pScrni, GeodePortPrivRec * pPriv)
+{
+  int red, green, blue;
+  unsigned long key;
+
+  switch (pScrni->depth) {
+  case 8:
+    vg_get_display_palette_entry(pPriv->colorKey & 0xFF, &key);
+    red = ((key >> 16) & 0xFF);
+    green = ((key >> 8) & 0xFF);
+    blue = (key & 0xFF);
+    break;
+  case 16:
+    red = (pPriv->colorKey & pScrni->mask.red) >>
+      pScrni->offset.red << (8 - pScrni->weight.red);
+    green = (pPriv->colorKey & pScrni->mask.green) >>
+      pScrni->offset.green << (8 - pScrni->weight.green);
+    blue = (pPriv->colorKey & pScrni->mask.blue) >>
+      pScrni->offset.blue << (8 - pScrni->weight.blue);
+    break;
+  default:
+    /* for > 16 bpp we send in the mask in xf86SetWeight. This
+     * function is providing the offset by 1 more. So we take
+     * this as a special case and subtract 1 for > 16
+     */
+
+    red = (pPriv->colorKey & pScrni->mask.red) >>
+      (pScrni->offset.red - 1) << (8 - pScrni->weight.red);
+    green = (pPriv->colorKey & pScrni->mask.green) >>
+      (pScrni->offset.green - 1) << (8 - pScrni->weight.green);
+    blue = (pPriv->colorKey & pScrni->mask.blue) >>
+      (pScrni->offset.blue - 1) << (8 - pScrni->weight.blue);
+    break;
+  }
+
+  df_set_video_color_key((blue | (green << 8) | (red << 16)),
+	0xFFFFFF, (pPriv->colorKeyMode == 0));
+
+  REGION_EMPTY(pScrni->pScreen, &pPriv->clip);
+}
+
+/* A structure full of the scratch information that originates in the copy routines,
+   but is needed for the video display - maybe we should figure out a way to attach
+   this to structures?  I hate to put it in pGeode since it will increase the size of
+   the structure, and possibly cause us cache issues.
 */
 
+struct {
+  unsigned int dstOffset;
+  unsigned int dstPitch;
+  unsigned int UVPitch;
+  unsigned int UDstOffset;
+  unsigned int VDstOffset;
+} videoScratch;
+
+/* Copy planar YUV data */
+
+static Bool
+LXCopyPlanar(ScrnInfoPtr pScrni, int id, unsigned char *buf,
+	     short x1, short y1, short x2, short y2,
+	     int width, int height, pointer data)
+{
+  GeodeRec *pGeode = GEODEPTR(pScrni);
+  GeodePortPrivRec *pPriv = (GeodePortPrivRec *) data;
+
+  unsigned int YSrcPitch, YDstPitch;
+  unsigned int UVSrcPitch, UVDstPitch;
+  unsigned int YSrcOffset, YDstOffset;
+  unsigned int USrcOffset, UDstOffset;
+  unsigned int VSrcOffset, VDstOffset;
+
+  unsigned int size, lines, top, left, pixels;
+
+  YSrcPitch = (width + 3) & ~3;
+  YDstPitch = (width + 31) & ~31;
+  
+  UVSrcPitch = ((width >> 1) + 3) & ~3;
+  UVDstPitch = ((width >> 1) + 15) & ~15;
+
+  if (id != FOURCC_I420) {
+    VSrcOffset = YSrcPitch * height;
+    USrcOffset = VSrcOffset + (UVSrcPitch * (height >> 1));
+
+    VDstOffset = YDstPitch * height;
+    UDstOffset = VDstOffset + (UVDstPitch * (height >> 1));
+  }
+  else {
+    USrcOffset = YSrcPitch * height;
+    VSrcOffset = USrcOffset + (UVSrcPitch * (height >> 1));
+
+    UDstOffset = YDstPitch * height;
+    VDstOffset = UDstOffset + (UVDstPitch * (height >> 1));
+  }
+
+  size = YDstPitch * height;
+  size += UVDstPitch * height;
+
+  pPriv->offset = LXAllocateVidMem(pScrni, &pPriv->area, size);
+  
+  if (pPriv->offset == 0) {
+    ErrorF("Error allocating an offscreen region.\n");
+    return FALSE;
+  }
+  
+  /* The top of the source region we want to copy */
+  top = y1 & ~1;
+
+  /* The left hand side of the source region, aligned on a word */
+  left = x1 & ~1;
+
+  /* Number of bytes to copy, also word aligned */
+  pixels = ((x2 + 1) & ~1) - left;
+
+  /* Calculate the source offset */
+  YSrcOffset = (top * YSrcPitch) + left;
+  USrcOffset += ((top >> 1) * UVSrcPitch) + (left >> 1);
+  VSrcOffset += ((top >> 1) * UVSrcPitch) + (left >> 1);
+
+  /* Calculate the destination offset */
+  YDstOffset = (top * YDstPitch) + left;
+  UDstOffset += ((top >> 1) * UVDstPitch) + (left >> 1);
+  VDstOffset += ((top >> 1) * UVDstPitch) + (left >> 1);
+
+  lines = ((y2 + 1) & ~1) - top;
+
+  /* Copy Y */
+
+  LXCopyFromSys(pGeode, buf + YSrcOffset, pPriv->offset + YDstOffset,
+		YDstPitch, YSrcPitch, lines, pixels);
+
+  /* Copy U + V at the same time */
+
+  LXCopyFromSys(pGeode, buf + USrcOffset, pPriv->offset + UDstOffset,
+		UVDstPitch, UVSrcPitch, lines, pixels >> 1);
+  
+  /* Copy V */
+
+  //LXCopyFromSys(pGeode, buf + VSrcOffset, pPriv->offset + VDstOffset,
+  //UVDstPitch, UVSrcPitch, lines >> 1, pixels >> 1);
+  
+  videoScratch.dstOffset = pPriv->offset + YDstOffset;
+  videoScratch.dstPitch = YDstPitch;
+  videoScratch.UVPitch = UVDstPitch;
+  videoScratch.UDstOffset = pPriv->offset + UDstOffset;
+  videoScratch.VDstOffset = pPriv->offset + VDstOffset;
+
+  return TRUE;
+}
+
+static Bool 
+LXCopyPacked(ScrnInfoPtr pScrni, int id, unsigned char *buf,
+	     short x1, short y1, short x2, short y2,
+	     int width, int height, pointer data)
+{
+  GeodePortPrivRec *pPriv = (GeodePortPrivRec *) data;
+  GeodeRec *pGeode = GEODEPTR(pScrni);
+  unsigned int dstPitch, srcPitch;
+  unsigned int srcOffset, dstOffset;
+  unsigned int lines, top, left, pixels;
+
+  dstPitch = ((width << 1) + 3) & ~3;
+  srcPitch = (width << 1);
+
+  lines = ((dstPitch * height) + pGeode->Pitch - 1) / pGeode->Pitch;
+
+  pPriv->offset = LXAllocateVidMem(pScrni, &pPriv->area, height * dstPitch);
+  
+  if (pPriv->offset == 0) {
+    ErrorF("Error while allocating an offscreen region.\n");
+    return FALSE;
+  }
+
+  /* The top of the source region we want to copy */
+  top = y1;
+
+  /* The left hand side of the source region, aligned on a word */
+  left = x1 & ~1;
+
+  /* Number of bytes to copy, also word aligned */
+  pixels = ((x2 + 1) & ~1) - left;
+  
+  /* Adjust the incoming buffer */
+  srcOffset = (top * srcPitch) + left;
+  
+  /* Calculate the destination offset */
+  dstOffset = pPriv->offset + (top * dstPitch) + left;
+  
+  /* Make the copy happen */
+
+  if (id == FOURCC_Y800) {
+    
+    /* Use the shared (unaccelerated) greyscale copy - you could probably 
+       accelerate it using a 2 pass blit and patterns, but it doesn't really 
+       seem worth it
+    */
+    
+    GeodeCopyGreyscale(buf + srcOffset, pGeode->FBBase + dstOffset, srcPitch, dstPitch, 
+		       height, pixels >> 1);
+  }
+  else
+    LXCopyFromSys(pGeode, buf + srcOffset, dstOffset, dstPitch, srcPitch, height, pixels);
+  
+  videoScratch.dstOffset = dstOffset;
+  videoScratch.dstPitch = dstPitch;
+
+  return TRUE;
+}
+
+void  
+LXDisplayVideo(ScrnInfoPtr pScrni, int id, short width, short height, 
+	       BoxPtr dstBox, short srcW, short srcH, short drawW, short drawH)
+{
+  long ystart, xend, yend;
+  unsigned long lines = 0;
+  unsigned long yExtra, uvExtra = 0;
+  DF_VIDEO_POSITION vidPos;
+  DF_VIDEO_SOURCE_PARAMS vSrcParams;
+
+  gp_wait_until_idle();
+
+  switch(id) {
+  case FOURCC_UYVY:
+    vSrcParams.video_format = DF_VIDFMT_UYVY;
+    break;
+
+  case FOURCC_Y800:
+  case FOURCC_YV12:
+  case FOURCC_I420:
+    vSrcParams.video_format = DF_VIDFMT_Y0Y1Y2Y3;
+    break;
+  case FOURCC_YUY2:
+    vSrcParams.video_format = DF_VIDFMT_YUYV;
+    break;
+  case FOURCC_Y2YU:
+    vSrcParams.video_format = DF_VIDFMT_Y2YU;
+    break;   
+  case FOURCC_YVYU:
+    vSrcParams.video_format = DF_VIDFMT_YVYU;
+    break;
+  case FOURCC_RGB565:
+    vSrcParams.video_format = DF_VIDFMT_RGB;
+    break;
+  }
+
+  vSrcParams.width = width;
+  vSrcParams.height = height;
+  vSrcParams.y_pitch = videoScratch.dstPitch;
+  vSrcParams.uv_pitch = videoScratch.UVPitch;
+
+  /* Set up scaling */
+  df_set_video_filter_coefficients(NULL, 1);
+  
+  if ((drawW >= srcW) && (drawH >= srcH))
+    df_set_video_scale(width, height, drawW, drawH, 
+		       DF_SCALEFLAG_CHANGEX | DF_SCALEFLAG_CHANGEY);
+  else if (drawW < srcW)
+    df_set_video_scale(drawW, height, drawW, drawH,
+		       DF_SCALEFLAG_CHANGEX | DF_SCALEFLAG_CHANGEY);
+  else if (drawH < srcH)
+    df_set_video_scale(width, drawH, drawW, drawH,
+		       DF_SCALEFLAG_CHANGEX | DF_SCALEFLAG_CHANGEY);
+  
+  /* Figure out clipping */
+
+  xend = dstBox->x2;
+  yend = dstBox->y2;
+
+  if (dstBox->y1 < 0) {
+    if (srcH < drawH)
+      lines = ((-dstBox->y1) * srcH) / drawH;
+    else
+      lines = (-dstBox->y1);
+
+    ystart = 0;
+    drawH += dstBox->y1;
+  }
+  else {
+      ystart = dstBox->y1;
+      lines = 0;
+  }
+  
+  yExtra = lines * videoScratch.dstPitch;
+  uvExtra = (lines >> 1) * videoScratch.UVPitch;
+
+  memset(&vidPos, 0, sizeof(vidPos));
+  
+  vidPos.x = dstBox->x1;
+  vidPos.y = ystart;
+  vidPos.width = xend - dstBox->x1;
+  vidPos.height = yend - ystart;
+
+  df_set_video_position(&vidPos);
+
+  vSrcParams.y_offset = videoScratch.dstOffset + yExtra;
+  
+  switch(id) {
+  case FOURCC_Y800:
+  case FOURCC_I420:
+  case FOURCC_YV12:
+    vSrcParams.u_offset = videoScratch.UDstOffset + uvExtra;
+    vSrcParams.v_offset = videoScratch.VDstOffset + uvExtra;
+    break;
+
+  default:
+    vSrcParams.u_offset = vSrcParams.v_offset = 0;
+    break;
+  }
+
+  vSrcParams.flags = DF_SOURCEFLAG_IMPLICITSCALING;
+  df_configure_video_source(&vSrcParams, &vSrcParams);
+  df_set_video_enable(1, 0);
+}
+
+static int
+LXPutImage(ScrnInfoPtr pScrni,
+	   short srcX, short srcY, short drawX, short drawY,
+	   short srcW, short srcH, short drawW, short drawH,
+	   int id, unsigned char *buf,
+	   short width, short height, Bool sync, RegionPtr clipBoxes, 
+	   pointer data, DrawablePtr pDraw)
+{
+  GeodeRec *pGeode = GEODEPTR(pScrni);
+  GeodePortPrivRec *pPriv = (GeodePortPrivRec *) data;
+  INT32 x1,x2,y1,y2;
+  BoxRec dstBox;
+  
+  if (srcW <= 0 || srcH <= 0) {
+    ErrorF("Nothing to draw!\n");
+    return Success;
+  }
+
+  if (drawW <= 0 || drawH <=0) {
+    ErrorF("Nothing to show!\n");
+    return Success;
+  }
+
+  if (drawW > 16384)
+    drawW = 16384;
+
+  x1 = srcX;
+  x2 = srcX + srcW;
+  y1 = srcY;
+  y2 = srcY + srcH;
+  
+  dstBox.x1 = drawX;
+  dstBox.x2 = drawX + drawW;
+  dstBox.y1 = drawY;
+  dstBox.y2 = drawY + drawH;
+
+  dstBox.x1 -= pScrni->frameX0;
+  dstBox.x2 -= pScrni->frameX0;
+  dstBox.y1 -= pScrni->frameY0;
+  dstBox.y2 -= pScrni->frameY0;
+  
+  switch(id) {
+  case FOURCC_YV12:
+  case FOURCC_I420:    
+    LXCopyPlanar(pScrni, id, buf, x1, y1, x2, y2, width, height, data);
+    break;
+    
+  case FOURCC_UYVY:
+  case FOURCC_YUY2:
+  case FOURCC_Y800:
+  case FOURCC_RGB565:
+    LXCopyPacked(pScrni, id, buf, x1, y1, x2, y2, width, height, data);
+    break;
+  }
+
+  if (!RegionsEqual(&pPriv->clip, clipBoxes)) {
+    REGION_COPY(pScrni->pScreen, &pPriv->clip, clipBoxes);
+    
+    if (pPriv->colorKeyMode == 0) {
+      xf86XVFillKeyHelper(pScrni->pScreen, pPriv->colorKey, clipBoxes);
+    }
+    
+    LXDisplayVideo(pScrni, id, width, height, &dstBox,
+		   srcW, srcH, drawW, drawH);
+  }
+  
+  pPriv->videoStatus = CLIENT_VIDEO_ON;
+  pGeode->OverlayON = TRUE;
+  
+  return Success;
+}
+
+static void
+LXQueryBestSize(ScrnInfoPtr pScrni, Bool motion,
+		short vidW, short vidH, short drawW, short drawH,
+		unsigned int *retW, unsigned int *retH, pointer data)
+{
+  *retW = drawW > 16384 ? 16384 : drawW;
+  *retH = drawH;
+}
+ 
+static Atom xvColorKey, xvColorKeyMode, xvFilter;
+ 
+static int
+LXGetPortAttribute(ScrnInfoPtr pScrni,
+		   Atom attribute, INT32 * value, pointer data)
+{
+  GeodePortPrivRec *pPriv = (GeodePortPrivRec *) data;
+ 
+  if (attribute == xvColorKey) 
+    *value = pPriv->colorKey;
+  else if (attribute == xvColorKeyMode)
+    *value = pPriv->colorKeyMode;
+  else if (attribute == xvFilter) 
+    *value = pPriv->filter;
+  else
+    return BadMatch;
+  
+  return Success;
+}
+
+static int
+LXSetPortAttribute(ScrnInfoPtr pScrni,
+		   Atom attribute, INT32 value, pointer data)
+{
+  GeodePortPrivRec *pPriv = (GeodePortPrivRec *) data;
+  
+  gp_wait_until_idle();
+
+  if (attribute == xvColorKey) {
+    pPriv->colorKey = value;
+    LXSetColorkey(pScrni, pPriv);
+  }
+  else if (attribute == xvColorKeyMode) {
+    pPriv->colorKeyMode = value;
+    LXSetColorkey(pScrni, pPriv);
+  }
+  else if (attribute == xvFilter) {
+    if ((value < 0) || (value > 1))
+      return BadValue;
+    pPriv->filter = value;
+  }
+  else
+    return BadMatch;
+
+  return Success;
+}
+
+void 
+LXStopVideo(ScrnInfoPtr pScrni, pointer data, Bool exit) 
+{
+  GeodePortPrivRec *pPriv = (GeodePortPrivRec *) data;
+  GeodeRec *pGeode = GEODEPTR(pScrni);
+
+  REGION_EMPTY(pScrni->pScreen, &pPriv->clip);
+  gp_wait_until_idle();
+
+  if (exit) {
+    if (pPriv->videoStatus & CLIENT_VIDEO_ON) {
+      df_set_video_enable(0,0);
+      df_set_video_palette(NULL);
+    }
+
+    if (pPriv->area)
+      exaOffscreenFree(pScrni->pScreen, pPriv->area);
+
+    pPriv->videoStatus = 0;
+
+    /* Eh? */
+    pGeode->OverlayON = FALSE;
+  }
+  else {
+    if (pPriv->videoStatus & CLIENT_VIDEO_ON) {
+      pPriv->videoStatus |= OFF_TIMER;
+      pPriv->offTime = currentTime.milliseconds + OFF_DELAY;
+    }
+  }
+}
+    
 void
 LXResetVideo(ScrnInfoPtr pScrni)
 {
     GeodeRec *pGeode = GEODEPTR(pScrni);
 
-    DBLOG(1, "LXResetVideo()\n");
-
     if (!pGeode->NoAccel) {
         GeodePortPrivRec *pPriv = pGeode->adaptor->pPortPrivates[0].ptr;
 
-        LXAccelSync(pScrni);
-        df_set_video_palette(NULL);
+	gp_wait_until_idle();
+	df_set_video_palette(NULL);
+
         LXSetColorkey(pScrni, pPriv);
     }
 }
 
-/*----------------------------------------------------------------------------
- * LXSetupImageVideo
- *
- * Description	: This function allocates space for a Videoadaptor and initializes
- *				  the XF86VideoAdaptorPtr record.
- *
- * Parameters.
- * ScreenPtr
- *		pScrn	:Screen handler pointer having screen information.
- *
- * Returns		:XF86VideoAdaptorPtr :- pointer to the initialized video adaptor record.
- *
- * Comments		:none
- *
-*----------------------------------------------------------------------------
-*/
-
-static XF86VideoAdaptorPtr
-LXSetupImageVideo(ScreenPtr pScrn)
-{
-    ScrnInfoPtr pScrni = xf86Screens[pScrn->myNum];
-    GeodeRec *pGeode = GEODEPTR(pScrni);
-    XF86VideoAdaptorPtr adapt;
-    GeodePortPrivRec *pPriv;
-
-    DBLOG(1, "LXSetupImageVideo()\n");
-
-    if (!(adapt = xcalloc(1, sizeof(XF86VideoAdaptorRec) +
-                sizeof(GeodePortPrivRec) + sizeof(DevUnion))))
-        return NULL;
-
-    adapt->type = XvWindowMask | XvInputMask | XvImageMask;
-    adapt->flags = VIDEO_OVERLAID_IMAGES | VIDEO_CLIP_TO_VIEWPORT;
-    adapt->name = "Advanced Micro Devices";
-    adapt->nEncodings = 1;
-    adapt->pEncodings = DummyEncoding;
-    adapt->nFormats = NUM_FORMATS;
-    adapt->pFormats = Formats;
-    adapt->nPorts = 1;
-    adapt->pPortPrivates = (DevUnion *) (&adapt[1]);
-    pPriv = (GeodePortPrivRec *) (&adapt->pPortPrivates[1]);
-    adapt->pPortPrivates[0].ptr = (pointer) (pPriv);
-    adapt->pAttributes = Attributes;
-    adapt->nImages = NUM_IMAGES;
-    adapt->nAttributes = NUM_ATTRIBUTES;
-    adapt->pImages = Images;
-    adapt->PutVideo = NULL;
-    adapt->PutStill = NULL;
-    adapt->GetVideo = NULL;
-    adapt->GetStill = NULL;
-    adapt->StopVideo = LXStopVideo;
-    adapt->SetPortAttribute = LXSetPortAttribute;
-    adapt->GetPortAttribute = LXGetPortAttribute;
-    adapt->QueryBestSize = LXQueryBestSize;
-    adapt->PutImage = LXPutImage;
-    adapt->QueryImageAttributes = LXQueryImageAttributes;
-
-    pPriv->filter = 0;
-    pPriv->colorKey = pGeode->videoKey;
-    pPriv->colorKeyMode = 0;
-    pPriv->videoStatus = 0;
-#if DBUF
-    pPriv->doubleBuffer = TRUE;
-    pPriv->currentBuffer = 0;          /* init to first buffer */
-#endif
-
-    /* gotta uninit this someplace */
-#if defined(REGION_NULL)
-    REGION_NULL(pScrn, &pPriv->clip);
-#else
-    REGION_INIT(pScrn, &pPriv->clip, NullBox, 0);
-#endif
-
-    pGeode->adaptor = adapt;
-
-    pGeode->BlockHandler = pScrn->BlockHandler;
-    pScrn->BlockHandler = LXBlockHandler;
-
-    xvColorKey = MAKE_ATOM("XV_COLORKEY");
-    xvColorKeyMode = MAKE_ATOM("XV_COLORKEYMODE");
-    xvFilter = MAKE_ATOM("XV_FILTER");
-#if DBUF
-    xvDoubleBuffer = MAKE_ATOM("XV_DOUBLE_BUFFER");
-#endif
-
-    LXResetVideo(pScrni);
-
-    return adapt;
-}
-
-/*----------------------------------------------------------------------------
- * LXStopVideo
- *
- * Description	:This function is used to stop input and output video
- *
- * Parameters.
- *		pScrni		:Screen handler pointer having screen information.
- *		data		:Pointer to the video port's private data
- *		exit		:Flag indicating whether the offscreen areas used for video
- *					 to be deallocated or not.
- * Returns		:none
- *
- * Comments		:none
- *
-*----------------------------------------------------------------------------
-*/
 static void
-LXStopVideo(ScrnInfoPtr pScrni, pointer data, Bool exit)
-{
-    GeodePortPrivRec *pPriv = (GeodePortPrivRec *) data;
-    GeodeRec *pGeode = GEODEPTR(pScrni);
-
-    DBLOG(1, "LXStopVideo()\n");
-
-    REGION_EMPTY(pScrni->pScreen, &pPriv->clip);
-
-    LXAccelSync(pScrni);
-    if (exit) {
-        if (pPriv->videoStatus & CLIENT_VIDEO_ON) {
-            df_set_video_enable(0, 0);
-        }
-        if (pPriv->area) {
-            xf86FreeOffscreenArea(pPriv->area);
-            pPriv->area = NULL;
-        }
-        pPriv->videoStatus = 0;
-        pGeode->OverlayON = FALSE;
-    } else {
-        if (pPriv->videoStatus & CLIENT_VIDEO_ON) {
-            pPriv->videoStatus |= OFF_TIMER;
-            pPriv->offTime = currentTime.milliseconds + OFF_DELAY;
-        }
-    }
-}
-
-/*----------------------------------------------------------------------------
- * LXSetPortAttribute
- *
- * Description	:This function is used to set the attributes of a port like colorkeymode,
- *				  double buffer support and filter.
- *
- * Parameters.
- *		pScrni		:Screen handler pointer having screen information.
- *		data		:Pointer to the video port's private data
- *		attribute	:The port attribute to be set
- *		value		:Value of the attribute to be set.  
- *					 
- * Returns		:Sucess if the attribute is supported, else BadMatch
- *
- * Comments		:none
- *
-*----------------------------------------------------------------------------
-*/
-static int
-LXSetPortAttribute(ScrnInfoPtr pScrni,
-    Atom attribute, INT32 value, pointer data)
-{
-    GeodePortPrivRec *pPriv = (GeodePortPrivRec *) data;
-
-    DBLOG(1, "LXSetPortAttribute(%d,%#x)\n", attribute, value);
-
-    LXAccelSync(pScrni);
-    if (attribute == xvColorKey) {
-        pPriv->colorKey = value;
-        LXSetColorkey(pScrni, pPriv);
-    }
-#if DBUF
-    else if (attribute == xvDoubleBuffer) {
-        if ((value < 0) || (value > 1))
-            return BadValue;
-        pPriv->doubleBuffer = value;
-    }
-#endif
-    else if (attribute == xvColorKeyMode) {
-        pPriv->colorKeyMode = value;
-        LXSetColorkey(pScrni, pPriv);
-    } else if (attribute == xvFilter) {
-        if ((value < 0) || (value > 1))
-            return BadValue;
-        pPriv->filter = value;
-    } else
-        return BadMatch;
-
-    return Success;
-}
-
-/*----------------------------------------------------------------------------
- * LXGetPortAttribute
- *
- * Description	:This function is used to get the attributes of a port like hue,
- *				 saturation,brightness or contrast.
- *
- * Parameters.
- *		pScrni		:Screen handler pointer having screen information.
- *		data		:Pointer to the video port's private data
- *		attribute	:The port attribute to be read
- *		value		:Pointer to the value of the attribute to be read.  
- *					 
- * Returns		:Sucess if the attribute is supported, else BadMatch
- *
- * Comments		:none
- *
-*----------------------------------------------------------------------------
-*/
-static int
-LXGetPortAttribute(ScrnInfoPtr pScrni,
-    Atom attribute, INT32 * value, pointer data)
-{
-    GeodePortPrivRec *pPriv = (GeodePortPrivRec *) data;
-
-    DBLOG(1, "LXGetPortAttribute(%d)\n", attribute);
-
-    if (attribute == xvColorKey) {
-        *value = pPriv->colorKey;
-    }
-#if DBUF
-    else if (attribute == xvDoubleBuffer) {
-        *value = (pPriv->doubleBuffer) ? 1 : 0;
-    }
-#endif
-    else if (attribute == xvColorKeyMode) {
-        *value = pPriv->colorKeyMode;
-    } else if (attribute == xvFilter) {
-        *value = pPriv->filter;
-    } else
-        return BadMatch;
-
-    return Success;
-}
-
-/*----------------------------------------------------------------------------
- * LXQueryBestSize
- *
- * Description	:
- *	This function provides a way to query what the destination dimensions
- *	would end up being if they were to request that an area vid_w by vid_h
- *  from the video stream be scaled to rectangle of drw_w by drw_h on 
- *	the screen.
- *
- * Parameters.
- * ScreenInfoPtr
- *		pScrni		:Screen handler pointer having screen information.
- *		data		:Pointer to the video port's private data
- *      vid_w,vid_h	:Width and height of the video data.
- *		drw_w,drw_h :Width and height of the scaled rectangle.
- *		p_w,p_h		:Width and height of the destination rectangle. 
- *					 
- * Returns		:None
- *
- * Comments		:None
- *
-*----------------------------------------------------------------------------
-*/
-static void
-LXQueryBestSize(ScrnInfoPtr pScrni, Bool motion, short vid_w, short vid_h,
-    short drw_w, short drw_h, unsigned int *p_w,
-    unsigned int *p_h, pointer data)
-{
-    *p_w = drw_w;
-    *p_h = drw_h;
-
-    if (*p_w > 16384)
-        *p_w = 16384;
-
-    DBLOG(1, "LXQueryBestSize(%d, src %dx%d scl %dx%d dst %dx%d)\n", motion,
-        vid_w, vid_h, drw_w, drw_h, *p_w, *p_h);
-}
-
-static void
-LXCopyGreyscale(unsigned char *src, unsigned char *dst, int srcp, int dstp,
-    int h, int w)
-{
-    int i;
-    unsigned char *src2 = src;
-    unsigned char *dst2 = dst;
-    unsigned char *dst3;
-    unsigned char *src3;
-
-    dstp <<= 1;
-
-    while (h--) {
-        dst3 = dst2;
-        src3 = src2;
-        for (i = 0; i < w; i++) {
-            *dst3++ = *src3++;         /* Copy Y data */
-            *dst3++ = 0x80;            /* Fill UV with 0x80 - greyscale */
-        }
-        src3 = src2;
-        for (i = 0; i < w; i++) {
-            *dst3++ = *src3++;         /* Copy Y data */
-            *dst3++ = 0x80;            /* Fill UV with 0x80 - greyscale */
-        }
-        dst2 += dstp;
-        src2 += srcp;
-    }
-}
-
-/*----------------------------------------------------------------------------
- * LXCopyData420
- *
- * Description	: Copies data from src to destination
- *
- * Parameters.
- *		src	: pointer to the source data
- *		dst	: pointer to destination data
- *		srcp	: pitch of the srcdata
- *		dstp	: pitch of the destination data 
- *		h & w	: height and width of source data
- *					 
- * Returns		:None
- *
- * Comments		:None
- *
-*----------------------------------------------------------------------------
-*/
-
-static void
-LXCopyData420(unsigned char *src, unsigned char *dst, int srcp, int dstp,
-    int h, int w)
-{
-    while (h--) {
-        memcpy(dst, src, w);
-        src += srcp;
-        dst += dstp;
-    }
-}
-
-/*----------------------------------------------------------------------------
- * LXCopyData422
- *
- * Description	: Copies data from src to destination
- *
- * Parameters.
- *		src			: pointer to the source data
- *		dst			: pointer to destination data
- *		srcp	: pitch of the srcdata
- *		dstp	: pitch of the destination data 
- *		h & w		: height and width of source data
- *					 
- * Returns		:None
- *
- * Comments		:None
- *
-*----------------------------------------------------------------------------
-*/
-
-static void
-LXCopyData422(unsigned char *src, unsigned char *dst,
-    int srcp, int dstp, int h, int w)
-{
-    w <<= 1;
-    while (h--) {
-        memcpy(dst, src, w);
-        src += srcp;
-        dst += dstp;
-    }
-}
-
-static FBAreaPtr
-LXAllocateMemory(ScrnInfoPtr pScrni, FBAreaPtr area, int numlines)
-{
-    ScreenPtr pScrn = screenInfo.screens[pScrni->scrnIndex];
-    FBAreaPtr new_area;
-
-    if (area) {
-        if ((area->box.y2 - area->box.y1) >= numlines)
-            return area;
-
-        if (xf86ResizeOffscreenArea(area, pScrni->displayWidth, numlines))
-            return area;
-
-        xf86FreeOffscreenArea(area);
-    }
-
-    new_area = xf86AllocateOffscreenArea(pScrn, pScrni->displayWidth,
-        numlines, 0, NULL, NULL, NULL);
-
-    if (!new_area) {
-        int max_w, max_h;
-
-        xf86QueryLargestOffscreenArea(pScrn, &max_w, &max_h, 0,
-            FAVOR_WIDTH_THEN_AREA, PRIORITY_EXTREME);
-
-        if ((max_w < pScrni->displayWidth) || (max_h < numlines))
-            return NULL;
-
-        xf86PurgeUnlockedOffscreenAreas(pScrn);
-        new_area = xf86AllocateOffscreenArea(pScrn, pScrni->displayWidth,
-            numlines, 0, NULL, NULL, NULL);
-    }
-
-    return new_area;
-}
-
-static BoxRec dstBox;
-static int srcPitch = 0, srcPitch2 = 0, dstPitch = 0, dstPitch2 = 0;
-static INT32 Bx1, Bx2, By1, By2;
-static int top, left, npixels, nlines;
-static int offset, s1offset = 0, s2offset = 0, s3offset = 0;
-static unsigned char *dst_start;
-static int d2offset = 0, d3offset = 0;
-
-static DF_VIDEO_SOURCE_PARAMS vSrcParams;
-
-void
-LXSetVideoPosition(int x, int y, int width, int height,
-    short src_w, short src_h, short drw_w, short drw_h,
-    int id, int offset, ScrnInfoPtr pScrni)
-{
-    long ystart, xend, yend;
-    unsigned long lines = 0;
-    unsigned long y_extra, uv_extra = 0;
-    DF_VIDEO_POSITION vidPos;
-
-    DBLOG(1, "LXSetVideoPosition(%d,%d %dx%d, src %dx%d, dst %dx%d, id %d, "
-        "ofs %d)\n", x, y, width, height, src_w, src_h, drw_w, drw_h,
-        id, offset);
-
-    xend = x + drw_w;
-    yend = y + drw_h;
-
-    /* TOP CLIPPING */
-
-    if (y < 0) {
-        if (src_h < drw_h)
-            lines = (-y) * src_h / drw_h;
-        else
-            lines = (-y);
-        ystart = 0;
-        drw_h += y;
-        y_extra = lines * dstPitch;
-        uv_extra = (lines >> 1) * (dstPitch2);
-    } else {
-        ystart = y;
-        lines = 0;
-        y_extra = 0;
-    }
-
-    memset(&vidPos, 0, sizeof(vidPos));
-    vidPos.x = x;
-    vidPos.y = ystart;
-    vidPos.width = xend - x;
-    vidPos.height = yend - ystart;
-
-    DBLOG(1, "video_pos %d,%d %dx%d\n", vidPos.x, vidPos.y, vidPos.width,
-        vidPos.height);
-    df_set_video_position(&vidPos);
-
-    vSrcParams.y_offset = offset + y_extra;
-    if ((id == FOURCC_Y800) || (id == FOURCC_I420) || (id == FOURCC_YV12)) {
-        vSrcParams.u_offset = offset + d3offset + uv_extra;
-        vSrcParams.v_offset = offset + d2offset + uv_extra;
-    } else {
-        vSrcParams.u_offset = vSrcParams.v_offset = 0;
-    }
-    vSrcParams.flags = DF_SOURCEFLAG_IMPLICITSCALING;
-
-    DBLOG(1, "video_format %#x yofs %#x uofs %#x vofs %#x yp %d uvp %d wh "
-        "%dx%d flg %#x\n", vSrcParams.video_format, vSrcParams.y_offset,
-        vSrcParams.u_offset, vSrcParams.v_offset, vSrcParams.y_pitch,
-        vSrcParams.uv_pitch, vSrcParams.width, vSrcParams.height,
-        vSrcParams.flags);
-
-    df_configure_video_source(&vSrcParams, &vSrcParams);
-}
-
-/*----------------------------------------------------------------------------
- * LXDisplayVideo
- *
- * Description	: This function sets up the video registers for playing video
- *		  It sets up the video format,width, height & position of the 
- *		  video window ,video offsets( y,u,v) and video pitches(y,u,v)	
- * Parameters.
- *					 
- * Returns	:None
- *
- * Comments	:None
- *
-*----------------------------------------------------------------------------
-*/
-
-static void
-LXDisplayVideo(ScrnInfoPtr pScrni, int id, int offset, short width,
-    short height, int pitch, int x1, int y1, int x2, int y2,
-    BoxPtr dstBox, short src_w, short src_h, short drw_w, short drw_h)
-{
-    DBLOG(1, "LXDisplayVideo(id %d, ofs %d, %dx%d, p %d, %d,%d, %d,%d, src "
-        "%dx%d dst %dx%d)\n", id, offset, width, height, pitch, x1, y1,
-        x2, y2, src_w, src_h, drw_w, drw_h);
-
-    LXAccelSync(pScrni);
-
-    switch (id) {
-    case FOURCC_UYVY:
-        vSrcParams.video_format = DF_VIDFMT_UYVY;
-        break;
-    case FOURCC_Y800:
-    case FOURCC_YV12:
-    case FOURCC_I420:
-        vSrcParams.video_format = DF_VIDFMT_Y0Y1Y2Y3;
-        break;
-    case FOURCC_YUY2:
-        vSrcParams.video_format = DF_VIDFMT_YUYV;
-        break;
-    case FOURCC_Y2YU:
-        vSrcParams.video_format = DF_VIDFMT_Y2YU;
-        break;
-    case FOURCC_YVYU:
-        vSrcParams.video_format = DF_VIDFMT_YVYU;
-        break;
-    }
-
-    vSrcParams.width = width;
-    vSrcParams.height = height;
-    vSrcParams.y_pitch = dstPitch;
-    vSrcParams.uv_pitch = dstPitch2;
-
-    df_set_video_filter_coefficients(NULL, 1);
-    if ((drw_w >= src_w) && (drw_h >= src_h))
-        df_set_video_scale(width, height, drw_w, drw_h,
-            DF_SCALEFLAG_CHANGEX | DF_SCALEFLAG_CHANGEY);
-    else if (drw_w < src_w)
-        df_set_video_scale(drw_w, height, drw_w, drw_h,
-            DF_SCALEFLAG_CHANGEX | DF_SCALEFLAG_CHANGEY);
-    else if (drw_h < src_h)
-        df_set_video_scale(width, drw_h, drw_w, drw_h,
-            DF_SCALEFLAG_CHANGEX | DF_SCALEFLAG_CHANGEY);
-
-    LXSetVideoPosition(dstBox->x1, dstBox->y1, width, height, src_w,
-        src_h, drw_w, drw_h, id, offset, pScrni);
-
-    df_set_video_enable(1, 0);
-}
-
-#if REINIT
-static Bool
-RegionsEqual(RegionPtr A, RegionPtr B)
-{
-    int *dataA, *dataB;
-    int num;
-
-    num = REGION_NUM_RECTS(A);
-    if (num != REGION_NUM_RECTS(B)) {
-        return FALSE;
-    }
-
-    if ((A->extents.x1 != B->extents.x1) ||
-        (A->extents.x2 != B->extents.x2) ||
-        (A->extents.y1 != B->extents.y1) || (A->extents.y2 != B->extents.y2))
-        return FALSE;
-
-    dataA = (int *)REGION_RECTS(A);
-    dataB = (int *)REGION_RECTS(B);
-
-    while (num--) {
-        if ((dataA[0] != dataB[0]) || (dataA[1] != dataB[1]))
-            return FALSE;
-        dataA += 2;
-        dataB += 2;
-    }
-
-    return TRUE;
-}
-#endif
-
-/*----------------------------------------------------------------------------
- * LXPutImage	:
- *	This function writes a single frame of video into a drawable.
- *	The position and size of the source rectangle is specified by src_x,src_y,
- *	src_w and src_h. This data is stored in a system memory buffer at buf.  
- *	The position and size of the destination rectangle is specified by drw_x,
- *  drw_y,drw_w,drw_h.The data is in the format indicated by the image
- *	descriptor and represents a source of size width by height.  If sync is
- *	TRUE the driver should not return from this function until it is through
- *	reading the data from buf.  Returning when sync is TRUE indicates that
- *	it is safe for the data at buf to be replaced,freed, or modified.
- *
- * Description		: 
- * Parameters.
- *					 
- * Returns		:None
- *
- * Comments		:None
- *
-*----------------------------------------------------------------------------
-*/
-
-static int
-LXPutImage(ScrnInfoPtr pScrni, short src_x, short src_y, short drw_x,
-    short drw_y, short src_w, short src_h, short drw_w, short drw_h,
-    int id, unsigned char *buf, short width, short height, Bool sync,
-    RegionPtr clipBoxes, pointer data)
-{
-    GeodePortPrivRec *pPriv = (GeodePortPrivRec *) data;
-    GeodeRec *pGeode = GEODEPTR(pScrni);
-    int new_h;
-
-#if REINIT
-    BOOL ReInitVideo = FALSE;
-    static BOOL DoReinitAgain = 0;
-#endif
-
-#if XV_PROFILE
-    long oldtime, newtime;
-
-    UpdateCurrentTime();
-    oldtime = currentTime.milliseconds;
-#endif
-    DBLOG(1, "LXPutImage(src %d,%d %dx%d dst %d,%d %dx%d, id %d %dx%d sync "
-        "%d)\n", src_x, src_y, src_w, src_h, drw_x, drw_y, drw_w, drw_h,
-        id, width, height, sync);
-
-#if REINIT
-    /* update cliplist */
-    if (!RegionsEqual(&pPriv->clip, clipBoxes)) {
-        ReInitVideo = TRUE;
-    }
-
-    if (DoReinitAgain)
-        ReInitVideo = TRUE;
-
-    if (ReInitVideo) {
-        DBLOG(1, "Regional Not Equal - Init\n");
-#endif
-        DoReinitAgain = ~DoReinitAgain;
-        if (drw_w > 16384)
-            drw_w = 16384;
-
-        /* Clip */
-        Bx1 = src_x;
-        Bx2 = src_x + src_w;
-        By1 = src_y;
-        By2 = src_y + src_h;
-
-        if ((Bx1 >= Bx2) || (By1 >= By2))
-            return Success;
-
-        dstBox.x1 = drw_x;
-        dstBox.x2 = drw_x + drw_w;
-        dstBox.y1 = drw_y;
-        dstBox.y2 = drw_y + drw_h;
-
-        dstBox.x1 -= pScrni->frameX0;
-        dstBox.x2 -= pScrni->frameX0;
-        dstBox.y1 -= pScrni->frameY0;
-        dstBox.y2 -= pScrni->frameY0;
-
-        switch (id) {
-        case FOURCC_YV12:
-        case FOURCC_I420:
-            srcPitch = (width + 3) & ~3;        /* of luma */
-            dstPitch = (width + 31) & ~31;
-
-            s2offset = srcPitch * height;
-            d2offset = dstPitch * height;
-
-            srcPitch2 = ((width >> 1) + 3) & ~3;
-            dstPitch2 = ((width >> 1) + 15) & ~15;
-
-            s3offset = (srcPitch2 * (height >> 1)) + s2offset;
-            d3offset = (dstPitch2 * (height >> 1)) + d2offset;
-
-            new_h = dstPitch * height; /* Y */
-            new_h += (dstPitch2 * height);      /* U+V */
-            new_h += pGeode->Pitch - 1;
-            new_h /= pGeode->Pitch;
-            break;
-
-        case FOURCC_UYVY:
-        case FOURCC_YUY2:
-        case FOURCC_Y800:
-        default:
-            dstPitch = ((width << 1) + 3) & ~3;
-            srcPitch = (width << 1);
-            new_h = ((dstPitch * height) + pGeode->Pitch - 1) / pGeode->Pitch;
-            break;
-        }
-
-#if DBUF
-        if (pPriv->doubleBuffer)
-            new_h <<= 1;
-#endif
-
-        if (!(pPriv->area = LXAllocateMemory(pScrni, pPriv->area, new_h)))
-            return BadAlloc;
-
-        /* copy data */
-        top = By1;
-        left = Bx1 & ~1;
-        npixels = ((Bx2 + 1) & ~1) - left;
-
-        switch (id) {
-        case FOURCC_YV12:
-        case FOURCC_I420:{
-                int tmp;
-
-                top &= ~1;
-                offset = (pPriv->area->box.y1 * pGeode->Pitch) +
-                    (top * dstPitch);
-
-#if DBUF
-                if (pPriv->doubleBuffer && pPriv->currentBuffer)
-                    offset += (new_h >> 1) * pGeode->Pitch;
-#endif
-
-                dst_start = pGeode->FBBase + offset + left;
-                tmp = ((top >> 1) * srcPitch2) + (left >> 1);
-                s2offset += tmp;
-                s3offset += tmp;
-                if (id == FOURCC_I420) {
-                    tmp = s2offset;
-                    s2offset = s3offset;
-                    s3offset = tmp;
-                }
-                nlines = ((By2 + 1) & ~1) - top;
-            }
-            break;
-
-        case FOURCC_UYVY:
-        case FOURCC_YUY2:
-        case FOURCC_Y800:
-        default:
-            left <<= 1;
-            buf += (top * srcPitch) + left;
-            nlines = By2 - top;
-            offset = (pPriv->area->box.y1 * pGeode->Pitch) + (top * dstPitch);
-#if DBUF
-            if (pPriv->doubleBuffer && pPriv->currentBuffer)
-                offset += (new_h >> 1) * pGeode->Pitch;
-#endif
-
-            dst_start = pGeode->FBBase + offset + left;
-            break;
-        }
-        s1offset = (top * srcPitch) + left;
-
-#if REINIT
-        /* update cliplist */
-        REGION_COPY(pScrni->pScreen, &pPriv->clip, clipBoxes);
-        if (pPriv->colorKeyMode == 0) {
-            /* draw these */
-            XAAFillSolidRects(pScrni, pPriv->colorKey, GXcopy, ~0,
-                REGION_NUM_RECTS(clipBoxes), REGION_RECTS(clipBoxes));
-        }
-        LXDisplayVideo(pScrni, id, offset, width, height, dstPitch,
-            Bx1, By1, Bx2, By2, &dstBox, src_w, src_h, drw_w, drw_h);
-    }
-#endif
-
-    switch (id) {
-    case FOURCC_Y800:
-        LXCopyGreyscale(buf, dst_start, srcPitch, dstPitch, nlines, npixels);
-        break;
-    case FOURCC_YV12:
-    case FOURCC_I420:
-        LXCopyData420(buf + s1offset, dst_start, srcPitch, dstPitch, nlines,
-            npixels);
-        LXCopyData420(buf + s2offset, dst_start + d2offset, srcPitch2,
-            dstPitch2, nlines >> 1, npixels >> 1);
-        LXCopyData420(buf + s3offset, dst_start + d3offset, srcPitch2,
-            dstPitch2, nlines >> 1, npixels >> 1);
-        break;
-    case FOURCC_UYVY:
-    case FOURCC_YUY2:
-    default:
-        LXCopyData422(buf, dst_start, srcPitch, dstPitch, nlines, npixels);
-        break;
-    }
-#if !REINIT
-    /* update cliplist */
-    REGION_COPY(pScrni->pScreen, &pPriv->clip, clipBoxes);
-    if (pPriv->colorKeyMode == 0) {
-        /* draw these */
-        XAAFillSolidRects(pScrni, pPriv->colorKey, GXcopy, ~0,
-            REGION_NUM_RECTS(clipBoxes), REGION_RECTS(clipBoxes));
-    }
-    LXDisplayVideo(pScrni, id, offset, width, height, dstPitch,
-        Bx1, By1, Bx2, By2, &dstBox, src_w, src_h, drw_w, drw_h);
-#endif
-
-#if XV_PROFILE
-    UpdateCurrentTime();
-    newtime = currentTime.milliseconds;
-    DBLOG(1, "PI %d\n", newtime - oldtime);
-#endif
-
-#if DBUF
-    pPriv->currentBuffer ^= 1;
-#endif
-
-    pPriv->videoStatus = CLIENT_VIDEO_ON;
-    pGeode->OverlayON = TRUE;
-
-    return Success;
-}
-
-/*----------------------------------------------------------------------------
- * LXQueryImageAttributes
- *
- * Description	:This function is called to let the driver specify how data
- *				 for a particular image of size width by height should be 
- *				 stored. 		
- *
- * Parameters.
- *		pScrni		:Screen handler pointer having screen information.
- *		id		:Id for the video format
- *		width		:width  of the image (can be modified by the driver)  
- *		height		:height of the image (can be modified by the driver)  
- * Returns		: Size of the memory required for storing this image
- *
- * Comments		:None
- *
-*----------------------------------------------------------------------------
-*/
-static int
-LXQueryImageAttributes(ScrnInfoPtr pScrni, int id, unsigned short *w,
-    unsigned short *h, int *pitches, int *offsets)
-{
-    int size;
-    int tmp;
-
-    if (*w > 1024)
-        *w = 1024;
-    if (*h > 1024)
-        *h = 1024;
-
-    *w = (*w + 1) & ~1;
-    if (offsets)
-        offsets[0] = 0;
-
-    switch (id) {
-    case FOURCC_YV12:
-    case FOURCC_I420:
-        *h = (*h + 1) & ~1;
-        size = (*w + 3) & ~3;
-        if (pitches)
-            pitches[0] = size;
-        size *= *h;
-        if (offsets)
-            offsets[1] = size;
-        tmp = ((*w >> 1) + 3) & ~3;
-        if (pitches)
-            pitches[1] = pitches[2] = tmp;
-        tmp *= (*h >> 1);
-        size += tmp;
-        if (offsets)
-            offsets[2] = size;
-        size += tmp;
-        break;
-    case FOURCC_UYVY:
-    case FOURCC_YUY2:
-    case FOURCC_Y800:
-    default:
-        size = *w << 1;
-        if (pitches)
-            pitches[0] = size;
-        size *= *h;
-        break;
-    }
-
-    DBLOG(1, "LXQueryImageAttributes(%d)= %d, %dx%d %d/%d/%d %d/%d/%d\n",
-        id, size, *w, *h, pitches[0], pitches[1], pitches[2], offsets[0],
-        offsets[1], offsets[2]);
-
-    return size;
-}
-
-static void
-LXBlockHandler(int i, pointer blockData, pointer pTimeout, pointer pReadmask)
+LXVidBlockHandler(int i, pointer blockData, pointer pTimeout, pointer pReadmask)
 {
     ScreenPtr pScrn = screenInfo.screens[i];
     ScrnInfoPtr pScrni = xf86Screens[i];
@@ -1233,132 +647,248 @@ LXBlockHandler(int i, pointer blockData, pointer pTimeout, pointer pReadmask)
 
     pScrn->BlockHandler = pGeode->BlockHandler;
     (*pScrn->BlockHandler) (i, blockData, pTimeout, pReadmask);
-    pScrn->BlockHandler = LXBlockHandler;
+    pScrn->BlockHandler = LXVidBlockHandler;
 
     if (pPriv->videoStatus & TIMER_MASK) {
-        DBLOG(1, "LXBlockHandler(%d)\n", i);
-        LXAccelSync(pScrni);
-        UpdateCurrentTime();
-        if (pPriv->videoStatus & OFF_TIMER) {
-            if (pPriv->offTime < currentTime.milliseconds) {
-                df_set_video_enable(0, 0);
-                pPriv->videoStatus = FREE_TIMER;
-                pPriv->freeTime = currentTime.milliseconds + FREE_DELAY;
-            }
-        } else {                       /* FREE_TIMER */
-            if (pPriv->freeTime < currentTime.milliseconds) {
-                if (pPriv->area) {
-                    xf86FreeOffscreenArea(pPriv->area);
-                    pPriv->area = NULL;
-                }
-                pPriv->videoStatus = 0;
-            }
-        }
+      Time now = currentTime.milliseconds;
+
+      if (pPriv->videoStatus & OFF_TIMER) {
+        gp_wait_until_idle();
+
+	if (pPriv->offTime < now) {
+	  df_set_video_enable(0, 0);
+	  pPriv->videoStatus = FREE_TIMER;
+	  pPriv->freeTime = now + FREE_DELAY;
+	}
+      }
+      else {
+	if (pPriv->freeTime < now) {
+	  if (pPriv->area) {
+	    exaOffscreenFree(pScrni->pScreen, pPriv->area);
+	    pPriv->area = NULL;
+	  }
+
+	  pPriv->videoStatus = 0;
+	}
+      }
     }
 }
 
-/****************** Offscreen stuff ***************/
-
-typedef struct
+static XF86VideoAdaptorPtr
+LXSetupImageVideo(ScreenPtr pScrn)
 {
-    FBAreaPtr area;
-    FBLinearPtr linear;
-    Bool isOn;
-}
-OffscreenPrivRec, *OffscreenPrivPtr;
+  ScrnInfoPtr pScrni = xf86Screens[pScrn->myNum];
+  GeodeRec *pGeode = GEODEPTR(pScrni);
+  XF86VideoAdaptorPtr adapt;
+  GeodePortPrivRec *pPriv;
+  
+  adapt = xcalloc(1, sizeof(XF86VideoAdaptorRec) +
+		  sizeof(GeodePortPrivRec) + sizeof(DevUnion));
 
-/*----------------------------------------------------------------------------
- * LXAllocateSurface
- *
- * Description	:This function allocates an area of w by h in the offscreen
- * Parameters.
- *		pScrni	:Screen handler pointer having screen information.
- * 
- * Returns		:None
- *
- * Comments		:None
- *
-*----------------------------------------------------------------------------
-*/
+  if (adapt == NULL) {
+    ErrorF("Couldn't create the rec\n");
+    return NULL;
+  }
+
+  adapt->type = XvWindowMask | XvInputMask | XvImageMask;
+  adapt->flags = VIDEO_OVERLAID_IMAGES | VIDEO_CLIP_TO_VIEWPORT;
+
+  adapt->name = "AMD Geode LX";
+  adapt->nEncodings = 1;
+  adapt->pEncodings = DummyEncoding;
+  adapt->nFormats = ARRAY_SIZE(Formats);
+  adapt->pFormats = Formats;
+  adapt->nPorts = 1;
+  adapt->pPortPrivates = (DevUnion *) (&adapt[1]);
+  pPriv = (GeodePortPrivRec *) (&adapt->pPortPrivates[1]);
+  adapt->pPortPrivates[0].ptr = (pointer) (pPriv);
+  adapt->pAttributes = Attributes;
+  adapt->nImages = ARRAY_SIZE(Images);
+  adapt->nAttributes = ARRAY_SIZE(Attributes);
+  adapt->pImages = Images;
+  adapt->PutVideo = NULL;
+  adapt->PutStill = NULL;
+  adapt->GetVideo = NULL;
+  adapt->GetStill = NULL;
+  adapt->StopVideo= LXStopVideo;
+  adapt->SetPortAttribute = LXSetPortAttribute;
+  adapt->GetPortAttribute = LXGetPortAttribute;
+  adapt->QueryBestSize = LXQueryBestSize;
+  adapt->PutImage =LXPutImage;
+
+  /* Use the common function */
+  adapt->QueryImageAttributes = GeodeQueryImageAttributes;
+
+  pPriv->filter = 0;
+  pPriv->colorKey = pGeode->videoKey;
+  pPriv->colorKeyMode = 0;
+  pPriv->videoStatus = 0;
+
+  REGION_NULL(pScrn, &pPriv->clip);
+
+  pGeode->adaptor = adapt;
+  
+  pGeode->BlockHandler = pScrn->BlockHandler;
+  pScrn->BlockHandler = LXVidBlockHandler;
+
+  xvColorKey = MAKE_ATOM("XV_COLORKEY");
+  xvColorKeyMode = MAKE_ATOM("XV_COLORKEYMODE");
+  xvFilter = MAKE_ATOM("XV_FILTER");
+
+  LXResetVideo(pScrni);
+  
+  return adapt;
+}
+
+/* Offscreen surface allocation */
+
+struct OffscreenPrivRec
+{
+  void * area;
+  int offset;
+  Bool isOn;
+};
 
 static int
-LXAllocateSurface(ScrnInfoPtr pScrni, int id, unsigned short w,
-    unsigned short h, XF86SurfacePtr surface)
+LXDisplaySurface(XF86SurfacePtr surface,
+		 short srcX, short srcY, short drawX, short drawY, 
+		 short srcW, short srcH, short drawW, short drawH,
+		 RegionPtr clipBoxes)
 {
-    FBAreaPtr area;
-    int pitch, fbpitch, numlines;
-    OffscreenPrivRec *pPriv;
+  struct OffscreenPrivRec *pPriv = 
+    (struct  OffscreenPrivRec *) surface->devPrivate.ptr;
 
-    DBLOG(1, "LXAllocateSurface(id %d, %dx%d)\n", id, w, h);
+  ScrnInfoPtr pScrni = surface->pScrn;
+  GeodePortPrivRec *portPriv = GET_PORT_PRIVATE(pScrni);
+  
+  BoxRec dstBox;
 
-    if ((w > 1024) || (h > 1024))
-        return BadAlloc;
+  dstBox.x1 = drawX;
+  dstBox.x2 = drawX + drawW;
+  dstBox.y1 = drawY;
+  dstBox.y2 = drawY + drawH;
 
-    w = (w + 1) & ~1;
-    pitch = ((w << 1) + 15) & ~15;
-    fbpitch = pScrni->bitsPerPixel * pScrni->displayWidth >> 3;
-    numlines = ((pitch * h) + fbpitch - 1) / fbpitch;
+  if ((drawW <= 0) | (drawH <=0))
+    return Success;
 
-    if (!(area = LXAllocateMemory(pScrni, NULL, numlines)))
-        return BadAlloc;
+  /* Is this still valid? */
 
-    surface->width = w;
-    surface->height = h;
+  dstBox.x1 -= pScrni->frameX0;
+  dstBox.x2 -= pScrni->frameX0;
+  dstBox.y1 -= pScrni->frameY0;
+  dstBox.y2 -= pScrni->frameY0;
 
-    if (!(surface->pitches = xalloc(sizeof(int))))
-        return BadAlloc;
-    if (!(surface->offsets = xalloc(sizeof(int)))) {
-        xfree(surface->pitches);
-        return BadAlloc;
-    }
-    if (!(pPriv = xalloc(sizeof(OffscreenPrivRec)))) {
-        xfree(surface->pitches);
-        xfree(surface->offsets);
-        return BadAlloc;
-    }
+  xf86XVFillKeyHelper(pScrni->pScreen, portPriv->colorKey, clipBoxes);
 
+  videoScratch.dstOffset = surface->offsets[0];
+  videoScratch.dstPitch = surface->pitches[0];
+
+  LXDisplayVideo(pScrni, surface->id, surface->width, surface->height, 
+		 &dstBox, srcW, srcH, drawW, drawH);
+
+  pPriv->isOn = TRUE;
+  
+  if (portPriv->videoStatus & CLIENT_VIDEO_ON) {
+    REGION_EMPTY(pScrni->pScreen, &portPriv->clip);
+    UpdateCurrentTime();
+    portPriv->videoStatus = FREE_TIMER;
+    portPriv->freeTime = currentTime.milliseconds + FREE_DELAY;
+  }
+
+  return Success;
+}
+
+static int 
+LXAllocateSurface(ScrnInfoPtr pScrni, int id, unsigned short w,
+		  unsigned short h, XF86SurfacePtr surface)
+{
+  GeodeRec *pGeode = GEODEPTR(pScrni);
+  void * area = NULL;
+  int pitch, lines;
+  unsigned offset;
+  struct OffscreenPrivRec *pPriv;
+
+  if (w > 1024 || h > 1024)
+    return BadAlloc;
+
+  /* The width needs to be word aligned */
+  w = (w + 1) & ~1;
+
+  pitch = ((w << 1) + 15) & ~15;
+  lines = ((pitch * h) + (pGeode->Pitch - 1)) /  pGeode->Pitch;
+  
+  offset = LXAllocateVidMem(pScrni, &area, lines);
+
+  if (offset == 0) {
+    ErrorF("Error while allocating an offscreen region.\n");
+    return BadAlloc;
+  }
+
+  surface->width = w;
+  surface->height = h;
+  
+  surface->pitches = xalloc(sizeof(int));
+
+  surface->offsets = xalloc(sizeof(int));
+
+  pPriv = xalloc(sizeof(struct OffscreenPrivRec));
+
+  if (pPriv && surface->pitches && surface->offsets) {
+    
     pPriv->area = area;
+    pPriv->offset = offset;
+    
     pPriv->isOn = FALSE;
-
+      
     surface->pScrn = pScrni;
     surface->id = id;
     surface->pitches[0] = pitch;
-    surface->offsets[0] = area->box.y1 * fbpitch;
+    surface->offsets[0] = offset;
     surface->devPrivate.ptr = (pointer) pPriv;
-
+    
     return Success;
+  }
+
+  if (surface->offsets)
+    xfree(surface->offsets);
+  
+  if (surface->pitches)
+    xfree(surface->pitches);
+  
+  if (area)
+    exaOffscreenFree(pScrni->pScreen, area);
+  
+  return BadAlloc;
 }
 
 static int
-LXStopSurface(XF86SurfacePtr surface)
+LXStopSurface(XF86SurfacePtr surface) 
 {
-    OffscreenPrivRec *pPriv = (OffscreenPrivRec *) surface->devPrivate.ptr;
+  struct OffscreenPrivRec *pPriv = (struct OffscreenPrivRec *)
+    surface->devPrivate.ptr;
 
-    DBLOG(1, "LXStopSurface()\n");
-
-    if (pPriv->isOn) {
-        pPriv->isOn = FALSE;
-    }
-
-    return Success;
+  pPriv->isOn = FALSE;
+  return Success;
 }
 
 static int
 LXFreeSurface(XF86SurfacePtr surface)
 {
-    OffscreenPrivRec *pPriv = (OffscreenPrivRec *) surface->devPrivate.ptr;
+  struct OffscreenPrivRec *pPriv = (struct OffscreenPrivRec *)
+    surface->devPrivate.ptr;
+  ScrnInfoPtr pScrni = surface->pScrn;
 
-    DBLOG(1, "LXFreeSurface()\n");
+  if (pPriv->isOn)
+    LXStopSurface(surface);
 
-    if (pPriv->isOn)
-        LXStopSurface(surface);
+  if (pPriv->area)
+    exaOffscreenFree(pScrni->pScreen, pPriv->area);
 
-    xf86FreeOffscreenArea(pPriv->area);
-    xfree(surface->pitches);
-    xfree(surface->offsets);
-    xfree(surface->devPrivate.ptr);
-
-    return Success;
+  xfree(surface->pitches);
+  xfree(surface->offsets);
+  xfree(surface->devPrivate.ptr);
+  
+  return Success;
 }
 
 static int
@@ -1375,98 +905,78 @@ LXSetSurfaceAttribute(ScrnInfoPtr pScrni, Atom attribute, INT32 value)
         (pointer) (GET_PORT_PRIVATE(pScrni)));
 }
 
-static int
-LXDisplaySurface(XF86SurfacePtr surface, short src_x, short src_y,
-    short drw_x, short drw_y, short src_w, short src_h,
-    short drw_w, short drw_h, RegionPtr clipBoxes)
-{
-    OffscreenPrivRec *pPriv = (OffscreenPrivRec *) surface->devPrivate.ptr;
-    ScrnInfoPtr pScrni = surface->pScrn;
-    GeodePortPrivRec *portPriv = GET_PORT_PRIVATE(pScrni);
-    INT32 x1, y1, x2, y2;
-    BoxRec dstBox;
 
-    DBLOG(1, "LXDisplaySurface(src %d,%d %dx%d, dst %d,%d %dx%d)\n",
-        src_x, src_y, src_w, src_h, drw_x, drw_y, drw_w, drw_h);
-
-    DEBUGMSG(0, (0, X_NONE, "DisplaySuface\n"));
-    x1 = src_x;
-    x2 = src_x + src_w;
-    y1 = src_y;
-    y2 = src_y + src_h;
-
-    dstBox.x1 = drw_x;
-    dstBox.x2 = drw_x + drw_w;
-    dstBox.y1 = drw_y;
-    dstBox.y2 = drw_y + drw_h;
-
-    if ((x1 >= x2) || (y1 >= y2))
-        return Success;
-
-    dstBox.x1 -= pScrni->frameX0;
-    dstBox.x2 -= pScrni->frameX0;
-    dstBox.y1 -= pScrni->frameY0;
-    dstBox.y2 -= pScrni->frameY0;
-
-    xf86XVFillKeyHelper(pScrni->pScreen, portPriv->colorKey, clipBoxes);
-
-    LXDisplayVideo(pScrni, surface->id, surface->offsets[0],
-        surface->width, surface->height, surface->pitches[0],
-        x1, y1, x2, y2, &dstBox, src_w, src_h, drw_w, drw_h);
-
-    pPriv->isOn = TRUE;
-    if (portPriv->videoStatus & CLIENT_VIDEO_ON) {
-        REGION_EMPTY(pScrni->pScreen, &portPriv->clip);
-        UpdateCurrentTime();
-        portPriv->videoStatus = FREE_TIMER;
-        portPriv->freeTime = currentTime.milliseconds + FREE_DELAY;
-    }
-
-    return Success;
-}
-
-/*----------------------------------------------------------------------------
- * LXInitOffscreenImages
- *
- * Description	:This function sets up the offscreen memory management.It fills 
- *				 in the XF86OffscreenImagePtr structure with functions to handle
- *				 offscreen memory operations. 	
- *
- * Parameters.
- *		pScrn	:Screen handler pointer having screen information.
- * 
- * Returns		: None
- *
- * Comments		:None
- *
-*----------------------------------------------------------------------------
-*/
 static void
-LXInitOffscreenImages(ScreenPtr pScrn)
+LXInitOffscreenImages(ScreenPtr pScrn) 
 {
-    XF86OffscreenImagePtr offscreenImages;
+  XF86OffscreenImagePtr offscreenImages;
+  
+  /* need to free this someplace */
+  if (!(offscreenImages = xalloc(sizeof(XF86OffscreenImageRec))))
+    return;
 
-    DBLOG(1, "LXInitOffscreenImages()\n");
-
-    /* need to free this someplace */
-    if (!(offscreenImages = xalloc(sizeof(XF86OffscreenImageRec))))
-        return;
-
-    offscreenImages[0].image = &Images[0];
-    offscreenImages[0].flags = VIDEO_OVERLAID_IMAGES | VIDEO_CLIP_TO_VIEWPORT;
-    offscreenImages[0].alloc_surface = LXAllocateSurface;
-    offscreenImages[0].free_surface = LXFreeSurface;
-    offscreenImages[0].display = LXDisplaySurface;
-    offscreenImages[0].stop = LXStopSurface;
-    offscreenImages[0].setAttribute = LXSetSurfaceAttribute;
-    offscreenImages[0].getAttribute = LXGetSurfaceAttribute;
-    offscreenImages[0].max_width = 1024;
-    offscreenImages[0].max_height = 1024;
-    offscreenImages[0].num_attributes = NUM_ATTRIBUTES;
-    offscreenImages[0].attributes = Attributes;
-
-    xf86XVRegisterOffscreenImages(pScrn, offscreenImages, 1);
+  offscreenImages[0].image = &Images[0];
+  offscreenImages[0].flags = VIDEO_OVERLAID_IMAGES | VIDEO_CLIP_TO_VIEWPORT;
+  offscreenImages[0].alloc_surface = LXAllocateSurface;
+  offscreenImages[0].free_surface = LXFreeSurface;
+  offscreenImages[0].display = LXDisplaySurface;
+  offscreenImages[0].stop = LXStopSurface;
+  offscreenImages[0].setAttribute = LXSetSurfaceAttribute;
+  offscreenImages[0].getAttribute = LXGetSurfaceAttribute;
+  offscreenImages[0].max_width = 1024;
+  offscreenImages[0].max_height = 1024;
+  offscreenImages[0].num_attributes = ARRAY_SIZE(Attributes);
+  offscreenImages[0].attributes = Attributes;
+  
+  xf86XVRegisterOffscreenImages(pScrn, offscreenImages, 1);
 }
+  
+void
+LXInitVideo(ScreenPtr pScrn)
+{
+  GeodeRec *pGeode;
+  ScrnInfoPtr pScrni = xf86Screens[pScrn->myNum];
+  XF86VideoAdaptorPtr *adaptors, *newAdaptors = NULL;
+  XF86VideoAdaptorPtr newAdaptor = NULL;
+  int num_adaptors;
 
-#endif /* !XvExtension */
-#endif /* !AMD_V4L2_VIDEO */
+  pGeode = GEODEPTR(pScrni);
+
+  if (pGeode->NoAccel) {
+    ErrorF("Cannot run Xv without accelerations!\n");
+    return;
+  }
+
+  if (!(newAdaptor = LXSetupImageVideo(pScrn))) {
+    ErrorF("Error while setting up the adaptor.\n");
+    return;
+  }
+
+  LXInitOffscreenImages(pScrn);
+
+  num_adaptors = xf86XVListGenericAdaptors(pScrni, &adaptors);
+    
+  if (!num_adaptors) {
+    num_adaptors = 1;
+    adaptors = &newAdaptor;
+  } else {
+    newAdaptors =          
+      xalloc((num_adaptors + 1) * sizeof(XF86VideoAdaptorPtr *));
+    
+    if (newAdaptors) {
+      memcpy(newAdaptors, adaptors, num_adaptors *
+	     sizeof(XF86VideoAdaptorPtr));
+      newAdaptors[num_adaptors] = newAdaptor;
+      adaptors = newAdaptors;
+      num_adaptors++;
+    }
+    else 
+      ErrorF("Memory error while setting up the adaptor\n");
+  }
+
+  if (num_adaptors)
+    xf86XVScreenInit(pScrn, adaptors, num_adaptors);
+    
+  if (newAdaptors)
+    xfree(newAdaptors);
+}

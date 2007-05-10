@@ -628,5 +628,6 @@ gfx_msr_write(unsigned int device, unsigned int msrRegister,
 
         return msrDev[device].Present;
     }
+
     return NOT_KNOWN;
 }

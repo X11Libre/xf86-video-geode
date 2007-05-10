@@ -282,6 +282,33 @@
 	wrmsr(addr, val1, val2);                                       \
 }
 
+#elif CIMARRON_MSR_HOOKS
+
+
+#define MSR_READ(msr_reg, device_add, data64_ptr)                  \
+{                                                                  \
+    unsigned long addr, val1, val2;                                \
+                                                                   \
+	addr = device_add | msr_reg;                               \
+	if (cim_rdmsr) {                                           \
+		cim_rdmsr (addr, &val1, &val2);                    \
+                                                                   \
+		((Q_WORD *)(data64_ptr))->high = val2;             \
+		((Q_WORD *)(data64_ptr))->low  = val1;	           \
+	}                                                          \
+}
+
+#define MSR_WRITE(msr_reg, device_add, data64_ptr)                 \
+{                                                                  \
+	unsigned long addr, val1, val2;                                \
+                                                                   \
+	val2 = ((Q_WORD *)(data64_ptr))->high;                         \
+	val1 = ((Q_WORD *)(data64_ptr))->low;                          \
+                                                                   \
+	addr = (device_add & 0xFFFF0000) | (unsigned long)msr_reg;     \
+	if (cim_wrmsr)                                                 \
+		cim_wrmsr(addr, val1, val2);                           \
+}
 #endif
 
 #endif /* #ifdef CIMARRON_INCLUDE_MSR_MACROS */
@@ -727,5 +754,8 @@ cim_outb(unsigned short port, unsigned char data)
 #endif
 
 #endif /* CIMARRON_INCLUDE_IO_MACROS */
+
+extern void (*cim_rdmsr)(unsigned long, unsigned long *, unsigned long *);
+extern void (*cim_wrmsr)(unsigned long, unsigned long, unsigned long);
 
 #endif
