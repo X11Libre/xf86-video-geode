@@ -177,13 +177,25 @@ static int
 lx_set_custom_mode(GeodeRec *pGeode, DisplayModePtr pMode, int bpp)
 {
   VG_DISPLAY_MODE mode;
+  int hsync, vsync;
 
   memset(&mode, 0, sizeof(mode));
 
-  if (pMode->Flags & V_NHSYNC)
-    mode.flags |= VG_MODEFLAG_NEG_HSYNC;
-  if (pMode->Flags & V_NVSYNC)
-    mode.flags |= VG_MODEFLAG_NEG_VSYNC;
+  /* Cimarron purposely swaps the sync when panels are enabled -this is
+   * presumably to allow for "default" panels which are normally active
+   * low, so we need to swizzle the flags
+   */
+
+  hsync = (pMode->Flags & V_NHSYNC) ? 1 : 0;
+  vsync = (pMode->Flags & V_NVSYNC) ? 1 : 0;
+
+  if (pGeode->Output & OUTPUT_PANEL) {
+	hsync = !vsync;
+	vsync = !vsync;
+  }
+
+  mode.flags |= (hsync) ? VG_MODEFLAG_NEG_HSYNC : 0;
+  mode.flags |= (vsync) ? VG_MODEFLAG_NEG_VSYNC : 0;
 
   mode.flags |= pGeode->Output & OUTPUT_CRT ? VG_MODEFLAG_CRT_AND_FP : 0;
 
