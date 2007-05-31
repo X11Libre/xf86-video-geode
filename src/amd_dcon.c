@@ -34,119 +34,25 @@
 #include <compiler.h>
 
 #include "amd.h"
+#include <unistd.h>
 
-/* OLPC board revision */
-
-#define REV_TESTA 0
-#define REV_TESTB 1
-
-/* Values in the embedded controller */
-
-#define TESTA_REVISION 0x09
-#define EC_VER_CMD 0x09
-
-/* This is a special color map used for video in the GX engine */
-/* on a rev-B DCON, this should be adjusted */
-
-extern unsigned long gfx_gamma_ram_redcloud[];
-
-/* Get the current board revision in a roundabout way by querying the
-   embedded controller 
-*/
-
-static int
-eccmd(ScrnInfoPtr pScrni, unsigned char cmd)
+static Bool
+dcon_present(void)
 {
-
-    unsigned char ret;
-    int i;
-
-    ret = inb(0x6c);
-
-    if (ret & 1)
-	ret = inb(0x68);
-
-    /* Write the command */
-    outb(0x6C, cmd);
-
-    /* Wait for the 2 response */
-    for (i = 0; i < 1000; i++) {
-	ret = inb(0x6C);
-	if ((ret & 3) == 1)
-	    break;
-    }
-
-    if (i == 100) {
-	xf86DrvMsg(pScrni->scrnIndex, X_ERROR,
-	    "Error waiting for the EC command (%x)\n", ret);
-	ret = -1;
-	goto eread;
-    }
-
-    /* get the response */
-    ret = inb(0x68);
-
-  eread:
-    /* Clear the "ownership flag" */
-    outb(0x6C, 0xFF);
-    return ret;
-}
-
-static int
-boardrev(ScrnInfoPtr pScrni)
-{
-    int ret;
-
-    ret = eccmd(pScrni, 0x09);
-
-    if (ret == -1)
-	return -1;
-
-    return ret == TESTA_REVISION ? REV_TESTA : REV_TESTB;
-}
-
-#define RTC_BASE_PORT 0x70
-#define RTC_PORT(x)     (RTC_BASE_PORT + (x))
-
-static inline char
-cmos_read(unsigned char addr)
-{
-    outb(RTC_PORT(0), addr);
-    return inb(RTC_PORT(1));
-}
-
-static inline void
-cmos_write(unsigned char val, unsigned char addr)
-{
-    outb(RTC_PORT(0), addr);
-    outb(RTC_PORT(1), val);
-}
-
-static int
-dcon_avail(void)
-{
-    return cmos_read(440 / 8) & 1;
+    return access("/sys/devices/platform/dcon", F_OK) == 0;
 }
 
 Bool
-gx_dcon_init(ScrnInfoPtr pScrni)
+dcon_init(ScrnInfoPtr pScrni)
 {
     GeodeRec *pGeode = GEODEPTR(pScrni);
-    int rev = boardrev(pScrni);
-    int i;
 
-    if (rev == -1) {
-	xf86DrvMsg(pScrni->scrnIndex, X_DEFAULT,
-	    "This is not an OLPC board\n");
-	return FALSE;
-    }
-    if (dcon_avail() == 0) {
+    if (!dcon_present()) {
 	xf86DrvMsg(pScrni->scrnIndex, X_DEFAULT, "No DCON is present\n");
 	return FALSE;
     }
 
-    xf86DrvMsg(pScrni->scrnIndex, X_DEFAULT, "OLPC board revision %s\n",
-	rev == REV_TESTB ? "testB" : "testA");
+    /* TODO: Print board revision once sysfs exports it. */
     xf86DrvMsg(pScrni->scrnIndex, X_DEFAULT, "DCON detected.\n");
 
     /* Panel size setup */
@@ -155,21 +61,5 @@ gx_dcon_init(ScrnInfoPtr pScrni)
 
     /* FIXME:  Mode setup should go here */
     /* FIXME:  Controller setup should go here */
-
-    /* Update the Xv map on a rev-b board */
-
-    if (rev == REV_TESTB) {
-	for (i = 0; i < 256; i++) {
-	    unsigned char r, g, b;
-
-	    r = (gfx_gamma_ram_redcloud[i] >> 16) & 0xFF;
-	    g = (gfx_gamma_ram_redcloud[i] >> 8) & 0xFF;
-	    b = gfx_gamma_ram_redcloud[i] & 0xFF;
-
-	    gfx_gamma_ram_redcloud[i] =
-		((r >> 2) << 16) | ((g >> 1) << 8) | (b >> 2);
-	}
-    }
-
     return TRUE;
 }

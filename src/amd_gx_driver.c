@@ -555,7 +555,7 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
 
   /* Set up the panel */
 
-  if (gx_dcon_init(pScrni)) {
+  if (dcon_init(pScrni)) {
     pGeode->Panel = TRUE;
   } else if (pGeode->Panel) {
     if (panelgeo != NULL) {

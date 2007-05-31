@@ -454,7 +454,9 @@ GX_GeodeOpts;
 #define DCON_DEFAULT_YRES   900
 #define DCON_DEFAULT_BPP     16
 #define DCON_DEFAULT_REFRESH 50
-extern Bool gx_dcon_init(ScrnInfoPtr pScrni);
+
+/* amd_dcon.c */
+extern Bool dcon_init(ScrnInfoPtr pScrni);
 
 /* amd_common.c */
 
