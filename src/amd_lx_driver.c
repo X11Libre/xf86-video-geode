@@ -629,7 +629,9 @@ LXPreInit(ScrnInfoPtr pScrni, int flags)
      * value of the output bitmask may change
      */
 
-    if (pGeode->Output & OUTPUT_PANEL) {
+    if (dcon_init(pScrni)) {
+	pGeode->Output = OUTPUT_PANEL;
+    } else if (pGeode->Output & OUTPUT_PANEL) {
       if (panelgeo != NULL) 
 		GeodeGetFPGeometry(panelgeo, &pGeode->PanelX, &pGeode->PanelY);
       else {
