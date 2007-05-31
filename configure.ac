@@ -60,6 +60,12 @@ AC_ARG_ENABLE(visibility,
 			     [ AMD_CFLAGS="$AMD_CFLAGS -fvisibility=hidden" ],
 			     [ : ])
 
+if test "x$GCC" = "xyes" ; then
+    GCC_WARNINGS="-Wall -Wstrict-prototypes -Wmissing-prototypes"
+    GCC_WARNINGS="$GCC_WARNINGS -Wmissing-declarations -Wnested-externs"
+fi
+AMD_CFLAGS="$AMD_CFLAGS $GCC_WARNINGS"
+
 # Checks for extensions
 XORG_DRIVER_CHECK_EXT(RANDR, randrproto)
 XORG_DRIVER_CHECK_EXT(RENDER, renderproto)

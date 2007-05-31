@@ -44,7 +44,7 @@ LXWindowLinear(ScreenPtr pScreen, CARD32 row, CARD32 offset, int mode,
 	row * pGeode->displayPitch + offset;
 }
 
-void
+static void
 LXUpdateFunc(ScreenPtr pScreen, shadowBufPtr pBuf)
 {
   RegionPtr   damage = shadowDamage (pBuf);
@@ -187,10 +187,10 @@ LXRotate(ScrnInfoPtr pScrni, DisplayModePtr mode)
 	ret = shadowAdd(pScrni->pScreen, pPixmap, LXUpdateFunc,
 			LXWindowLinear, pGeode->rotation, NULL);
 
-	/* XXX - FIXME - bail gracefully */
-
-	if (!ret)
+	if (!ret) {
 	    ErrorF("shadowAdd failed\n");
+	    goto error;
+	}
     }
 
     if (pGeode->rotation == RR_Rotate_0)

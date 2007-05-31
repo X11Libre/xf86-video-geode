@@ -135,10 +135,10 @@ GXRotate(ScrnInfoPtr pScrni, DisplayModePtr mode)
 	    shadowAdd(pScrni->pScreen, pPixmap, GXUpdate, GXWindowLinear,
 	    pGeode->rotation, NULL);
 
-	/* XXX - FIXME - bail gracefully */
-
-	if (!ret)
+	if (!ret) {
 	    ErrorF("shadowAdd failed\n");
+	    goto error;
+	}
     }
 
     if (pGeode->rotation == RR_Rotate_0)

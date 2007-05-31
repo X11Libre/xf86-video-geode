@@ -580,7 +580,7 @@ redcloud_msr_read(unsigned int device, unsigned int msrRegister,
     Q_WORD * msrValue)
 #else
 DEV_STATUS
-gfx_msr_read(unsigned int device, unsigned int msrRegister, Q_WORD * msrValue)
+gfx_msr_read(unsigned int device, unsigned int msrRegister, QQ_WORD * msrValue)
 #endif
 {
     if (device < NUM_DEVS) {
@@ -618,7 +618,7 @@ redcloud_msr_write(unsigned int device, unsigned int msrRegister,
 #else
 DEV_STATUS
 gfx_msr_write(unsigned int device, unsigned int msrRegister,
-    Q_WORD * msrValue)
+    QQ_WORD * msrValue)
 #endif
 {
     if (device < NUM_DEVS) {

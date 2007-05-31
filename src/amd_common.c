@@ -31,6 +31,7 @@
 #endif
 
 #include "xf86.h"
+#include "amd.h"
 
 #define move0(d,s,n) \
   __asm__ __volatile__( \

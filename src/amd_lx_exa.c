@@ -625,7 +625,7 @@ static Bool lx_prepare_composite(int op, PicturePtr pSrc, PicturePtr pMsk,
   return TRUE;
 }
 
-int lx_get_bpp_from_format(int format) {
+static int lx_get_bpp_from_format(int format) {
 
   switch(format) {
   case CIMGP_SOURCE_FMT_8_8_8_8:
@@ -993,7 +993,7 @@ static Bool lx_upload(PixmapPtr pDst, int x, int y, int w, int h,
   gp_set_solid_pattern(0);
 
   offset = ((unsigned long) dst) - ((unsigned long) pGeode->FBBase);
-  gp_color_bitmap_to_screen_blt(offset, 0, w, h, src, src_pitch);
+  gp_color_bitmap_to_screen_blt(offset, 0, w, h, (unsigned char *)src, src_pitch);
   return TRUE;
 }
 

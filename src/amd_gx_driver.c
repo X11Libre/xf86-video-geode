@@ -1154,10 +1154,7 @@ GXCreateScreenResources(ScreenPtr pScreen)
   if (!(*pScreen->CreateScreenResources) (pScreen))
     return FALSE;
 
-  if (xf86LoaderCheckSymbol("GXRandRSetConfig")
-      && pGeode->rotation != RR_Rotate_0) {
-    Rotation(*GXRandRSetConfig) (ScreenPtr pScreen, Rotation rr, int rate,
-				 RRScreenSizePtr pSize) = NULL;
+  if (pGeode->rotation != RR_Rotate_0) {
     RRScreenSize p;
     Rotation requestedRotation = pGeode->rotation;
 
@@ -1170,12 +1167,9 @@ GXCreateScreenResources(ScreenPtr pScreen)
     p.mmWidth = pScreen->mmWidth;
     p.mmHeight = pScreen->mmHeight;
 
-    GXRandRSetConfig = LoaderSymbol("GXRandRSetConfig");
-    if (GXRandRSetConfig) {
-      pGeode->starting = TRUE;
-      (*GXRandRSetConfig) (pScreen, requestedRotation, 0, &p);
-      pGeode->starting = FALSE;
-    }
+    pGeode->starting = TRUE;
+    GXRandRSetConfig(pScreen, requestedRotation, 0, &p);
+    pGeode->starting = FALSE;
   }
 
   return TRUE;

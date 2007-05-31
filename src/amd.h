@@ -37,6 +37,7 @@
 #include <X11/extensions/randr.h>
 
 #include "xf86xv.h"
+#include "randrstr.h"
 
 /* We only support EXA version >=2 */
 
@@ -167,6 +168,7 @@ extern unsigned short gfx_inw(unsigned short port);
 extern void gfx_outw(unsigned short port, unsigned short data);
 extern unsigned long gfx_ind(unsigned short port);
 extern void gfx_outd(unsigned short port, unsigned long data);
+void gfx_reset_pitch(unsigned short pitch);
 
 #define Q_WORD QQ_WORD
 #include "gfx_rtns.h"
@@ -283,7 +285,7 @@ typedef struct _geodeRec
 
   unsigned long FBLinearAddr;
   unsigned char *FBBase;
-  unsigned int FBAvail;
+  int FBAvail;
   unsigned int FBOffset;
   unsigned int FBSize;
 
@@ -306,7 +308,7 @@ typedef struct _geodeRec
 
   ExaDriverPtr pExa;
   unsigned int exaBfrOffset;
-  unsigned int exaBfrSz;
+  int exaBfrSz;
   
   /* XAA structures */
   unsigned char **AccelImageWriteBuffers;
@@ -478,6 +480,7 @@ int GeodeGetFPGeometry(const char *str, int *width, int *height);
 void GeodePointerMoved(int index, int x, int y);
 void GeodeFreeScreen(int scrnIndex, int flags);
 int GeodeCalculatePitchBytes(unsigned int width, unsigned int bpp);
+void GXSetupChipsetFPtr(ScrnInfoPtr pScrn);
 
 /* amd_msr.c */
 int GeodeReadMSR(unsigned long addr, unsigned long *lo, unsigned long *hi);
@@ -492,15 +495,20 @@ void GXShowCursor(ScrnInfoPtr pScrni);
 /* amd_gx_randr.c */
 Rotation GXGetRotation(ScreenPtr pScreen);
 Bool GXRandRInit(ScreenPtr pScreen, int rotation);
+Bool GXRandRSetConfig(ScreenPtr, Rotation, int, RRScreenSizePtr);
 
 /* amd_gx_rotate.c */
 Bool GXRotate(ScrnInfoPtr pScrni, DisplayModePtr mode);
 
 /* amd_gx_accel.c */
 Bool GXAccelInit(ScreenPtr pScrn);
+void GXAccelSync(ScrnInfoPtr pScrni);
 
 /* amd_gx_video.c */
 void GXInitVideo(ScreenPtr pScrn);
+
+/* amd_lx_driver.c */
+void LXSetupChipsetFPtr(ScrnInfoPtr pScrn);
 
 /* amd_lx_cursor.c */
 Bool LXHWCursorInit(ScreenPtr pScrn);
@@ -511,6 +519,7 @@ void LXShowCursor(ScrnInfoPtr pScrni);
 /* amd_lx_randr.c */
 Rotation LXGetRotation(ScreenPtr pScreen);
 Bool LXRandRInit(ScreenPtr pScreen, int rotation);
+Bool LXRandRSetConfig(ScreenPtr, Rotation, int, RRScreenSizePtr);
 
 /* amd_lx_rotate.c */
 Bool LXSetRotatePitch(ScrnInfoPtr pScrni);
@@ -521,5 +530,9 @@ Bool LXExaInit(ScreenPtr pScreen);
 
 /* amd_lx_video.c */
 void LXInitVideo(ScreenPtr pScrn);
+void   LXDisplayVideo(ScrnInfoPtr pScrni, int id, short width, short height, 
+    BoxPtr dstBox, short srcW, short srcH, short drawW, short drawH);
+void  LXStopVideo(ScrnInfoPtr pScrni, pointer data, Bool exit);
+void LXResetVideo(ScrnInfoPtr pScrni);
 
 #endif /* _AMD_GEODE_H_ */

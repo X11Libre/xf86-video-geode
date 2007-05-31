@@ -764,6 +764,8 @@ static int top, left, npixels, nlines;
 static int offset, s1offset = 0, s2offset = 0, s3offset = 0;
 static unsigned char *dst_start;
 static int d2offset = 0, d3offset = 0;
+
+#if 0
 static Bool
 RegionsIntersect(BoxPtr pRcl1, BoxPtr pRcl2, BoxPtr pRclResult)
 {
@@ -781,6 +783,7 @@ RegionsIntersect(BoxPtr pRcl1, BoxPtr pRcl2, BoxPtr pRclResult)
 
     return (FALSE);
 }
+#endif
 
 void
 GXSetVideoPosition(int x, int y, int width, int height,
@@ -792,7 +795,9 @@ GXSetVideoPosition(int x, int y, int width, int height,
     unsigned long lines = 0;
     unsigned long y_extra, uv_extra = 0;
     unsigned long startAddress;
+#if 0
     BoxRec ovly, display, result;
+#endif
 
     xend = x + drw_w;
     yend = y + drw_h;

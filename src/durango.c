@@ -38,6 +38,7 @@
 #include <errno.h>
 #include <xf86_ansic.h>
 #include <compiler.h>
+#include "amd.h"
 
 /* Compiler options */
 
