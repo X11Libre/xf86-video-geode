@@ -36,7 +36,6 @@
 
 #include <unistd.h>
 #include <errno.h>
-#include <xf86_ansic.h>
 #include <compiler.h>
 #include "amd.h"
 

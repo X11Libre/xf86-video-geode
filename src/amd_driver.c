@@ -42,7 +42,6 @@
 /* Includes that are used by all drivers */
 #include "xf86.h"
 #include "xf86_OSproc.h"
-#include "xf86_ansic.h"
 #include "xf86Resources.h"
 #include "compiler.h"
 #include "xf86PciInfo.h"
