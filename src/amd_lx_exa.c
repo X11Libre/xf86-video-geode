@@ -74,6 +74,7 @@ static struct {
   unsigned int srcWidth, srcHeight;
   PixmapPtr srcPixmap;
 
+  unsigned int srcColor;
   int op;
   int repeat;
   unsigned int fourBpp;
@@ -571,6 +572,13 @@ static Bool lx_prepare_composite(int op, PicturePtr pSrc, PicturePtr pMsk,
       return FALSE;
     }
 
+    /* Get the source color */
+
+    if (direction == 0)
+      exaScratch.srcColor = lx_get_source_color(pSrc, 0, 0, pSrc->format);
+    else
+      exaScratch.srcColor = lx_get_source_color(pDst, 0, 0, pDst->format);
+
     /* FIXME:  What to do here? */
 
     if (pSrc->pDrawable->width != 1 || pSrc->pDrawable->height != 1)
@@ -594,19 +602,6 @@ static Bool lx_prepare_composite(int op, PicturePtr pSrc, PicturePtr pMsk,
 
     if (direction == 1)
       exaScratch.srcPixmap = pxSrc;
-
-    /* Extract the source color to use */
-
-    if (direction == 0)
-      srcColor = lx_get_source_color(pSrc, 0, 0, pDst->format);
-    else
-      srcColor = lx_get_source_color(pDst, 0, 0, pSrc->format);
-
-    /* Build part of the blt now to save time later */
-
-    gp_declare_blt (0);
-    gp_set_solid_source (srcColor);
-    gp_write_parameters();
   }
   else {
     if (usesPasses(op))
@@ -879,7 +874,11 @@ lx_do_composite_mask(PixmapPtr pxDst, unsigned long dstOffset,
   struct blend_ops_t *opPtr = &lx_alpha_ops[exaScratch.op * 2];
 
   gp_declare_blt (0);
+
+  gp_set_source_format(exaScratch.srcFormat->fmt);
+  gp_set_strides(exaGetPixmapPitch(pxDst), exaScratch.srcPitch);
   gp_set_bpp(lx_get_bpp_from_format(exaScratch.dstFormat->fmt));
+  gp_set_solid_source (exaScratch.srcColor);
 
   gp_blend_mask_blt(dstOffset, 0, width, height, data,
 		    exaScratch.srcPitch, opPtr->operation,

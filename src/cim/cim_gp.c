@@ -3460,7 +3460,7 @@ gp_blend_mask_blt(unsigned long dstoffset, unsigned long srcx,
         WRITE_COMMAND32(GP3_BLT_RASTER_MODE,
             gp3_bpp |
             GP3_RM_ALPHA_TO_RGB |
-            GP3_RM_ALPHA_A_PLUS_BETA_B | GP3_RM_SELECT_ALPHA_CHAN_3);
+            ((unsigned long) operation << 20) | GP3_RM_SELECT_ALPHA_CHAN_3);
     } else {
         WRITE_COMMAND32(GP3_BLT_RASTER_MODE,
             gp3_bpp |
@@ -3478,7 +3478,7 @@ gp_blend_mask_blt(unsigned long dstoffset, unsigned long srcx,
     WRITE_COMMAND32(GP3_BLT_CH3_MODE_STR, GP3_CH3_C3EN |
         GP3_CH3_HST_SRC_ENABLE |
         depth_flag | ((gp3_blt_flags & CIMGP_BLTFLAGS_PRES_LUT) << 20));
-    WRITE_COMMAND32(GP3_BLT_MODE, gp3_blt_mode | GP3_BM_DST_REQ);
+    WRITE_COMMAND32(GP3_BLT_MODE, GP3_BM_DST_REQ);
 
     /* START THE BLT */
 
