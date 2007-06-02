@@ -126,7 +126,7 @@ extern "C"
         unsigned long width, unsigned long height, unsigned char *data,
         long stride, int fourbpp);
   void gp_blend_mask_blt(unsigned long dstoffset, unsigned long srcx,
-	unsigned long width, unsigned long height, unsigned char *data,
+	unsigned long width, unsigned long height, unsigned long,
         long stride, int operation, int fourbpp);
   void gp_masked_blt(unsigned long dstoffset, unsigned long width,
         unsigned long height, unsigned long mono_srcx,

@@ -408,9 +408,11 @@ struct blend_ops_t {
   /* PictOpDst */
   { CIMGP_ALPHA_TIMES_A, CIMGP_ALPHA_EQUALS_ONE, CIMGP_CHANNEL_A_DEST }, { },
   /* PictOpOver*/
-  { CIMGP_A_PLUS_BETA_B, CIMGP_CHANNEL_A_ALPHA, CIMGP_CHANNEL_A_SOURCE }, { },
+  { CIMGP_ALPHA_A_PLUS_BETA_B, CIMGP_CHANNEL_A_ALPHA, CIMGP_CHANNEL_A_SOURCE },
+  { },
   /* PictOpOverReverse */
-  { CIMGP_A_PLUS_BETA_B, CIMGP_CHANNEL_A_ALPHA, CIMGP_CHANNEL_A_DEST }, { },
+  { CIMGP_ALPHA_A_PLUS_BETA_B, CIMGP_CHANNEL_A_ALPHA, CIMGP_CHANNEL_A_DEST }, 
+  { },
   /* PictOpIn */
   { CIMGP_ALPHA_TIMES_A, CIMGP_CHANNEL_B_ALPHA, CIMGP_CHANNEL_A_SOURCE }, { },
   /* PictOpInReverse */
@@ -880,8 +882,8 @@ lx_do_composite_mask(PixmapPtr pxDst, unsigned long dstOffset,
   gp_set_bpp(lx_get_bpp_from_format(exaScratch.dstFormat->fmt));
   gp_set_solid_source (exaScratch.srcColor);
 
-  gp_blend_mask_blt(dstOffset, 0, width, height, data,
-		    exaScratch.srcPitch, opPtr->operation,
+  gp_blend_mask_blt(dstOffset, 0, width, height, maskOffset,
+		exaScratch.srcPitch, opPtr->operation,
 		    exaScratch.fourBpp);
 }
 
