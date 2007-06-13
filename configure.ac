@@ -54,17 +54,25 @@ AC_ARG_ENABLE(geodegx-panel,
 	      [ ], 
 	      [ AMD_CFLAGS="-DPNL_SUP $AMD_CFLAGS" ])
 
+AC_ARG_ENABLE(werror,        AC_HELP_STRING([--enable-werror],
+				  [Treat warnings as errors (default: disabled)]),
+			        [WERROR=$enableval], [WERROR=no])
 AC_ARG_ENABLE(visibility,
 	      AC_HELP_STRING([--enable-visibility],
 			     [Enable GCC visibility optimizations]),
 			     [ AMD_CFLAGS="$AMD_CFLAGS -fvisibility=hidden" ],
 			     [ : ])
 
-if test "x$GCC" = "xyes" ; then
-    GCC_WARNINGS="-Wall -Wstrict-prototypes -Wmissing-prototypes"
-    GCC_WARNINGS="$GCC_WARNINGS -Wmissing-declarations -Wnested-externs"
+if test "x$GCC" = "xyes"; then
+       GCC_WARNINGS1="-Wall -Wpointer-arith -Wstrict-prototypes"
+       GCC_WARNINGS2="-Wmissing-prototypes -Wmissing-declarations"
+       GCC_WARNINGS3="-Wnested-externs -fno-strict-aliasing"
+       GCC_WARNINGS="$GCC_WARNINGS1 $GCC_WARNINGS2 $GCC_WARNINGS3"
+       if test "x$WERROR" = "xyes"; then
+               GCC_WARNINGS="${GCC_WARNINGS} -Werror"
+       fi
+       AMD_CFLAGS="$GCC_WARNINGS $AMD_CFLAGS"
 fi
-AMD_CFLAGS="$AMD_CFLAGS $GCC_WARNINGS"
 
 # Checks for extensions
 XORG_DRIVER_CHECK_EXT(RANDR, randrproto)

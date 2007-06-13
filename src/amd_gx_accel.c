@@ -83,9 +83,9 @@ typedef unsigned char uchar;
 #endif
 
 #ifdef OPT_ACCEL
-unsigned int BPP;
-unsigned int BLT_MODE, VEC_MODE;
-unsigned int ACCEL_STRIDE;
+static unsigned int BPP;
+static unsigned int BLT_MODE, VEC_MODE;
+static unsigned int ACCEL_STRIDE;
 
 #define GU2_WAIT_PENDING while(READ_GP32(MGP_BLT_STATUS) & MGP_BS_BLT_PENDING)
 #define GU2_WAIT_BUSY    while(READ_GP32(MGP_BLT_STATUS) & MGP_BS_BLT_BUSY)
@@ -152,17 +152,33 @@ static const int SDfn_PM[16] = {
 
 /* (pat FUNC dst) */
 
-static int PDfn[16] = {
+static const int PDfn[16] = {
     0x00, 0xA0, 0x50, 0xF0, 0x0A, 0xAA, 0x5A, 0xFA,
     0x05, 0xA5, 0x55, 0xF5, 0x0F, 0xAF, 0x5F, 0xFF
 };
 
 /* ((pat FUNC dst) AND src-mask) OR (dst AND (NOT src-mask)) */
 
-static int PDfn_SM[16] = {
+static const int PDfn_SM[16] = {
     0x22, 0xA2, 0x62, 0xE2, 0x2A, 0xAA, 0x6A, 0xEA,
     0x26, 0xA6, 0x66, 0xE6, 0x2E, 0xAE, 0x6E, 0xEE
 };
+
+#ifdef OPT_ACCEL
+static _X_INLINE uint32_t amd_gx_BppToRasterMode(int bpp)
+{
+    switch (bpp) {
+    case 16:
+        return MGP_RM_BPPFMT_565;
+    case 32:
+        return MGP_RM_BPPFMT_8888;
+    case 8:
+        return MGP_RM_BPPFMT_332;
+    default:
+	return 0;
+    }
+}
+#endif /* OPT_ACCEL */
 
 /*----------------------------------------------------------------------------
  * GXAccelSync.
@@ -222,9 +238,9 @@ GXSetupForSolidFill(ScrnInfoPtr pScrni,
         if (((ROP ^ (ROP >> 1)) & 0x55) != 0)
             BLT_MODE |= MGP_BM_DST_REQ;
         GU2_WAIT_PENDING;
+        WRITE_GP32(MGP_RASTER_MODE, ROP);
         WRITE_GP32(MGP_PAT_COLOR_0, planemask);
         WRITE_GP32(MGP_SRC_COLOR_FG, color);
-        WRITE_GP32(MGP_RASTER_MODE, ROP);
         WRITE_GP32(MGP_STRIDE, ACCEL_STRIDE);
     }
 #endif
@@ -399,12 +415,12 @@ GXSetupForMono8x8PatternFill(ScrnInfoPtr pScrni, int patx, int paty,
         if (((ROP ^ (ROP >> 1)) & 0x55) != 0)
             BLT_MODE |= MGP_BM_DST_REQ;
         GU2_WAIT_PENDING;
+        WRITE_GP32(MGP_RASTER_MODE, ROP);
         WRITE_GP32(MGP_SRC_COLOR_FG, planemask);
         WRITE_GP32(MGP_PAT_COLOR_0, bg);
         WRITE_GP32(MGP_PAT_COLOR_1, fg);
         WRITE_GP32(MGP_PAT_DATA_0, patx);
         WRITE_GP32(MGP_PAT_DATA_1, paty);
-        WRITE_GP32(MGP_RASTER_MODE, ROP);
         WRITE_GP32(MGP_STRIDE, ACCEL_STRIDE);
     }
 #endif
@@ -504,10 +520,10 @@ GXSetupForScreenToScreenCopy(ScrnInfoPtr pScrni, int xdir, int ydir, int rop,
         BLT_MODE = ((ROP ^ (ROP >> 1)) & 0x55) != 0 ?
             MGP_BM_SRC_FB | MGP_BM_DST_REQ : MGP_BM_SRC_FB;
         GU2_WAIT_PENDING;
+        WRITE_GP32(MGP_RASTER_MODE, ROP);
         WRITE_GP32(MGP_PAT_COLOR_0, planemask);
         WRITE_GP32(MGP_SRC_COLOR_FG, trans_color);
         WRITE_GP32(MGP_SRC_COLOR_BG, ~0);
-        WRITE_GP32(MGP_RASTER_MODE, ROP);
         WRITE_GP32(MGP_STRIDE, ACCEL_STRIDE);
     }
 #endif
@@ -769,10 +785,10 @@ GXSetupForScanlineCPUToScreenColorExpandFill(ScrnInfoPtr pScrni,
             MGP_BM_SRC_MONO | MGP_BM_SRC_FB | MGP_BM_DST_REQ :
             MGP_BM_SRC_MONO | MGP_BM_SRC_FB;
         GU2_WAIT_PENDING;
+        WRITE_GP32(MGP_RASTER_MODE, ROP);
         WRITE_GP32(MGP_PAT_COLOR_0, planemask);
         WRITE_GP32(MGP_SRC_COLOR_BG, bg);
         WRITE_GP32(MGP_SRC_COLOR_FG, fg);
-        WRITE_GP32(MGP_RASTER_MODE, ROP);
         WRITE_GP32(MGP_STRIDE, stride);
     }
 #endif
@@ -946,10 +962,10 @@ GXSetupForScreenToScreenColorExpandFill(ScrnInfoPtr pScrni, int fg, int bg,
             MGP_BM_SRC_MONO | MGP_BM_SRC_FB | MGP_BM_DST_REQ :
             MGP_BM_SRC_MONO | MGP_BM_SRC_FB;
         GU2_WAIT_PENDING;
+        WRITE_GP32(MGP_RASTER_MODE, ROP);
         WRITE_GP32(MGP_PAT_COLOR_0, planemask);
         WRITE_GP32(MGP_SRC_COLOR_BG, bg);
         WRITE_GP32(MGP_SRC_COLOR_FG, fg);
-        WRITE_GP32(MGP_RASTER_MODE, ROP);
         WRITE_GP32(MGP_STRIDE, ACCEL_STRIDE);
     }
 #endif
@@ -1054,9 +1070,9 @@ GXSetupForSolidLine(ScrnInfoPtr pScrni, int color, int rop, uint planemask)
         VEC_MODE = ((ROP ^ (ROP >> 1)) & 0x55) != 0 ? ((BLT_MODE |=
                 MGP_BM_DST_REQ), MGP_VM_DST_REQ) : 0;
         GU2_WAIT_PENDING;
+        WRITE_GP32(MGP_RASTER_MODE, ROP);
         WRITE_GP32(MGP_PAT_COLOR_0, color);
         WRITE_GP32(MGP_SRC_COLOR_FG, planemask);
-        WRITE_GP32(MGP_RASTER_MODE, ROP);
         WRITE_GP32(MGP_STRIDE, ACCEL_STRIDE);
     }
 #endif
@@ -1490,17 +1506,22 @@ amd_gx_exa_PrepareSolid(PixmapPtr pxMap, int alu, Pixel planemask, Pixel fg)
 {
 
     int dstPitch = exaGetPixmapPitch(pxMap);
-    unsigned int ROP = BPP | (planemask == ~0U ? SDfn[alu] : SDfn_PM[alu]);
+    unsigned int ROP =
+	amd_gx_BppToRasterMode(pxMap->drawable.bitsPerPixel)
+	| (planemask == ~0U ? SDfn[alu] : SDfn_PM[alu]);
 
-    //ErrorF("amd_gx_exa_PrepareSolid(%#x,%#x,%#x)\n", alu, planemask, fg);
+    //  FIXME: this should go away -- workaround for the blockparty icon corruption
+    //if (pxMap->drawable.bitsPerPixel == 32)
+    //	return FALSE;
 
     BLT_MODE = ((ROP ^ (ROP >> 2)) & 0x33) == 0 ? MGP_BM_SRC_MONO : 0;
     if (((ROP ^ (ROP >> 1)) & 0x55) != 0)
         BLT_MODE |= MGP_BM_DST_REQ;
+    //ErrorF("amd_gx_exa_PrepareSolid(%#x,%#x,%#x - ROP=%x,BLT_MODE=%x)\n", alu, planemask, fg, ROP, BLT_MODE);
     GU2_WAIT_PENDING;
+    WRITE_GP32(MGP_RASTER_MODE, ROP);
     WRITE_GP32(MGP_PAT_COLOR_0, planemask);
     WRITE_GP32(MGP_SRC_COLOR_FG, fg);
-    WRITE_GP32(MGP_RASTER_MODE, ROP);
     WRITE_GP32(MGP_STRIDE, dstPitch);
     return TRUE;
 }
@@ -1513,7 +1534,7 @@ amd_gx_exa_Solid(PixmapPtr pxMap, int x1, int y1, int x2, int y2)
     unsigned int offset = exaGetPixmapOffset(pxMap) + pitch * y1 + bpp * x1;
     unsigned int size = ((x2 - x1) << 16) | (y2 - y1);
 
-    //ErrorF("amd_gx_exa_Solid() at %d,%d %d,%d\n", x1, y1, x2, y2);
+    //ErrorF("amd_gx_exa_Solid() at %d,%d %d,%d - offset=%d, bpp=%d\n", x1, y1, x2, y2, offset, bpp);
 
     GU2_WAIT_PENDING;
     WRITE_GP32(MGP_DST_OFFSET, offset);
@@ -1543,10 +1564,10 @@ amd_gx_exa_PrepareCopy(PixmapPtr pxSrc, PixmapPtr pxDst, int dx, int dy,
     BLT_MODE = ((ROP ^ (ROP >> 1)) & 0x55) != 0 ?
         MGP_BM_SRC_FB | MGP_BM_DST_REQ : MGP_BM_SRC_FB;
     GU2_WAIT_PENDING;
+    WRITE_GP32(MGP_RASTER_MODE, ROP);
     WRITE_GP32(MGP_PAT_COLOR_0, planemask);
     WRITE_GP32(MGP_SRC_COLOR_FG, ~0);
     WRITE_GP32(MGP_SRC_COLOR_BG, ~0);
-    WRITE_GP32(MGP_RASTER_MODE, ROP);
     WRITE_GP32(MGP_STRIDE, (pGeode->cpySrcPitch << 16) | dstPitch);
     return TRUE;
 }
@@ -1890,17 +1911,7 @@ GXAccelInit(ScreenPtr pScrn)
 
 #ifdef OPT_ACCEL
     ACCEL_STRIDE = (pGeode->Pitch << 16) | pGeode->Pitch;
-    switch (pScrni->bitsPerPixel) {
-    case 16:
-        BPP = MGP_RM_BPPFMT_565;
-        break;
-    case 32:
-        BPP = MGP_RM_BPPFMT_8888;
-        break;
-    default:
-        BPP = MGP_RM_BPPFMT_332;
-        break;
-    }
+    BPP = amd_gx_BppToRasterMode(pScrni->bitsPerPixel);
 #endif
 
 #if XF86EXA
