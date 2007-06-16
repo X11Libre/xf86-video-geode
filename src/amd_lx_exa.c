@@ -577,9 +577,9 @@ static Bool lx_prepare_composite(int op, PicturePtr pSrc, PicturePtr pMsk,
     /* Get the source color */
 
     if (direction == 0)
-      exaScratch.srcColor = lx_get_source_color(pSrc, 0, 0, pSrc->format);
+      exaScratch.srcColor = lx_get_source_color(pSrc, 0, 0, pDst->format);
     else
-      exaScratch.srcColor = lx_get_source_color(pDst, 0, 0, pDst->format);
+      exaScratch.srcColor = lx_get_source_color(pDst, 0, 0, pSrc->format);
 
     /* FIXME:  What to do here? */
 
@@ -1025,7 +1025,7 @@ Bool LXExaInit(ScreenPtr pScreen)
   pExa->WaitMarker = lx_wait_marker;
 
   pExa->UploadToScreen = lx_upload;
-  pExa->DownloadFromScreen = lx_download;
+  //pExa->DownloadFromScreen = lx_download;
 
   pExa->PrepareSolid = lx_prepare_solid;
   pExa->Solid = lx_do_solid;

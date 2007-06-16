@@ -3407,7 +3407,8 @@ gp_blend_mask_blt(unsigned long dstoffset, unsigned long srcx,
     unsigned long base, depth_flag;
 
     base = ((gp3_fb_base << 24) + (dstoffset & 0xFFC00000)) |
-        (gp3_base_register & ~GP3_BASE_OFFSET_DSTMASK);
+	   ((gp3_fb_base << 4) + (dataoffset >> 20)) |
+           (gp3_base_register & GP3_BASE_OFFSET_SRCMASK);
 
     /* ENABLE ALL RELEVANT REGISTERS */
     /* We override the raster mode register to force the */
@@ -3457,7 +3458,7 @@ gp_blend_mask_blt(unsigned long dstoffset, unsigned long srcx,
     WRITE_COMMAND32(GP3_BLT_DST_OFFSET, (dstoffset & 0x3FFFFF));
 
     /* Set the offset of the CH3 data in memory */
-    WRITE_COMMAND32(GP3_BLT_CH3_OFFSET, dataoffset & 0xFFFFFFF);
+    WRITE_COMMAND32(GP3_BLT_CH3_OFFSET, dataoffset & 0x3FFFFF);
 
     WRITE_COMMAND32(GP3_BLT_WID_HEIGHT, size);
     WRITE_COMMAND32(GP3_BLT_CH3_WIDHI, size);
