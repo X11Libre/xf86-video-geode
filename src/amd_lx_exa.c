@@ -771,8 +771,6 @@ lx_composite_convert(PixmapPtr pxDst, unsigned long dstOffset,
 {
   /* Step 1 - copy the destination into the scratch buffer */
 
-  ErrorF("Convert\n");
-
   gp_declare_blt(0);
   gp_set_bpp(lx_get_bpp_from_format(exaScratch.dstFormat->fmt));
 

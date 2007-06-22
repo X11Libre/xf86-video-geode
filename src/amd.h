@@ -258,7 +258,9 @@ typedef struct _geodeRec
   Bool tryHWCursor;
   unsigned int shadowSize;
   unsigned int shadowOffset;
-  
+
+  ExaOffscreenArea *shadowArea;
+
   DisplayModePtr curMode;
   VG_COMPRESSION_DATA CBData;
   

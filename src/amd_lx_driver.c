@@ -65,7 +65,6 @@
 #include "cim_defs.h"
 #include "cim_regs.h"
 #include "amd.h"
-#include "shadow.h"
 
 /* Bring in VGA functions */
 #include "amd_lx_vga.c"
@@ -316,27 +315,6 @@ LXAllocateMemory(ScreenPtr pScrn, ScrnInfoPtr pScrni, int rotate)
       }
     }
 
-    pGeode->shadowSize = 0;
-
-    if (rotate != RR_Rotate_0) {
-	if (rotate & (RR_Rotate_90 | RR_Rotate_270))
-	    size = pGeode->displayPitch * pScrni->virtualX;
-	else
-	    size = pGeode->displayPitch * pScrni->virtualY;
-
-	if (size <= fbavail) {
-	    pGeode->shadowOffset = fboffset;
-	    pGeode->shadowSize = size;
-
-	    fboffset += size;
-	    fbavail -= size;
-	} else {
-	    xf86DrvMsg(pScrni->scrnIndex, X_ERROR,
-		"Not enough memory for the shadow framebuffer\n");
-	    ret = FALSE;
-	}
-    }
-
     /* Adjust the available EXA offscreen space to account for the buffer */
 
     if (!pGeode->NoAccel && pGeode->pExa) {
@@ -449,9 +427,6 @@ LXMapMem(ScrnInfoPtr pScrni)
 	!cim_vip_ptr)
       return FALSE;
 
-    /* FIXME:  Temporary */
-    WRITE_GP32(GP3_BLT_STATUS, 0x690000);
-
     gp_set_frame_buffer_base(pci->memBase[0], pGeode->FBAvail);
     gp_set_command_buffer_base(cmd_bfr_phys, 0, pGeode->CmdBfrSize);
 
@@ -475,20 +450,17 @@ LXMapMem(ScrnInfoPtr pScrni)
 static Bool
 LXCheckVGA(ScrnInfoPtr pScrni) {
 
-  char bfr[19];
-
+  unsigned char *ptr;
   const char *vgasig = "IBM VGA Compatible";
-  vgaHWPtr pvgaHW = VGAHWPTR(pScrni);
   int ret;
 
-  if (!vgaHWMapMem(pScrni))
+  ptr = xf86MapVidMem(pScrni->scrnIndex, VIDMEM_FRAMEBUFFER, 0xC001E, strlen(vgasig));
+
+  if (ptr == NULL)
     return FALSE;
 
-  ret = memcmp(pvgaHW->Base + 0x1E, vgasig, strlen(vgasig));
-  memcpy(bfr, pvgaHW->Base + 0x1E, 18);
-  vgaHWUnmapMem(pScrni);
-
-  bfr[18] = 0;
+  ret = memcmp(ptr, vgasig, strlen(vgasig));
+  xf86UnMapVidMem(pScrni->scrnIndex, (pointer) ptr, strlen(vgasig));
 
   return ret ? FALSE : TRUE;
 }
@@ -513,10 +485,8 @@ LXPreInit(ScrnInfoPtr pScrni, int flags)
     pGeode->VGAActive = FALSE;
 
     if (xf86LoadSubModule(pScrni, "vgahw")) {
-      if (vgaHWGetHWRec(pScrni)) {
-
+      if (vgaHWGetHWRec(pScrni)) 
 	pGeode->useVGA = LXCheckVGA(pScrni);
-      }
     }
 
     if (pGeode->useVGA)
@@ -583,10 +553,20 @@ LXPreInit(ScrnInfoPtr pScrni, int flags)
     pGeode->tryHWCursor = TRUE;
     pGeode->tryCompression = TRUE;
 
-    pGeode->NoAccel = FALSE;
+    /* Protect against old versions of EXA */
 
-    pGeode->NoOfImgBuffers = DEFAULT_IMG_LINE_BUFS;
-    pGeode->NoOfColorExpandLines = DEFAULT_CLR_LINE_BUFS;
+#if (EXA_VERSION_MAJOR < 2)
+    pGeode->NoAccel = TRUE;
+    xf86DrvMsg(pScrni->scrnIndex, X_ERROR,
+		"*** This driver was compiled with EXA version %d\n");
+    xf86DrvMsg(pScrni->scrnIndex, X_ERROR,
+		"*** we need version 2 or greater\n");
+    xf86DrvMsg(pScrni->scrnIndex, X_ERROR,
+		"*** All accelerations are being turned off.\n");
+#else
+    pGeode->NoAccel = FALSE;
+#endif
+
     pGeode->exaBfrSz = DEFAULT_EXA_SCRATCH_BFRSZ;
 
     xf86GetOptValBool(GeodeOptions, LX_OPTION_HW_CURSOR,
@@ -694,7 +674,6 @@ LXPreInit(ScrnInfoPtr pScrni, int flags)
 
 	pGeode->FBAvail = value << 20;
     }
-
 
     pScrni->fbOffset = 0;
 
@@ -807,13 +786,14 @@ static Bool
 LXUnmapMem(ScrnInfoPtr pScrni)
 {
     GeodeRec *pGeode = GEODEPTR(pScrni);
-    
+
     xf86UnMapVidMem(pScrni->scrnIndex, (pointer) cim_gp_ptr, LX_GP_REG_SIZE);
     xf86UnMapVidMem(pScrni->scrnIndex, (pointer) cim_vg_ptr, LX_VG_REG_SIZE);
     xf86UnMapVidMem(pScrni->scrnIndex, (pointer) cim_vid_ptr, LX_VID_REG_SIZE);
     xf86UnMapVidMem(pScrni->scrnIndex, (pointer) cim_vip_ptr, LX_VIP_REG_SIZE);
 
     xf86UnMapVidMem(pScrni->scrnIndex, cim_fb_ptr, pGeode->FBAvail);
+    xf86UnMapVidMem(pScrni->scrnIndex, XpressROMPtr, 0x10000);
 
     return TRUE;
 }
@@ -991,7 +971,8 @@ LXLeaveGraphics(ScrnInfoPtr pScrni)
   vg_set_cursor_position(pGeode->FBCursor.cursor_x,
 			 pGeode->FBCursor.cursor_y, &panning);
   
-    
+  LXRestore(pScrni);
+  
   if (pGeode->useVGA && pGeode->VGAActive) {
     pGeode->vesa->pInt->num = 0x10;
     pGeode->vesa->pInt->ax = 0x0 | pGeode->FBBIOSMode;
@@ -1000,7 +981,7 @@ LXLeaveGraphics(ScrnInfoPtr pScrni)
     vg_delay_milliseconds(3);
   }
   
-  LXRestore(pScrni);
+
   lx_enable_dac_power(pScrni, 1);
   pScrni->vtSema = FALSE;
 }
@@ -1040,8 +1021,7 @@ LXEnterGraphics(ScreenPtr pScrn, ScrnInfoPtr pScrni)
   int bpp;
   GeodeRec *pGeode = GEODEPTR(pScrni);
 
-  if (!LXMapMem(pScrni))
-      return FALSE;
+  pGeode->curMode = NULL;
 
   pGeode->VGAActive = gu3_get_vga_active();
 
@@ -1058,7 +1038,7 @@ LXEnterGraphics(ScreenPtr pScrn, ScrnInfoPtr pScrni)
 
   pGeode->FBDisplayOffset = vg_get_display_offset();
 
-  if (pGeode->useVGA) {
+  if (pGeode->useVGA && pGeode->VGAActive) {
     vgaHWPtr pvgaHW = VGAHWPTR(pScrni);
     pGeode->FBBIOSMode = pvgaHW->readCrtc(pvgaHW, 0x040);
   }
@@ -1074,11 +1054,7 @@ LXEnterGraphics(ScreenPtr pScrn, ScrnInfoPtr pScrni)
   if (pGeode->useVGA) {
     unsigned short sequencer;
     vgaHWPtr pvgaHW = VGAHWPTR(pScrni);
-    
-    /* Map VGA aperture */
-    if (!vgaHWMapMem(pScrni))
-	    return FALSE;
-    
+        
     /* Unlock VGA registers */
     vgaHWUnlock(pvgaHW);
     
@@ -1111,10 +1087,10 @@ LXEnterGraphics(ScreenPtr pScrn, ScrnInfoPtr pScrni)
   
   /* Clear the framebuffer */
   memset(pGeode->FBBase + pGeode->displayOffset, 0, pGeode->displaySize);
-  
-  /* Set up the video mode */
 
+  /* Set the video mode */
   LXSetVideoMode(pScrni, pScrni->currentMode);
+
   pGeode->curMode = pScrni->currentMode;
   pScrni->vtSema = TRUE;
 
@@ -1139,16 +1115,42 @@ LXLoadPalette(ScrnInfoPtr pScrni,
 
 #ifdef DPMSExtension
 
+#include <stdio.h>
+#include <unistd.h>
+
+#define DCON_SLEEP_FILE "/sys/devices/platform/dcon/sleep"
+
+/* Set up the OLPC DCON to sleep if so requested */
+
+static void DCONSleep(int state)
+{
+	char val = (state) ? '1' : '0';
+	FILE *stream = fopen(DCON_SLEEP_FILE, "w");
+	if (stream == NULL) {
+		ErrorF("Couldn't open the DCON sleep file");
+		return;
+	}
+
+	fprintf(stream, "%c\n", val);
+	fclose(stream);
+}
+
 static void
 LXDPMSSet(ScrnInfoPtr pScrni, int mode, int flags)
 {
-    GeodeRec *pGeode;
+  GeodeRec *pGeode = GEODEPTR(pScrni);
 
-    pGeode = GEODEPTR(pScrni);
-
-    if (!pScrni->vtSema)
+   if (!pScrni->vtSema)
 	return;
 
+    /* For now - we use the presence of the DCON sleep file as a positive
+       indicator that the DCON is attached.  This should be transitioned to
+       the device tree.
+    */
+
+    if (dconAvail == -1)
+      dconAvail = (!access(DCON_SLEEP_FILE, R_OK | W_OK)) ? 1 : 0;
+    
     switch (mode) {
     case DPMSModeOn:
       lx_enable_dac_power(pScrni, 1);
@@ -1245,6 +1247,11 @@ LXScreenInit(int scrnIndex, ScreenPtr pScrn, int argc, char **argv)
       }
     }
 
+    /* Map the memory here before doing anything else */
+
+    if (!LXMapMem(pScrni))
+      return FALSE;
+  
     /* XXX FIXME - Take down any of the structures on failure? */
     if (!LXEnterGraphics(pScrn, pScrni))
 	return FALSE;
@@ -1435,7 +1442,15 @@ LXValidMode(int scrnIndex, DisplayModePtr pMode, Bool Verbose, int flags)
 static Bool
 LXEnterVT(int scrnIndex, int flags)
 {
-    return LXEnterGraphics(NULL, xf86Screens[scrnIndex]);
+  ScrnInfoPtr pScrni = xf86Screens[scrnIndex];
+  Bool ret = LXEnterGraphics(NULL, pScrni);
+
+  /* Reallocate a shadow area, if we need it */
+
+  if (ret == TRUE)
+    ret = LXAllocShadow(pScrni);
+
+  return ret;
 }
 
 static void
@@ -1446,6 +1461,13 @@ LXLeaveVT(int scrnIndex, int flags)
 
     pGeode->PrevDisplayOffset = vg_get_display_offset();
     LXLeaveGraphics(xf86Screens[scrnIndex]);
+    
+    /* Destroy any shadow area, if we have it */
+    
+    if (pGeode->shadowArea != NULL) {
+      exaOffscreenFree(pScrni->pScreen, pGeode->shadowArea);
+      pGeode->shadowArea = NULL;
+    }    
 }
 
 void

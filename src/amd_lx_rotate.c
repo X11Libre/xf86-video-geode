@@ -31,6 +31,16 @@
 #include "shadow.h"
 #include "amd.h"
 
+static void 
+LXShadowSave(ScreenPtr pScreen, ExaOffscreenArea *area)
+{
+  ScrnInfoPtr pScrni = xf86Screens[pScreen->myNum];
+  GeodeRec *pGeode = GEODEPTR(pScrni);
+
+  if (area == pGeode->shadowArea)
+    pGeode->shadowArea = NULL;
+}
+
 static void *
 LXWindowLinear(ScreenPtr pScreen, CARD32 row, CARD32 offset, int mode,
     CARD32 * size, void *closure)
@@ -159,6 +169,60 @@ Bool LXSetRotatePitch(ScrnInfoPtr pScrni)
   return TRUE;
 }
 
+Bool LXAllocShadow(ScrnInfoPtr pScrni)
+{
+  GeodeRec *pGeode = GEODEPTR(pScrni);
+  PixmapPtr pPixmap;
+
+  int size;
+  
+  if (pGeode->rotation == RR_Rotate_0) {
+    
+    if (pGeode->shadowArea) {
+      exaOffscreenFree(pScrni->pScreen, pGeode->shadowArea);
+      pGeode->shadowArea = NULL;
+    }
+
+    pScrni->fbOffset = pGeode->displayOffset;
+  }
+  else {
+    if (pGeode->rotation == RR_Rotate_90 || pGeode->rotation == RR_Rotate_270)
+      size = pGeode->displayPitch * pScrni->virtualX;
+    else
+      size = pGeode->displayPitch * pScrni->virtualY;
+    
+    if (pGeode->shadowArea) {
+
+      if (pGeode->shadowArea->size < size) {
+	exaOffscreenFree(pScrni->pScreen,pGeode->shadowArea);
+	pGeode->shadowArea = NULL;
+      }
+    }
+
+    if (pGeode->shadowArea == NULL) {
+      pGeode->shadowArea = exaOffscreenAlloc(pScrni->pScreen, size, 32, TRUE,
+					     LXShadowSave, pGeode);
+      
+      if (pGeode->shadowArea == NULL) 
+	return FALSE;
+    }
+    
+    pScrni->fbOffset = pGeode->shadowArea->offset;
+  }
+    
+  pPixmap = pScrni->pScreen->GetScreenPixmap(pScrni->pScreen);
+
+  pScrni->pScreen->ModifyPixmapHeader(pPixmap,
+				      pScrni->pScreen->width,
+				      pScrni->pScreen->height,
+				      pScrni->pScreen->rootDepth,
+				      pScrni->bitsPerPixel,
+				      PixmapBytePad(pScrni->displayWidth, pScrni->pScreen->rootDepth),
+				      (pointer) (pGeode->FBBase + pScrni->fbOffset));
+  
+  return TRUE;
+}
+ 
 Bool
 LXRotate(ScrnInfoPtr pScrni, DisplayModePtr mode)
 {
@@ -182,50 +246,16 @@ LXRotate(ScrnInfoPtr pScrni, DisplayModePtr mode)
     LXSetRotatePitch(pScrni);
 
     if (pGeode->rotation != RR_Rotate_0) {
-
-
-	ret = shadowAdd(pScrni->pScreen, pPixmap, LXUpdateFunc,
+      
+      ret = shadowAdd(pScrni->pScreen, pPixmap, LXUpdateFunc,
 			LXWindowLinear, pGeode->rotation, NULL);
 
-	if (!ret) {
-	    ErrorF("shadowAdd failed\n");
-	    goto error;
-	}
+      if (!ret)
+	goto error;
     }
 
-    if (pGeode->rotation == RR_Rotate_0)
-	pScrni->fbOffset = pGeode->displayOffset;
-    else
-	pScrni->fbOffset = pGeode->shadowOffset;
-
-    vg_set_display_offset(pScrni->fbOffset);
-
-    pScrni->pScreen->ModifyPixmapHeader(pPixmap,
-	pScrni->pScreen->width,
-	pScrni->pScreen->height,
-	pScrni->pScreen->rootDepth,
-	pScrni->bitsPerPixel,
-	PixmapBytePad(pScrni->displayWidth, pScrni->pScreen->rootDepth),
-	(pointer) (pGeode->FBBase + pScrni->fbOffset));
-
-    /* Don't use XAA pixmap cache or offscreen pixmaps when rotated */
-
-    if (pGeode->AccelInfoRec) {
-        if (pGeode->rotation == RR_Rotate_0) {
-            pGeode->AccelInfoRec->Flags = LINEAR_FRAMEBUFFER | OFFSCREEN_PIXMAPS | PIXMAP_CACHE;
-            pGeode->AccelInfoRec->UsingPixmapCache = TRUE;
-            pGeode->AccelInfoRec->maxOffPixWidth = 0;
-            pGeode->AccelInfoRec->maxOffPixHeight = 0;
-        }
-        else {
-            pGeode->AccelInfoRec->Flags = LINEAR_FRAMEBUFFER;
-            pGeode->AccelInfoRec->UsingPixmapCache = FALSE;
-            pGeode->AccelInfoRec->maxOffPixWidth = 1;
-            pGeode->AccelInfoRec->maxOffPixHeight = 1;
-        }
-    }
-
-    return TRUE;
+    if (LXAllocShadow(pScrni))
+      return TRUE;
 
 error:
     /* Restore the old rotation */

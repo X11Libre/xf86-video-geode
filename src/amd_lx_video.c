@@ -110,7 +110,7 @@ LXCopyFromSys(GeodeRec *pGeode, unsigned char *src, unsigned int dst,
 
   gp_declare_blt(0);
   gp_set_bpp(16);
-  
+
   gp_set_raster_operation(0xCC);
   gp_set_strides(dstPitch, srcPitch);
   gp_set_solid_pattern(0);
@@ -127,6 +127,8 @@ LXVideoSave(ScreenPtr pScreen, ExaOffscreenArea *area)
   
   if (area == pPriv->area)
     pPriv->area = NULL;
+
+  LXStopVideo(pScrni, (void *) pPriv, TRUE);
 }
 
 
@@ -141,7 +143,7 @@ LXAllocateVidMem(ScrnInfoPtr pScrni, void **memp, int size)
     
     exaOffscreenFree(pScrni->pScreen, area);
   }
-  
+ 
   area = exaOffscreenAlloc(pScrni->pScreen, size, 16, TRUE, 
 			   LXVideoSave, NULL);
   
@@ -229,13 +231,13 @@ LXCopyPlanar(ScrnInfoPtr pScrni, int id, unsigned char *buf,
   UVSrcPitch = ((width >> 1) + 3) & ~3;
   UVDstPitch = ((width >> 1) + 15) & ~15;
 
-  if (id != FOURCC_I420) {
-    VSrcOffset = YSrcPitch * height;
-    USrcOffset = VSrcOffset + (UVSrcPitch * (height >> 1));
+  USrcOffset = YSrcPitch * height;
+  VSrcOffset = USrcOffset + (UVSrcPitch * (height >> 1));
 
-    VDstOffset = YDstPitch * height;
-    UDstOffset = VDstOffset + (UVDstPitch * (height >> 1));
-  }
+  UDstOffset = YDstPitch * height;
+  VDstOffset = UDstOffset + (UVDstPitch * (height >> 1));
+
+#if 0
   else {
     USrcOffset = YSrcPitch * height;
     VSrcOffset = USrcOffset + (UVSrcPitch * (height >> 1));
@@ -243,6 +245,7 @@ LXCopyPlanar(ScrnInfoPtr pScrni, int id, unsigned char *buf,
     UDstOffset = YDstPitch * height;
     VDstOffset = UDstOffset + (UVDstPitch * (height >> 1));
   }
+#endif
 
   size = YDstPitch * height;
   size += UVDstPitch * height;
@@ -284,11 +287,6 @@ LXCopyPlanar(ScrnInfoPtr pScrni, int id, unsigned char *buf,
 
   LXCopyFromSys(pGeode, buf + USrcOffset, pPriv->offset + UDstOffset,
 		UVDstPitch, UVSrcPitch, lines, pixels >> 1);
-  
-  /* Copy V */
-
-  //LXCopyFromSys(pGeode, buf + VSrcOffset, pPriv->offset + VDstOffset,
-  //UVDstPitch, UVSrcPitch, lines >> 1, pixels >> 1);
   
   videoScratch.dstOffset = pPriv->offset + YDstOffset;
   videoScratch.dstPitch = YDstPitch;
@@ -367,6 +365,8 @@ LXDisplayVideo(ScrnInfoPtr pScrni, int id, short width, short height,
   unsigned long yExtra, uvExtra = 0;
   DF_VIDEO_POSITION vidPos;
   DF_VIDEO_SOURCE_PARAMS vSrcParams;
+
+  memset(&vSrcParams, 0, sizeof(vSrcParams));
 
   gp_wait_until_idle();
 
@@ -448,9 +448,12 @@ LXDisplayVideo(ScrnInfoPtr pScrni, int id, short width, short height,
   switch(id) {
   case FOURCC_Y800:
   case FOURCC_I420:
-  case FOURCC_YV12:
     vSrcParams.u_offset = videoScratch.UDstOffset + uvExtra;
     vSrcParams.v_offset = videoScratch.VDstOffset + uvExtra;
+    break;
+  case FOURCC_YV12:
+    vSrcParams.v_offset = videoScratch.UDstOffset + uvExtra;
+    vSrcParams.u_offset = videoScratch.VDstOffset + uvExtra;
     break;
 
   default:
@@ -476,18 +479,21 @@ LXPutImage(ScrnInfoPtr pScrni,
   INT32 x1,x2,y1,y2;
   BoxRec dstBox;
   
+  if (pGeode->rotation != RR_Rotate_0)
+    return Success;
+
   if (srcW <= 0 || srcH <= 0) {
-    ErrorF("Nothing to draw!\n");
     return Success;
   }
 
   if (drawW <= 0 || drawH <=0) {
-    ErrorF("Nothing to show!\n");
     return Success;
   }
 
   if (drawW > 16384)
     drawW = 16384;
+
+  memset(&videoScratch, 0, sizeof(videoScratch));
 
   x1 = srcX;
   x2 = srcX + srcW;
@@ -503,13 +509,13 @@ LXPutImage(ScrnInfoPtr pScrni,
   dstBox.x2 -= pScrni->frameX0;
   dstBox.y1 -= pScrni->frameY0;
   dstBox.y2 -= pScrni->frameY0;
-  
+
   switch(id) {
   case FOURCC_YV12:
-  case FOURCC_I420:    
+  case FOURCC_I420:
     LXCopyPlanar(pScrni, id, buf, x1, y1, x2, y2, width, height, data);
     break;
-    
+
   case FOURCC_UYVY:
   case FOURCC_YUY2:
   case FOURCC_Y800:
@@ -597,6 +603,9 @@ LXStopVideo(ScrnInfoPtr pScrni, pointer data, Bool exit)
   GeodePortPrivRec *pPriv = (GeodePortPrivRec *) data;
   GeodeRec *pGeode = GEODEPTR(pScrni);
 
+  if (pPriv->videoStatus == 0) 
+    return;
+
   REGION_EMPTY(pScrni->pScreen, &pPriv->clip);
   gp_wait_until_idle();
 
@@ -605,20 +614,20 @@ LXStopVideo(ScrnInfoPtr pScrni, pointer data, Bool exit)
       df_set_video_enable(0,0);
       df_set_video_palette(NULL);
     }
-
-    if (pPriv->area)
+    
+    if (pPriv->area) {
       exaOffscreenFree(pScrni->pScreen, pPriv->area);
-
+      pPriv->area = NULL;
+    }
+    
     pPriv->videoStatus = 0;
 
     /* Eh? */
     pGeode->OverlayON = FALSE;
   }
-  else {
-    if (pPriv->videoStatus & CLIENT_VIDEO_ON) {
-      pPriv->videoStatus |= OFF_TIMER;
-      pPriv->offTime = currentTime.milliseconds + OFF_DELAY;
-    }
+  else if (pPriv->videoStatus & CLIENT_VIDEO_ON) {
+    pPriv->videoStatus |= OFF_TIMER;
+    pPriv->offTime = currentTime.milliseconds + OFF_DELAY;
   }
 }
     
@@ -881,8 +890,10 @@ LXFreeSurface(XF86SurfacePtr surface)
   if (pPriv->isOn)
     LXStopSurface(surface);
 
-  if (pPriv->area)
+  if (pPriv->area) {
     exaOffscreenFree(pScrni->pScreen, pPriv->area);
+    pPriv->area = NULL;
+  }
 
   xfree(surface->pitches);
   xfree(surface->offsets);
