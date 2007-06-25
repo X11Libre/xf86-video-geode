@@ -365,6 +365,7 @@ LXDisplayVideo(ScrnInfoPtr pScrni, int id, short width, short height,
   unsigned long yExtra, uvExtra = 0;
   DF_VIDEO_POSITION vidPos;
   DF_VIDEO_SOURCE_PARAMS vSrcParams;
+  int err;
 
   memset(&vSrcParams, 0, sizeof(vSrcParams));
 
@@ -401,16 +402,14 @@ LXDisplayVideo(ScrnInfoPtr pScrni, int id, short width, short height,
 
   /* Set up scaling */
   df_set_video_filter_coefficients(NULL, 1);
-  
-  if ((drawW >= srcW) && (drawH >= srcH))
-    df_set_video_scale(width, height, drawW, drawH, 
-		       DF_SCALEFLAG_CHANGEX | DF_SCALEFLAG_CHANGEY);
-  else if (drawW < srcW)
-    df_set_video_scale(drawW, height, drawW, drawH,
-		       DF_SCALEFLAG_CHANGEX | DF_SCALEFLAG_CHANGEY);
-  else if (drawH < srcH)
-    df_set_video_scale(width, drawH, drawW, drawH,
-		       DF_SCALEFLAG_CHANGEX | DF_SCALEFLAG_CHANGEY);
+
+  err = df_set_video_scale(width, height, drawW, drawH, 
+                DF_SCALEFLAG_CHANGEX | DF_SCALEFLAG_CHANGEY);
+  if (err != CIM_STATUS_OK) {
+    /* Note the problem, but do nothing for now. */
+    ErrorF("Video scale factor too large: %dx%d -> %dx%d\n",
+           width, height, drawW, drawH);
+  }
   
   /* Figure out clipping */
 
