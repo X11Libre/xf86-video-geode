@@ -165,7 +165,7 @@ static const int PDfn_SM[16] = {
 };
 
 #ifdef OPT_ACCEL
-static _X_INLINE uint32_t amd_gx_BppToRasterMode(int bpp)
+static _X_INLINE CARD32 amd_gx_BppToRasterMode(int bpp)
 {
     switch (bpp) {
     case 16:
