@@ -51,6 +51,8 @@
 #include <X11/extensions/Xv.h>
 #include "fourcc.h"
 #include "amd_fourcc.h"
+#include "cim/cim_defs.h"
+#include "cim/cim_regs.h"
 
 #define OFF_DELAY 		200
 #define FREE_DELAY 		60000
@@ -462,6 +464,9 @@ LXDisplayVideo(ScrnInfoPtr pScrni, int id, short width, short height,
 
   vSrcParams.flags = DF_SOURCEFLAG_IMPLICITSCALING;
   df_configure_video_source(&vSrcParams, &vSrcParams);
+
+  /* Turn on the video palette */
+  df_set_video_palette(NULL);
   df_set_video_enable(1, 0);
 }
 
@@ -610,8 +615,12 @@ LXStopVideo(ScrnInfoPtr pScrni, pointer data, Bool exit)
 
   if (exit) {
     if (pPriv->videoStatus & CLIENT_VIDEO_ON) {
+      unsigned int val;
+
       df_set_video_enable(0,0);
-      df_set_video_palette(NULL);
+      /* Put the LUT back in bypass */
+      val = READ_VID32(DF_VID_MISC);
+      WRITE_VID32(DF_VID_MISC,  val | DF_GAMMA_BYPASS_BOTH);
     }
     
     if (pPriv->area) {
@@ -664,9 +673,15 @@ LXVidBlockHandler(int i, pointer blockData, pointer pTimeout, pointer pReadmask)
         gp_wait_until_idle();
 
 	if (pPriv->offTime < now) {
+	  unsigned int val;
+
 	  df_set_video_enable(0, 0);
 	  pPriv->videoStatus = FREE_TIMER;
 	  pPriv->freeTime = now + FREE_DELAY;
+
+	  /* Turn off the video palette */
+          val = READ_VID32(DF_VID_MISC);
+          WRITE_VID32(DF_VID_MISC,  val | DF_GAMMA_BYPASS_BOTH);
 	}
       }
       else {
