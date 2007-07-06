@@ -1492,7 +1492,7 @@ amd_gx_exa_DownloadFromScreen(PixmapPtr pSrc, int x, int y, int w, int h,
     int src_pitch = exaGetPixmapPitch(pSrc);
     int bpp = pSrc->drawable.bitsPerPixel;
 
-    src += y * src_pitch + x * (bpp >> 3);
+    src += (y * src_pitch) + (x * (bpp >> 3));
     GU2_WAIT_BUSY;
     geode_memory_to_screen_blt((unsigned long)src, (unsigned long)dst,
         src_pitch, dst_pitch, w, h, bpp);
@@ -1550,6 +1550,12 @@ amd_gx_exa_PrepareCopy(PixmapPtr pxSrc, PixmapPtr pxDst, int dx, int dy,
 {
     GeodeRec *pGeode = GEODEPTR_FROM_PIXMAP(pxDst);
     int dstPitch = exaGetPixmapPitch(pxDst);
+    unsigned int ROP;
+
+    /* Punt if the color formats aren't the same */
+
+    if (pxSrc->drawable.bitsPerPixel != pxDst->drawable.bitsPerPixel)
+	return FALSE;
 
     //ErrorF("amd_gx_exa_PrepareCopy() dx%d dy%d alu %#x %#x\n",
     //  dx, dy, alu, planemask);
@@ -1559,7 +1565,8 @@ amd_gx_exa_PrepareCopy(PixmapPtr pxSrc, PixmapPtr pxDst, int dx, int dy,
     pGeode->cpySrcBpp = (pxSrc->drawable.bitsPerPixel + 7) / 8;
     pGeode->cpyDx = dx;
     pGeode->cpyDy = dy;
-    unsigned int ROP = BPP | (planemask == ~0U ? SDfn[alu] : SDfn_PM[alu]);
+    ROP = amd_gx_BppToRasterMode(pxSrc->drawable.bitsPerPixel) |
+	(planemask == ~0U ? SDfn[alu] : SDfn_PM[alu]);
 
     BLT_MODE = ((ROP ^ (ROP >> 1)) & 0x55) != 0 ?
         MGP_BM_SRC_FB | MGP_BM_DST_REQ : MGP_BM_SRC_FB;
@@ -1580,10 +1587,10 @@ amd_gx_exa_Copy(PixmapPtr pxDst, int srcX, int srcY, int dstX, int dstY,
     int dstBpp = (pxDst->drawable.bitsPerPixel + 7) / 8;
     int dstPitch = exaGetPixmapPitch(pxDst);
     unsigned int srcOffset =
-        pGeode->cpySrcOffset + pGeode->cpySrcPitch * srcY +
-        pGeode->cpySrcBpp * srcX;
+        pGeode->cpySrcOffset + (pGeode->cpySrcPitch * srcY) +
+        (pGeode->cpySrcBpp * srcX);
     unsigned int dstOffset =
-        exaGetPixmapOffset(pxDst) + dstPitch * dstY + dstBpp * dstX;
+        exaGetPixmapOffset(pxDst) + (dstPitch * dstY) + (dstBpp * dstX);
     unsigned int size = (w << 16) | h;
     unsigned int blt_mode = BLT_MODE;
 
