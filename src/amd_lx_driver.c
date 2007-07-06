@@ -1115,26 +1115,6 @@ LXLoadPalette(ScrnInfoPtr pScrni,
 
 #ifdef DPMSExtension
 
-#include <stdio.h>
-#include <unistd.h>
-
-#define DCON_SLEEP_FILE "/sys/devices/platform/dcon/sleep"
-
-/* Set up the OLPC DCON to sleep if so requested */
-
-static void DCONSleep(int state)
-{
-	char val = (state) ? '1' : '0';
-	FILE *stream = fopen(DCON_SLEEP_FILE, "w");
-	if (stream == NULL) {
-		ErrorF("Couldn't open the DCON sleep file");
-		return;
-	}
-
-	fprintf(stream, "%c\n", val);
-	fclose(stream);
-}
-
 static void
 LXDPMSSet(ScrnInfoPtr pScrni, int mode, int flags)
 {
@@ -1143,14 +1123,6 @@ LXDPMSSet(ScrnInfoPtr pScrni, int mode, int flags)
    if (!pScrni->vtSema)
 	return;
 
-    /* For now - we use the presence of the DCON sleep file as a positive
-       indicator that the DCON is attached.  This should be transitioned to
-       the device tree.
-    */
-
-    if (dconAvail == -1)
-      dconAvail = (!access(DCON_SLEEP_FILE, R_OK | W_OK)) ? 1 : 0;
-    
     switch (mode) {
     case DPMSModeOn:
       lx_enable_dac_power(pScrni, 1);
