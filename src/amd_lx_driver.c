@@ -351,7 +351,7 @@ LXSaveScreen(ScreenPtr pScrn, int mode)
         : "=a" (lo), "=d" (hi)                  \
         : "c" (adr))
 
-#define LX_MSR_WRITE(adr,high,low) \
+#define LX_MSR_WRITE(adr,low,high) \
   { int d0, d1, d2, d3, d4;        \
   __asm__ __volatile__(            \
     " push %%ebx\n"                \
