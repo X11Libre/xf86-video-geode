@@ -11,10 +11,10 @@ rm -rf config.guess config.sub ltmain.sh
 autoreconf -v --install || exit 1
 cd $ORIGDIR || exit $?
 
+$srcdir/missing --run git-log --stat | fmt --split-only 1> ChangeLog 2>/dev/null
+
 $srcdir/configure --enable-maintainer-mode "$@"
 
-make distclean
-
-rm -rf autom4te.cache
+make maintainer-clean
 
 #EOF
