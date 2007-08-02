@@ -35,6 +35,8 @@
 #endif
 
 #include "xf86.h"
+#include "exa.h"
+
 #include "amd.h"
 #include "cim_defs.h"
 #include "cim_regs.h"
@@ -249,42 +251,27 @@ _GetRGBAFromPixel(CARD32	pixel,
     return TRUE;
 }
 
-static unsigned int lx_get_source_color(PicturePtr pSrc, int x, int y, int dstFormat)
+static unsigned int lx_get_source_color(PixmapPtr pSrc, int srcFormat,
+					int dstFormat)
 {
-  FbBits *bits;
-  FbStride stride;
-  int bpp, xoff, yoff;
+    CARD32 in, out;
+    CARD16 red, green, blue, alpha;
 
-  CARD32 in, out;
-  CARD16 red, green, blue, alpha;
+    /* Stall to avoid a race with the upload function */
+    /* for 1.4 and newer, the problem will be resolved within
+     * exaGetPixmapFirstPixel, so this should be adjusted so
+     * the stall isn't run needlessly
+     */
 
-  fbGetDrawable (pSrc->pDrawable, bits, stride, bpp, xoff, yoff);
-  
-  bits += (y * stride) + (x * (bpp >> 3));
+    gp_wait_until_idle();
+    in = exaGetPixmapFirstPixel(pSrc);
 
-  /* Read the source value */
+    _GetRGBAFromPixel(in, &red, &blue, &green, &alpha, srcFormat);
+    _GetPixelFromRGBA(&out, red, blue, green, alpha, dstFormat);
 
-  switch(bpp) {
-  case 32:
-  case 24:    
-    in = (CARD32) *((CARD32 *) bits);
-    break;
-    
-  case 16:
-    in = (CARD32) *((CARD16 *) bits);
-    break;
-
-  case 8:
-    in = (CARD32) *((CARD8 *) bits);
-    break;
-  }
-
-  _GetRGBAFromPixel(in, &red, &blue, &green, &alpha, pSrc->format);
-  _GetPixelFromRGBA(&out, red, blue, green, alpha, dstFormat);
-
-  return out;
+    return out;
 }
- 
+
 static Bool
 lx_prepare_solid(PixmapPtr pxMap, int alu, Pixel planemask, Pixel fg)
 {
@@ -577,9 +564,11 @@ static Bool lx_prepare_composite(int op, PicturePtr pSrc, PicturePtr pMsk,
     /* Get the source color */
 
     if (direction == 0)
-      exaScratch.srcColor = lx_get_source_color(pSrc, 0, 0, pDst->format);
+      exaScratch.srcColor = lx_get_source_color(pxSrc, pSrc->format,
+						pDst->format);
     else
-      exaScratch.srcColor = lx_get_source_color(pDst, 0, 0, pSrc->format);
+      exaScratch.srcColor = lx_get_source_color(pxDst, pDst->format,
+						pSrc->format);
 
     /* FIXME:  What to do here? */
 
