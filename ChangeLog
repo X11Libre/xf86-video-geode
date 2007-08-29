@@ -1,13 +1,42 @@
-commit b73e2754fda2bc843651c299973ba55033912670
+commit a6192811e21c9f8d17b409018f945adc2eea3594
+Author: Jordan Crouse <jordan.crouse@amd.com>
+Date:   Thu Aug 2 10:45:14 2007 -0600
+
+    Fix the upload / composite mask race
+
+    We fix a race with the upload function when using a composite mask
+    by using the exa core function exaGetPixmapFirstPixel, which does
+    the right thing in X 1.4 and newer.  For older versions, the fix is
+    to stall the pipeine to ensure the upload is complete, so thats what
+    we do.
+
+ src/amd_lx_exa.c |   53
+ +++++++++++++++++++++--------------------------------
+ 1 files changed, 21 insertions(+), 32 deletions(-)
+
+commit 8ce4c5cc9650ddc81d9243bc416522800bce3afc
 Author: Martin-Éric Racine <q-funk@iki.fi>
-Date:   Fri Jul 13 12:33:27 2007 -0600
+Date:   Wed Jul 25 09:55:25 2007 -0600
+
+    Add the all-important if/then loop to avoid
+    squashing the ChangeLog if autogen.sh is executed outside of a git
+    tree.
+
+ autogen.sh |    5 ++++-
+ 1 files changed, 4 insertions(+), 1 deletions(-)
+
+commit bb0f0afc6c5cf849081a007af0c2d3485e87e9c4
+Author: Martin-Éric Racine <q-funk@iki.fi>
+Date:   Fri Jul 13 12:34:45 2007 -0600
 
     This autogen.sh implements ChangeLog generation from the git commit
     log. It also calls the correct Makefile macro to clean up after
     maintainer configuration, instead of cleaning up by hand.
 
- autogen.sh |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+ ChangeLog  | 1125
+ ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ autogen.sh |    6 +-
+ 2 files changed, 1128 insertions(+), 3 deletions(-)
 
 commit 08c26f1bda66b8ffd91e345cdd2cb29171b615b3
 Author: Jordan Crouse <jordan.crouse@amd.com>
