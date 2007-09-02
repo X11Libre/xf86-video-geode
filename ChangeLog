@@ -1,3 +1,32 @@
+commit 47c1bc40e2a06ac84953f4a8b62031fb978ab316
+Author: Martin-Eric Racine <q-funk@yonix.lan>
+Date:   Wed Aug 29 22:02:23 2007 +0300
+
+    Updated the ChangeLog.
+
+ ChangeLog |   37 +++++++++++++++++++++++++++++++++----
+ 1 files changed, 33 insertions(+), 4 deletions(-)
+
+commit b29cce202abb0c6afb30ec1f06c98d7f84e8d2e4
+Author: Martin-Eric Racine <q-funk@yonix.lan>
+Date:   Wed Aug 29 22:01:28 2007 +0300
+
+    Regenerated ChangeLog and autotool files.
+
+ Makefile.in     |  667 ++
+ aclocal.m4      | 7967 ++++++++++++++++++++
+ config.guess    | 1500 ++++
+ config.h.in     |   69 +
+ config.sub      | 1608 ++++
+ configure       |22611
+ +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ depcomp         |  584 ++
+ install-sh      |  507 ++
+ ltmain.sh       | 6871 +++++++++++++++++
+ missing         |  367 +
+ src/Makefile.in |  698 ++
+ 11 files changed, 43449 insertions(+), 0 deletions(-)
+
 commit a6192811e21c9f8d17b409018f945adc2eea3594
 Author: Jordan Crouse <jordan.crouse@amd.com>
 Date:   Thu Aug 2 10:45:14 2007 -0600
