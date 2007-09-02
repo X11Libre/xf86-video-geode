@@ -1,3 +1,12 @@
+commit e525ca0d68faed9ede9f55df6d0d4a3099d3ad49
+Author: Martin-Éric Racine <q-funk@iki.fi>
+Date:   Sun Sep 2 10:05:49 2007 +0300
+
+    Bumped the package version to 2.7.7.0 and calling it a release.
+
+ ChangeLog |   29 +++++++++++++++++++++++++++++
+ 1 files changed, 29 insertions(+), 0 deletions(-)
+
 commit 47c1bc40e2a06ac84953f4a8b62031fb978ab316
 Author: Martin-Eric Racine <q-funk@yonix.lan>
 Date:   Wed Aug 29 22:02:23 2007 +0300
