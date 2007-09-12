@@ -23,8 +23,6 @@ SUBDIRS = src
 
 EXTRA_DIST = autogen.sh ChangeLog
 
-CLEANFILES = ChangeLog
-
 .PHONY: ChangeLog
 
 ChangeLog:
