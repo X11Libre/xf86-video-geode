@@ -962,44 +962,6 @@ static void lx_done(PixmapPtr ptr)
 {
 }
 
-static Bool lx_upload(PixmapPtr pDst, int x, int y, int w, int h,
-		      char *src, int src_pitch)
-{
-  char *dst = pDst->devPrivate.ptr;
-  int dpitch = exaGetPixmapPitch(pDst);
-  int bpp = pDst->drawable.bitsPerPixel;
-  GeodeRec *pGeode = GEODEPTR_FROM_PIXMAP(pDst);
-  unsigned long offset;
-
-  dst += (y * dpitch) + (x * (bpp >> 3));
-
-  gp_declare_blt(0);
-
-  gp_set_bpp(bpp);
-  gp_set_raster_operation(0xCC);
-  gp_set_strides(dpitch, src_pitch);
-  gp_set_solid_pattern(0);
-
-  offset = ((unsigned long) dst) - ((unsigned long) pGeode->FBBase);
-  gp_color_bitmap_to_screen_blt(offset, 0, w, h, (unsigned char *)src, src_pitch);
-  return TRUE;
-}
-
-static Bool lx_download(PixmapPtr pSrc, int x, int y, int w, int h,
-			char *dst, int dst_pitch)
-{
-  char *src = pSrc->devPrivate.ptr;
-  int spitch = exaGetPixmapPitch(pSrc);
-  int bpp = pSrc->drawable.bitsPerPixel;
-
-  src += (y * spitch) + (x * (bpp >> 3));
-
-  geode_memory_to_screen_blt((unsigned long)src, (unsigned long)dst,
-			     spitch, dst_pitch, w, h, bpp);
-  return TRUE;
-}
-
-
 Bool LXExaInit(ScreenPtr pScreen)
 {
   ScrnInfoPtr pScrni = xf86Screens[pScreen->myNum];
@@ -1010,9 +972,6 @@ Bool LXExaInit(ScreenPtr pScreen)
   pExa->exa_minor = EXA_VERSION_MINOR;
 
   pExa->WaitMarker = lx_wait_marker;
-
-  pExa->UploadToScreen = lx_upload;
-  //pExa->DownloadFromScreen = lx_download;
 
   pExa->PrepareSolid = lx_prepare_solid;
   pExa->Solid = lx_do_solid;
