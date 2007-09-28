@@ -100,6 +100,7 @@ typedef struct
     CARD32 videoStatus;
     Time offTime;
     Time freeTime;
+    short pwidth, pheight;
 } GeodePortPrivRec, *GeodePortPrivPtr;
 
 #define GET_PORT_PRIVATE(pScrni) \
@@ -528,7 +529,8 @@ LXPutImage(ScrnInfoPtr pScrni,
     break;
   }
 
-  if (!RegionsEqual(&pPriv->clip, clipBoxes)) {
+  if (!RegionsEqual(&pPriv->clip, clipBoxes) ||
+      (drawW != pPriv->pwidth || drawH != pPriv->pheight)) {
     REGION_COPY(pScrni->pScreen, &pPriv->clip, clipBoxes);
     
     if (pPriv->colorKeyMode == 0) {
@@ -537,8 +539,10 @@ LXPutImage(ScrnInfoPtr pScrni,
     
     LXDisplayVideo(pScrni, id, width, height, &dstBox,
 		   srcW, srcH, drawW, drawH);
+    pPriv->pwidth = drawW;
+    pPriv->pheight = drawH;
   }
-  
+
   pPriv->videoStatus = CLIENT_VIDEO_ON;
   pGeode->OverlayON = TRUE;
   
@@ -746,6 +750,8 @@ LXSetupImageVideo(ScreenPtr pScrn)
   pPriv->colorKey = pGeode->videoKey;
   pPriv->colorKeyMode = 0;
   pPriv->videoStatus = 0;
+  pPriv->pwidth = 0;
+  pPriv->pheight = 0;
 
   REGION_NULL(pScrn, &pPriv->clip);
 
