@@ -470,39 +470,45 @@ LXPreInit(ScrnInfoPtr pScrni, int flags)
 {
     GeodePtr pGeode;
     ClockRangePtr GeodeClockRange;
+    EntityInfoPtr pEnt;
     OptionInfoRec *GeodeOptions = &LX_GeodeOptions[0];
     rgb defaultWeight = { 0, 0, 0 };
     int modecnt;
     char *s, *panelgeo = NULL;
+    Bool useVGA;
+
+    if (pScrni->numEntities != 1)
+      return FALSE;
+
+    pEnt = xf86GetEntityInfo(pScrni->entityList[0]);
+
+    if (pEnt->resources)
+      return FALSE;
+
+    useVGA = LXCheckVGA(pScrni);
+
+    if (flags & PROBE_DETECT) {
+	if (useVGA)
+		GeodeProbeDDC(pScrni, pEnt->index);
+
+	return TRUE;
+    }
 
     pGeode = pScrni->driverPrivate = xnfcalloc(sizeof(GeodeRec), 1);
 
     if (pGeode == NULL)
-	return FALSE;
+      return FALSE;
 
-    /* Probe for VGA */
-    pGeode->useVGA = TRUE;
+    pGeode->useVGA = useVGA;
     pGeode->VGAActive = FALSE;
+    pGeode->pEnt = pEnt;
 
-    if (xf86LoadSubModule(pScrni, "vgahw")) {
-      if (vgaHWGetHWRec(pScrni)) 
-	pGeode->useVGA = LXCheckVGA(pScrni);
-    }
+    if (pGeode->useVGA) {
+	if (!xf86LoadSubModule(pScrni, "vgahw") ||
+		!vgaHWGetHWRec(pScrni))
+		pGeode->useVGA = FALSE;
 
-    if (pGeode->useVGA)
-      pGeode->vesa = xcalloc(sizeof(VESARec), 1);
-
-    if (pScrni->numEntities != 1)
-	return FALSE;
-
-    pGeode->pEnt = xf86GetEntityInfo(pScrni->entityList[0]);
-
-    if (pGeode->pEnt->resources)
-	return FALSE;
-
-    if (pGeode->useVGA && (flags & PROBE_DETECT)) {
-	    GeodeProbeDDC(pScrni, pGeode->pEnt->index);
-	    return TRUE;
+        pGeode->vesa = xcalloc(sizeof(VESARec), 1);
     }
 
     cim_rdmsr = LXReadMSR;
