@@ -368,17 +368,19 @@ GXMapMem(ScrnInfoPtr pScrni)
 static Bool
 GXCheckVGA(ScrnInfoPtr pScrni) {
 
-  const char *vgasig = "IBM VGA Compatible";
-  vgaHWPtr pvgaHW = VGAHWPTR(pScrni);
-  int ret;
+	unsigned char *ptr;
+	const char *vgasig = "IBM VGA Compatible";
+	int ret;
 
-  if (!vgaHWMapMem(pScrni))
-    return FALSE;
+        ptr = xf86MapVidMem(pScrni->scrnIndex, VIDMEM_FRAMEBUFFER, 0xC001E, strlen(vgasig));
 
-  ret = memcmp(pvgaHW->Base + 0x1E, vgasig, strlen(vgasig));
-  vgaHWUnmapMem(pScrni);
+	if (ptr == NULL)
+		return FALSE;
 
-  return ret ? FALSE : TRUE;
+	ret = memcmp(ptr, vgasig, strlen(vgasig));
+	xf86UnMapVidMem(pScrni->scrnIndex, (pointer) ptr, strlen(vgasig));
+
+	return ret ? FALSE : TRUE;
 }
 
 static Bool
@@ -389,42 +391,43 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
   OptionInfoRec *GeodeOptions = &GX_GeodeOptions[0];
   int ret;
   QQ_WORD msrValue;
+  EntityInfoPtr pEnt;
   rgb defaultWeight = { 0, 0, 0 };
   int modecnt;
   char *s, *panelgeo;
+  Bool useVGA;
+
+  if (pScrni->numEntities != 1)
+	return FALSE;
+
+  pEnt = xf86GetEntityInfo(pScrni->entityList[0]);
+  if (pEnt->resources)
+	return FALSE;
 
   pGeode = pScrni->driverPrivate = xnfcalloc(sizeof(GeodeRec), 1);
 
   if (pGeode == NULL)
     return FALSE;
 
-  /* Probe for VGA */
-  pGeode->useVGA = FALSE;
+  useVGA = GXCheckVGA(pScrni);
 
-  if (xf86LoadSubModule(pScrni, "vgahw")) {
-    if (vgaHWGetHWRec(pScrni)) {
-      pGeode->useVGA = GXCheckVGA(pScrni);
-    }
+  if (flags & PROBE_DETECT) {
+	if (useVGA)
+		GeodeProbeDDC(pScrni, pEnt->index);
+	return TRUE;
   }
 
+  /* Probe for VGA */
+  pGeode->useVGA = useVGA;
+  pGeode->pEnt = pEnt;
+
+  if (pGeode->useVGA) {
+  if (!xf86LoadSubModule(pScrni, "vgahw") || !vgaHWGetHWRec(pScrni))
+	pGeode->useVGA = FALSE;
+
 #if INT10_SUPPORT
-  if (pGeode->useVGA)
-    pGeode->vesa = xcalloc(sizeof(VESARec), 1);
+	pGeode->vesa = xcalloc(sizeof(VESARec), 1);
 #endif
-
-  if (pScrni->numEntities != 1)
-    return FALSE;
-
-  pGeode->pEnt = xf86GetEntityInfo(pScrni->entityList[0]);
-
-  if (pGeode->pEnt->resources)
-    return FALSE;
-
-  /* ISSUE - this won't work without VGA, but its too early to know if we can use VGA or not */
-
-  if (pGeode->useVGA && (flags & PROBE_DETECT)) {
-    GeodeProbeDDC(pScrni, pGeode->pEnt->index);
-    return TRUE;
   }
 
   gfx_msr_init();
@@ -593,9 +596,6 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
       pGeode->useVGA = FALSE;
     }
 #endif
-
-    xf86LoaderReqSymLists(amdVgahwSymbols, NULL);
-    pGeode->FBVGAActive = gu2_get_vga_active();
   }
 
   if (pGeode->FBAvail  == 0)
@@ -968,6 +968,9 @@ GXEnterGraphics(ScreenPtr pScrn, ScrnInfoPtr pScrni)
 
   if (!GXMapMem(pScrni))
     return FALSE;
+
+  if (pGeode->useVGA)
+	pGeode->FBVGAActive = gu2_get_vga_active();
 
   gfx_wait_until_idle();
 
