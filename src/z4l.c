@@ -1717,15 +1717,15 @@ _X_EXPORT DriverRec Z4l = {
 
 static MODULESETUPPROTO(z4lSetup);
 
-static XF86ModuleVersionInfo z4lVersRec = {
-    "z4l",
+static XF86ModuleVersionInfo z4lVersionRec = {
+    "ztv",
     MODULEVENDORSTRING, MODINFOSTRING1, MODINFOSTRING2,
     XF86_VERSION_CURRENT, 0, 0, 1,
     ABI_CLASS_VIDEODRV, ABI_VIDEODRV_VERSION, MOD_CLASS_NONE,
     {0, 0, 0, 0}
 };
 
-_X_EXPORT XF86ModuleData z4lModuleData = { &z4lVersRec, z4lSetup, NULL };
+_X_EXPORT XF86ModuleData ztvModuleData = { &z4lVersionRec, z4lSetup, NULL };
 
 static pointer
 z4lSetup(pointer module, pointer opts, int *errmaj, int *errmin)
