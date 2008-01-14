@@ -558,9 +558,7 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
 
   /* Set up the panel */
 
-  if (dcon_init(pScrni)) {
-    pGeode->Panel = TRUE;
-  } else if (pGeode->Panel) {
+  if (pGeode->Panel) {
     if (panelgeo != NULL) {
       if (GeodeGetFPGeometry(panelgeo, &pGeode->PanelX, &pGeode->PanelY))
 	pGeode->Panel = FALSE;
@@ -598,8 +596,15 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
 #endif
   }
 
-  if (pGeode->FBAvail  == 0)
-    pGeode->FBAvail = gfx_get_frame_buffer_size();
+  /* First try to get the framebuffer size from the framebuffer,
+   * and if that fails, revert all  the way back to the legacy
+   * method
+   */
+
+  if (pGeode->FBAvail  == 0) {
+    if (GeodeGetSizeFromFB(&pGeode->FBAvail))
+       pGeode->FBAvail = gfx_get_frame_buffer_size();
+  }
 
   if (pScrni->memPhysBase == 0)
     pScrni->memPhysBase = gfx_get_frame_buffer_base();
@@ -1157,7 +1162,11 @@ GXCreateScreenResources(ScreenPtr pScreen)
   if (!(*pScreen->CreateScreenResources) (pScreen))
     return FALSE;
 
-  if (pGeode->rotation != RR_Rotate_0) {
+  if (xf86LoaderCheckSymbol("GXRandRSetConfig")
+      && pGeode->rotation != RR_Rotate_0) {
+    Rotation(*GXRandRSetConfig) (ScreenPtr pScreen, Rotation rr, int rate,
+                                RRScreenSizePtr pSize) = NULL;
+
     RRScreenSize p;
     Rotation requestedRotation = pGeode->rotation;
 
@@ -1170,9 +1179,12 @@ GXCreateScreenResources(ScreenPtr pScreen)
     p.mmWidth = pScreen->mmWidth;
     p.mmHeight = pScreen->mmHeight;
 
-    pGeode->starting = TRUE;
-    GXRandRSetConfig(pScreen, requestedRotation, 0, &p);
-    pGeode->starting = FALSE;
+    GXRandRSetConfig = LoaderSymbol("GXRandRSetConfig");
+    if (GXRandRSetConfig) {
+      pGeode->starting = TRUE;
+      (*GXRandRSetConfig) (pScreen, requestedRotation, 0, &p);
+      pGeode->starting = FALSE;
+    }
   }
 
   return TRUE;

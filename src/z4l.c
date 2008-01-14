@@ -36,6 +36,9 @@
 #include <sys/ioctl.h>
 #include <errno.h>
 #include <unistd.h>
+#include <string.h>
+#include <ctype.h>
+#include <stdlib.h>
 
 #include "xf86.h"
 #include <X11/extensions/Xv.h>

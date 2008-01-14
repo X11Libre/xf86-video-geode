@@ -30,6 +30,13 @@
 #include "config.h"
 #endif
 
+#include <string.h> /* memcmp() */
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <sys/ioctl.h>
+
 #include "xf86.h"
 #include "amd.h"
 
@@ -157,3 +164,39 @@ GeodeCopyGreyscale(unsigned char *src, unsigned char *dst,
     src2 += srcPitch;
   }
 }
+
+#if defined(linux)
+
+#include <linux/fb.h>
+
+int GeodeGetSizeFromFB(unsigned int *size)
+{
+	struct fb_fix_screeninfo fix;
+	int ret;
+	int fd = open("/dev/fb0", O_RDONLY);
+
+	if (fd == -1)
+		return -1;
+
+	ret = ioctl(fd, FBIOGET_FSCREENINFO, &fix);
+	close(fd);
+
+	if (!ret) {
+		if (!memcmp(fix.id, "Geode", 5)) {
+			*size = fix.smem_len;
+			return 0;
+		}
+	}
+
+	return -1;
+}
+
+#else
+
+int GeodeGetSizeFromFB(unsigned int *size)
+{
+	return -1;
+}
+
+#endif
+

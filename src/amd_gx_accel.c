@@ -1504,7 +1504,6 @@ amd_gx_exa_DownloadFromScreen(PixmapPtr pSrc, int x, int y, int w, int h,
 static Bool
 amd_gx_exa_PrepareSolid(PixmapPtr pxMap, int alu, Pixel planemask, Pixel fg)
 {
-
     int dstPitch = exaGetPixmapPitch(pxMap);
     unsigned int ROP =
 	amd_gx_BppToRasterMode(pxMap->drawable.bitsPerPixel)

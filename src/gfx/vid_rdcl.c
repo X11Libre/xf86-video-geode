@@ -254,7 +254,7 @@ void
 gfx_set_clock_frequency(unsigned long frequency)
 #endif
 {
-    QQ_WORD msr_value, sys_value;
+    Q_WORD msr_value, sys_value;
     unsigned long sys_low;
     unsigned int i, index = 0;
     unsigned long value;
@@ -1632,7 +1632,7 @@ unsigned long
 gfx_get_clock_frequency(void)
 #endif
 {
-    QQ_WORD msr_value;
+    Q_WORD msr_value;
     unsigned int index;
     unsigned long value, mask = 0x00001FFF;
     unsigned long post_div3 = 0, pre_mult2 = 0;
@@ -2310,7 +2310,7 @@ unsigned long
 gfx_read_crc(void)
 #endif
 {
-    QQ_WORD msr_value;
+    Q_WORD msr_value;
     unsigned long crc = 0xFFFFFFFF;
 
     /* DISABLE 32-BIT CRCS */
@@ -2359,7 +2359,7 @@ unsigned long
 gfx_read_crc32(void)
 #endif
 {
-    QQ_WORD msr_value;
+    Q_WORD msr_value;
     unsigned long crc = 0xFFFFFFFF;
 
     /* ENABLE 32-BIT CRCS */
@@ -2409,7 +2409,7 @@ gfx_read_window_crc(int source, unsigned short x, unsigned short y,
     unsigned short width, unsigned short height, int crc32)
 #endif
 {
-    QQ_WORD msr_value;
+    Q_WORD msr_value;
     unsigned long xpos, ypos, crc = 0;
     unsigned long old_fmt = 0;
     unsigned int vsync_active_base, vsync_inactive_base, hsync_active_base;

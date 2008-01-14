@@ -5,7 +5,6 @@
 #include <sys/types.h>
 #include <sys/errno.h>
 #include "os.h"
-#include "amd.h"
 
 static int _msr_open(void)
 {

@@ -55,6 +55,7 @@
 #include "xf86cmap.h"
 #include "compiler.h"
 #include "mipointer.h"
+#include <shadow.h> /* setupShadow() */
 #include <X11/extensions/randr.h>
 #include "fb.h"
 #include "miscstruct.h"
@@ -670,15 +671,19 @@ LXPreInit(ScrnInfoPtr pScrni, int flags)
     }
 
     /* Read the amount of framebuffer memory */
-
+    /* First try to read it from the framebuffer, and if that fails,
+     * do it the legacy way
+     */
+    
     if (pGeode->FBAvail  == 0) {
-        unsigned long value;
-	cim_outw(0xAC1C, 0xFC53);
-	cim_outw(0xAC1C, 0x0200);
+        if (GeodeGetSizeFromFB(&pGeode->FBAvail)) {
+		unsigned long value;
+		cim_outw(0xAC1C, 0xFC53);
+		cim_outw(0xAC1C, 0x0200);
 
-	value = (unsigned long)(cim_inw(0xAC1E)) & 0xFE;
-
-	pGeode->FBAvail = value << 20;
+		value = (unsigned long)(cim_inw(0xAC1E)) & 0xFE;
+		pGeode->FBAvail = value << 20;
+	}
     }
 
     pScrni->fbOffset = 0;
@@ -1160,7 +1165,10 @@ LXCreateScreenResources(ScreenPtr pScreen)
     if (!(*pScreen->CreateScreenResources) (pScreen))
 	return FALSE;
 
-    if (pGeode->rotation != RR_Rotate_0) {
+    if (xf86LoaderCheckSymbol("LXRandRSetConfig")
+	&& pGeode->rotation != RR_Rotate_0) {
+	Rotation(*LXRandRSetConfig) (ScreenPtr pScreen, Rotation rr, int rate,
+	    RRScreenSizePtr pSize) = NULL;
 	RRScreenSize p;
 	Rotation requestedRotation = pGeode->rotation;
 
@@ -1173,9 +1181,12 @@ LXCreateScreenResources(ScreenPtr pScreen)
 	p.mmWidth = pScreen->mmWidth;
 	p.mmHeight = pScreen->mmHeight;
 
-	pGeode->starting = TRUE;
-	LXRandRSetConfig(pScreen, requestedRotation, 0, &p);
-	pGeode->starting = FALSE;
+	LXRandRSetConfig = LoaderSymbol("LXRandRSetConfig");
+	if (LXRandRSetConfig) {
+	    pGeode->starting = TRUE;
+	    (*LXRandRSetConfig) (pScreen, requestedRotation, 0, &p);
+	    pGeode->starting = FALSE;
+	}
     }
 
     return TRUE;

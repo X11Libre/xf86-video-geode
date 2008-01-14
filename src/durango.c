@@ -37,7 +37,6 @@
 #include <unistd.h>
 #include <errno.h>
 #include <compiler.h>
-#include "amd.h"
 
 /* Compiler options */
 
