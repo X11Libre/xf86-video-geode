@@ -490,7 +490,7 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
 		    &pGeode->tryHWCursor);
 
   if (!xf86GetOptValInteger(GeodeOptions, GX_OPTION_FBSIZE,
-			    &(pGeode->FBAvail)))
+			    (int *)&(pGeode->FBAvail)))
     pGeode->FBAvail = 0;
 
   /* For compatability - allow SWCursor too */
@@ -532,7 +532,7 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
     pGeode->NoOfColorExpandLines = 0;
 
   xf86GetOptValInteger(GeodeOptions, GX_OPTION_OSM_CLR_BUFS,
-		       &(pGeode->exaBfrSz));
+		       (int *)&(pGeode->exaBfrSz));
 
   if (pGeode->exaBfrSz <= 0)
     pGeode->exaBfrSz = 0;

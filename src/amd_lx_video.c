@@ -64,6 +64,18 @@
 #define MAKE_ATOM(a) MakeAtom(a, sizeof(a) - 1, TRUE)
 #define ARRAY_SIZE(a) (sizeof((a)) / (sizeof(*(a))))
 
+/* Local function prototypes */
+static void
+LXStopVideo(ScrnInfoPtr pScrni, pointer data, Bool exit);
+
+static void
+LXDisplayVideo(ScrnInfoPtr pScrni, int id, short width, short height,
+		BoxPtr dstBox, short srcW, short srcH, short drawW, short drawH);
+
+static void
+LXResetVideo(ScrnInfoPtr pScrni);
+
+
 static XF86VideoEncodingRec DummyEncoding[1] = {
   { 0, "XV_IMAGE", 1024, 1024, {1, 1} }
 };
@@ -359,8 +371,8 @@ LXCopyPacked(ScrnInfoPtr pScrni, int id, unsigned char *buf,
   return TRUE;
 }
 
-void  
-LXDisplayVideo(ScrnInfoPtr pScrni, int id, short width, short height, 
+static void
+LXDisplayVideo(ScrnInfoPtr pScrni, int id, short width, short height,
 	       BoxPtr dstBox, short srcW, short srcH, short drawW, short drawH)
 {
   long ystart, xend, yend;
@@ -605,8 +617,8 @@ LXSetPortAttribute(ScrnInfoPtr pScrni,
   return Success;
 }
 
-void 
-LXStopVideo(ScrnInfoPtr pScrni, pointer data, Bool exit) 
+static void
+LXStopVideo(ScrnInfoPtr pScrni, pointer data, Bool exit)
 {
   GeodePortPrivRec *pPriv = (GeodePortPrivRec *) data;
   GeodeRec *pGeode = GEODEPTR(pScrni);
@@ -642,8 +654,8 @@ LXStopVideo(ScrnInfoPtr pScrni, pointer data, Bool exit)
     pPriv->offTime = currentTime.milliseconds + OFF_DELAY;
   }
 }
-    
-void
+
+static void
 LXResetVideo(ScrnInfoPtr pScrni)
 {
     GeodeRec *pGeode = GEODEPTR(pScrni);
