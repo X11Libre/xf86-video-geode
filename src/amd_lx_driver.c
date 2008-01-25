@@ -527,7 +527,7 @@ LXPreInit(ScrnInfoPtr pScrni, int flags)
     /* Fill in the monitor information */
     pScrni->monitor = pScrni->confScreen->monitor;
 
-    if (!xf86SetDepthBpp(pScrni, 8, 8, 8, Support24bppFb | Support32bppFb))
+    if (!xf86SetDepthBpp(pScrni, 16, 16, 16, Support24bppFb | Support32bppFb))
 	return FALSE;
 
     switch (pScrni->depth) {
