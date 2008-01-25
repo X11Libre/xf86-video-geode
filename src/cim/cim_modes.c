@@ -32,7 +32,7 @@
 /*  PREDEFINED DISPLAY TIMINGS   */
 /*-------------------------------*/
 
-VG_DISPLAY_MODE CimarronDisplayModes[] = {
+static const VG_DISPLAY_MODE CimarronDisplayModes[] = {
     /* 320 x 240 PANEL */
 
     {VG_SUPPORTFLAG_75HZ |             /* refresh rate = 75    */
@@ -1256,7 +1256,7 @@ VG_DISPLAY_MODE CimarronDisplayModes[] = {
 /*  PREDEFINED PLL FREQUENCIES       */
 /*-----------------------------------*/
 
-PLL_FREQUENCY CimarronPLLFrequencies[] = {
+static const PLL_FREQUENCY CimarronPLLFrequencies[] = {
     {0x000031AC, (24L << 16) | ((9230L * 65536L) / 10000L)}
     ,                                  /* 24.9230, - 4,27,13 */
     {0x0000215D, (25L << 16) | ((1750L * 65536L) / 10000L)}
@@ -1386,7 +1386,7 @@ PLL_FREQUENCY CimarronPLLFrequencies[] = {
 /*  PREDEFINED FILTER COEFFICIENTS   */
 /*-----------------------------------*/
 
-unsigned long CimarronHorizontalGraphicsFilter[][2] = {
+static const unsigned long CimarronHorizontalGraphicsFilter[][2] = {
     {0x1284A7D5, 0x000017D5},          /*  -43,  297,  296,  -43,    5  */
     {0x12A497D7, 0x000013D6},          /*  -41,  293,  298,  -42,    4  */
     {0x12D48BD7, 0x000013D6},          /*  -41,  290,  301,  -42,    4  */
@@ -1645,7 +1645,7 @@ unsigned long CimarronHorizontalGraphicsFilter[][2] = {
     {0x12AF5C04, 0x000F5D24},          /*    4,  -41,  298,  292,  -41  */
 };
 
-unsigned long CimarronVerticalGraphicsFilter[] = {
+static const unsigned long CimarronVerticalGraphicsFilter[] = {
     0x3F840D05,                        /* 261, 259,  -8  */
     0x3F841D01,                        /* 257, 263,  -8  */
     0x3F8428FE,                        /* 254, 266,  -8  */
