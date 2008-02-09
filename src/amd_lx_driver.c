@@ -558,7 +558,7 @@ LXPreInit(ScrnInfoPtr pScrni, int flags)
     {
         Gamma zeros = { 0.0, 0.0, 0.0 };
 
-        if (!xf86SetGamma(pScrn, zeros)) {
+        if (!xf86SetGamma(pScrni, zeros)) {
             return FALSE;
         }
     }
