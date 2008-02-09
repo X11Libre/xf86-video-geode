@@ -467,6 +467,18 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
   if (!xf86SetDefaultVisual(pScrni, -1))
     return FALSE;
 
+  /*
+   * If the driver can do gamma correction, it should call xf86SetGamma()
+   * here.
+   */
+  {
+      Gamma zeros = { 0.0, 0.0, 0.0 };
+
+      if (!xf86SetGamma(pScrn, zeros)) {
+          return FALSE;
+      }
+  }
+
   pScrni->progClock = TRUE;
   xf86CollectOptions(pScrni, NULL);
   xf86ProcessOptions(pScrni->scrnIndex, pScrni->options, GeodeOptions);
