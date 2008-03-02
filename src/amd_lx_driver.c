@@ -857,9 +857,10 @@ LXSetVideoMode(ScrnInfoPtr pScrni, DisplayModePtr pMode)
     lx_disable_dac_power(pScrni, DF_CRT_DISABLE);
     vg_set_compression_enable(0);
 
-    if (!pMode->type || pMode->type == M_T_USERDEF) 
-      lx_set_custom_mode(pGeode, pMode, pScrni->bitsPerPixel);
-    else {
+    /* If the mode is a default one, then set the mode with the Cimarron
+     * tables */
+
+    if ((pMode->type & M_T_BUILTIN) || (pMode->type & M_T_DEFAULT)) {
       if (pMode->Flags & V_NHSYNC)
 	flags |= VG_MODEFLAG_NEG_HSYNC;
       if (pMode->Flags & V_NVSYNC)
@@ -890,8 +891,14 @@ LXSetVideoMode(ScrnInfoPtr pScrni, DisplayModePtr pMode)
 			    pScrni->bitsPerPixel, GeodeGetRefreshRate(pMode), 
 			    0);
       }
-    } 
-   
+    }
+    else {
+	/* For anything other then a default mode - use the passed in
+	 * timings */
+
+	lx_set_custom_mode(pGeode, pMode, pScrni->bitsPerPixel);
+    }
+
     if (pGeode->Output & OUTPUT_PANEL)
       df_set_output_path((pGeode->Output & OUTPUT_CRT) ? DF_DISPLAY_CRT_FP : DF_DISPLAY_FP);
     else
@@ -1398,7 +1405,9 @@ LXValidMode(int scrnIndex, DisplayModePtr pMode, Bool Verbose, int flags)
 
     memset(&vgQueryMode, 0, sizeof(vgQueryMode));
 
-    if (pMode->type && pMode->type != M_T_USERDEF) {
+    /* For builtin and default modes, try to look up the mode in Cimarron */
+
+    if ((pMode->type & M_T_BUILTIN) || (pMode->type & M_T_DEFAULT)) {
       
       if (pGeode->Output & OUTPUT_PANEL) {
 

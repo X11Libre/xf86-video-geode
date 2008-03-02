@@ -795,7 +795,9 @@ GXSetVideoMode(ScrnInfoPtr pScrni, DisplayModePtr pMode)
 
   /* Only use the panel mode for built in modes */
 
-  if ((pMode->type && pMode->type != M_T_USERDEF) && pGeode->Panel) {
+ if ((pMode->type & M_T_BUILTIN) || (pMode->type & M_T_DEFAULT)
+	&& pGeode->Panel) {
+
     GFX(set_fixed_timings(pGeode->PanelX, pGeode->PanelY,
 			  pMode->CrtcHDisplay, pMode->CrtcVDisplay,
 			  pScrni->bitsPerPixel));
@@ -1402,10 +1404,9 @@ GXValidMode(int scrnIndex, DisplayModePtr pMode, Bool Verbose, int flags)
   GeodeRec *pGeode = GEODEPTR(pScrni);
   int p, ret;
 
-  /* Not sure if this is an X bug or not - but on my current build,
-   * user defined modes pass a type of 0 */
+  /* Use the durango lookup for builtin or default modes only */
 
-  if (pMode->type && pMode->type != M_T_USERDEF) {
+  if ((pMode->type & M_T_BUILTIN) || (pMode->type & M_T_DEFAULT)) {
 
     if (pGeode->Panel) {
       if (pMode->CrtcHDisplay > pGeode->PanelX ||
