@@ -33,6 +33,7 @@
 #include "xf86.h"
 #include "xf86Priv.h"
 #include "xf86DDC.h"
+#include "xf86Module.h"
 #include "mipointer.h"
 #include "windowstr.h"
 #include <X11/extensions/randr.h>
@@ -55,15 +56,18 @@ typedef struct _GXRandRInfo
 } XF86RandRInfoRec, *XF86RandRInfoPtr;
 
 #define AMD_OLDPRIV (GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 4)
+
 #if AMD_OLDPRIV
+
+static int GXRandRIndex;
+#define XF86RANDRINFO(p) ((XF86RandRInfoPtr) (p)->devPrivates[GXRandRIndex].ptr)
+#else
 
 static DevPrivateKey GXRandRKey;
 #define XF86RANDRINFO(p) ((XF86RandRInfoPtr) \
 			  dixLookupPrivate(&(p)->devPrivates, GXRandRKey));
-#else
 
-static int GXRandRIndex;
-#define XF86RANDRINFO(p) ((XF86RandRInfoPtr) (p)->devPrivates[GXRandRIndex].ptr)
+
 #endif
 
 static int
@@ -341,9 +345,9 @@ GXRandRInit(ScreenPtr pScreen, int rotation)
     pRandr->maxX = pRandr->maxY = 0;
 
 #if AMD_OLDPRIV
-    dixSetPrivate(&pScreen->devPrivates, GXRandRKey, pRandr);
-#else
     pScreen->devPrivates[GXRandRIndex].ptr = pRandr;
+#else
+    dixSetPrivate(&pScreen->devPrivates, GXRandRKey, pRandr);
 #endif
     return TRUE;
 }

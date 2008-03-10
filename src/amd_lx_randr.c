@@ -57,13 +57,15 @@ typedef struct _LXRandRInfo
 #define AMD_OLDPRIV (GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 4)
 #if AMD_OLDPRIV
 
+static int LXRandRIndex;
+#define XF86RANDRINFO(p) ((XF86RandRInfoPtr) (p)->devPrivates[LXRandRIndex].ptr)
+
+#else
+
 static DevPrivateKey LXRandRKey;
 #define XF86RANDRINFO(p) ((XF86RandRInfoPtr) \
 			  dixLookupPrivate(&(p)->devPrivates, LXRandRKey));
-#else
 
-static int LXRandRIndex;
-#define XF86RANDRINFO(p) ((XF86RandRInfoPtr) (p)->devPrivates[LXRandRIndex].ptr)
 #endif
 
 static int
@@ -341,9 +343,9 @@ LXRandRInit(ScreenPtr pScreen, int rotation)
     pRandr->maxX = pRandr->maxY = 0;
 
 #if AMD_OLDPRIV
-    dixSetPrivate(&pScreen->devPrivates, LXRandRKey, pRandr);
-#else
     pScreen->devPrivates[LXRandRIndex].ptr = pRandr;
+#else
+    dixSetPrivate(&pScreen->devPrivates, LXRandRKey, pRandr);
 #endif
     return TRUE;
 }
