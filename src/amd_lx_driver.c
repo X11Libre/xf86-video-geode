@@ -419,12 +419,14 @@ LXMapMem(ScrnInfoPtr pScrni)
     GeodeRec *pGeode = GEODEPTR(pScrni);
     int index = pScrni->scrnIndex;
     unsigned long cmd_bfr_phys;
-    PCITAG tag;
 
-    pciVideoRec *pci = xf86GetPciInfoForEntity(pGeode->pEnt->index);
-    tag = pciTag(pci->bus, pci->device, pci->func);
+    pciVideoPtr pci = xf86GetPciInfoForEntity(pGeode->pEnt->index);
 
 #ifndef XSERVER_LIBPCIACCESS
+    PCITAG tag;
+
+    tag = pciTag(pci->bus, pci->device, pci->func);
+
     cim_gp_ptr = (unsigned char *)xf86MapPciMem(index, VIDMEM_MMIO,
 						tag, pci->memBase[1], LX_GP_REG_SIZE);
 
