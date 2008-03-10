@@ -40,7 +40,6 @@
 
 #include "amd.h"
 
-static int GXRandRIndex;
 static int GXRandRGeneration;
 
 typedef struct _GXRandRInfo
@@ -55,7 +54,16 @@ typedef struct _GXRandRInfo
     Rotation supported_rotations;      /* driver supported */
 } XF86RandRInfoRec, *XF86RandRInfoPtr;
 
-#define XF86RANDRINFO(p)    ((XF86RandRInfoPtr) (p)->devPrivates[GXRandRIndex].ptr)
+#if XORG_VERSION_CURRENT < XORG_VERSION_NUMERIC(7,0,0,0,0)
+
+static DevPrivateKey GXRandRKey;
+#define XF86RANDRINFO(p) ((XF86RandRInfoPtr) \
+			  dixLookupPrivate(&(p)->devPrivates, GXRandRKey));
+#else
+
+static int GXRandRIndex;
+#define XF86RANDRINFO(p) ((XF86RandRInfoPtr) (p)->devPrivates[GXRandRIndex].ptr)
+#endif
 
 static int
 GXRandRModeRefresh(DisplayModePtr mode)
@@ -299,9 +307,14 @@ GXRandRInit(ScreenPtr pScreen, int rotation)
     rrScrPrivPtr rp;
 
     if (GXRandRGeneration != serverGeneration) {
-	GXRandRIndex = AllocateScreenPrivateIndex();
 	GXRandRGeneration = serverGeneration;
     }
+
+#if XORG_VERSION_CURRENT < XORG_VERSION_NUMERIC(7,0,0,0,0)
+    GXRandRIndex = AllocateScreenPrivateIndex();
+#else
+    GXRandRKey = &GXRandRKey;
+#endif
 
     pRandr = xcalloc(sizeof(XF86RandRInfoRec), 1);
     if (pRandr == NULL)
@@ -326,6 +339,10 @@ GXRandRInit(ScreenPtr pScreen, int rotation)
     pRandr->supported_rotations = rotation;
     pRandr->maxX = pRandr->maxY = 0;
 
+#if XORG_VERSION_CURRENT < XORG_VERSION_NUMERIC(7,0,0,0,0)
+    dixSetPrivate(&pScreen->devPrivates, GXRandRKey, pRandr);
+#else
     pScreen->devPrivates[GXRandRIndex].ptr = pRandr;
+#endif
     return TRUE;
 }
