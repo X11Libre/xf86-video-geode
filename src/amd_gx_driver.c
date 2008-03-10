@@ -317,7 +317,27 @@ GXSaveScreen(ScreenPtr pScrn, int mode)
 
 
 /* Common function - used by the LX too */
-
+#ifdef XSERVER_LIBPCIACCESS
+static inline void * map_pci_mem(ScrnInfoPtr pScrni, int vram,
+				 struct pci_device *dev,
+				 int bar, int size)
+{
+  void *ptr;
+  void** result = (void**)&ptr;
+  int map_size = size ? size : dev->regions[bar].size;
+    
+  int err = pci_device_map_range(dev,
+				 dev->regions[bar].base_addr
+				 map_size,
+				 PCI_DEV_MAP_FLAG_WRITABLE |
+				 (vram ? PCI_DEV_MAP_FLAG_WRITE_COMBINE : 0),
+				 result);
+  
+  if (err) 
+    return NULL;
+  return ptr;
+}
+#endif
 
 
 extern unsigned long gfx_gx2_scratch_base;
@@ -330,6 +350,7 @@ GXMapMem(ScrnInfoPtr pScrni)
 
   pciVideoRec *pci = xf86GetPciInfoForEntity(pGeode->pEnt->index);
 
+#ifndef XSERVER_LIBPCIACCESS
   gfx_virt_regptr = (unsigned char *)xf86MapVidMem(index, VIDMEM_MMIO,
 						   pci->memBase[2], pci->size[2]);
 
@@ -341,6 +362,12 @@ GXMapMem(ScrnInfoPtr pScrni)
 
   gfx_virt_fbptr = (unsigned char *)xf86MapVidMem(index, VIDMEM_FRAMEBUFFER,
 						  pci->memBase[0], pGeode->FBAvail);
+#else
+  gfx_virt_regptr = map_pci_mem(pScrni, 0, pci, 2, 0);
+  gfx_virt_gpptr = map_pci_mem(pScrni, 0, pci, 1, 0);
+  gfx_virt_vidptr = map_pci_mem(pScrni, 0, pci, 3, 0);
+  gfx_virt_fbptr = map_pci_mem(pScrni, 1, pci, 0, pGeode->FBAvail);
+#endif
 
   gfx_gx2_scratch_base = pGeode->FBAvail - 0x4000;
 

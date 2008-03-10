@@ -391,6 +391,27 @@ LXWriteMSR(unsigned long addr, unsigned long lo, unsigned long hi)
     LX_MSR_WRITE(addr, lo, hi);
 }
 
+#ifdef XSERVER_LIBPCIACCESS
+static inline void * map_pci_mem(ScrnInfoPtr pScrni, int vram,
+				 struct pci_device *dev,
+				 int bar, int size)
+{
+  void *ptr;
+  void** result = (void**)&ptr;
+  int map_size = size ? size : dev->regions[bar].size;
+    
+  int err = pci_device_map_range(dev,
+				 dev->regions[bar].base_addr
+				 map_size,
+				 PCI_DEV_MAP_FLAG_WRITABLE |
+				 (vram ? PCI_DEV_MAP_FLAG_WRITE_COMBINE : 0),
+				 result);
+  
+  if (err) 
+    return NULL;
+  return ptr;
+}
+#endif
 
 static Bool
 LXMapMem(ScrnInfoPtr pScrni)
@@ -403,6 +424,7 @@ LXMapMem(ScrnInfoPtr pScrni)
     pciVideoRec *pci = xf86GetPciInfoForEntity(pGeode->pEnt->index);
     tag = pciTag(pci->bus, pci->device, pci->func);
 
+#ifndef XSERVER_LIBPCIACCESS
     cim_gp_ptr = (unsigned char *)xf86MapPciMem(index, VIDMEM_MMIO,
 						tag, pci->memBase[1], LX_GP_REG_SIZE);
 
@@ -417,18 +439,26 @@ LXMapMem(ScrnInfoPtr pScrni)
 
     cim_fb_ptr = (unsigned char *)xf86MapPciMem(index, VIDMEM_FRAMEBUFFER,
 						tag, pci->memBase[0], pGeode->FBAvail + CIM_CMD_BFR_SZ);
+#else
+    cim_gp_ptr = map_pci_mem(pScrni, 0, pci, 1, LX_GP_REG_SIZE);
+    cim_vg_ptr = map_pci_mem(pScrni, 0, pci, 2, LX_VG_REG_SIZE);
+    cim_vid_ptr = map_pci_mem(pScrni, 0, pci, 3, LX_VID_REG_SIZE);
+    cim_vip_ptr = map_pci_mem(pScrni, 0, pci, 4, LX_VIP_REG_SIZE);
+    cim_fb_ptr = map_pci_mem(pScrni, 1, pci, 0, pGeode->FBAvail + CIM_CMD_BFR_SZ);
+#endif
 
     if (pScrni->memPhysBase == 0)
-      pScrni->memPhysBase = pci->memBase[0];
+      pScrni->memPhysBase = PCI_REGION_BASE(pci, 0, REGION_MEM);
+      
 
-    cmd_bfr_phys = pci->memBase[0] + pGeode->CmdBfrOffset;
+    cmd_bfr_phys = PCI_REGION_BASE(pci, 0, REGION_MEM) + pGeode->CmdBfrOffset;
     cim_cmd_base_ptr = cim_fb_ptr + pGeode->CmdBfrOffset;
 
     if (!cim_gp_ptr || !cim_vg_ptr || !cim_vid_ptr || !cim_fb_ptr ||
 	!cim_vip_ptr)
       return FALSE;
 
-    gp_set_frame_buffer_base(pci->memBase[0], pGeode->FBAvail);
+    gp_set_frame_buffer_base(PCI_REGION_BASE(pci, 0, REGION_MEM), pGeode->FBAvail);
     gp_set_command_buffer_base(cmd_bfr_phys, 0, pGeode->CmdBfrSize);
 
     XpressROMPtr = xf86MapVidMem(index, VIDMEM_FRAMEBUFFER, 0xF0000, 0x10000);

@@ -86,9 +86,20 @@ PKG_CHECK_MODULES(XORG, [xorg-server xproto fontsproto $REQUIRED_MODULES])
 sdkdir=$(pkg-config --variable=sdkdir xorg-server)
 
 # Checks for libraries.
+SAVE_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS="$CPPFLAGS $XORG_CFLAGS"
+AC_CHECK_DECL(XSERVER_LIBPCIACCESS,
+              [XSERVER_LIBPCIACCESS=yes],[XSERVER_LIBPCIACCESS=no],
+              [#include "xorg-server.h"])
+CPPFLAGS="$SAVE_CPPFLAGS"
 
 # Checks for header files.
 AC_HEADER_STDC
+
+if test "x$XSERVER_LIBPCIACCESS" = xyes; then
+    PKG_CHECK_MODULES([PCIACCESS], [pciaccess >= 0.8.0])
+    XORG_CFLAGS="$XORG_CFLAGS $PCIACCESS_CFLAGS"
+fi
 
 AC_SUBST([XORG_CFLAGS])
 AC_SUBST([moduledir])

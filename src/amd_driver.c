@@ -419,7 +419,10 @@ AmdProbe(DriverPtr drv, int flags)
     }
     DEBUGMSG(1, (0, X_INFO, "AmdProbe: Before MatchPciInstances!\n"));
     /* PCI BUS */
-    if (xf86GetPciVideoInfo()) {
+#ifndef XSERVER_LIBPCIACCESS
+    if (xf86GetPciVideoInfo()) 
+#endif
+    {
         numUsed = xf86MatchPciInstances(AMD_NAME, PCI_VENDOR_ID_NS,
             GeodeChipsets, GeodePCIchipsets,
             devSections, numDevSections, drv, &usedChips);

@@ -28,6 +28,8 @@
 #ifndef _AMD_GEODE_H_
 #define _AMD_GEODE_H_
 
+#include "amd_pcirename.h"
+
 #include "xaa.h"
 #include "exa.h"
 #include "xf86Cursor.h"
