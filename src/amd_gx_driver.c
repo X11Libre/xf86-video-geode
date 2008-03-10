@@ -348,7 +348,7 @@ GXMapMem(ScrnInfoPtr pScrni)
   GeodeRec *pGeode = GEODEPTR(pScrni);
   int index = pScrni->scrnIndex;
 
-  pciVideoRec *pci = xf86GetPciInfoForEntity(pGeode->pEnt->index);
+  pciVideoPtr pci = xf86GetPciInfoForEntity(pGeode->pEnt->index);
 
 #ifndef XSERVER_LIBPCIACCESS
   gfx_virt_regptr = (unsigned char *)xf86MapVidMem(index, VIDMEM_MMIO,
