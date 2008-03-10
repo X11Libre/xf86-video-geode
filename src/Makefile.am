@@ -64,7 +64,8 @@ amd_drv_la_SOURCES = \
 	amd_lx_rotate.c \
 	amd_lx_randr.c \
 	amd_lx_exa.c \
-        cimarron.c
+        cimarron.c \
+	amd_pcirename.h
 
 EXTRA_DIST = \
         cim/cim_defs.h \
