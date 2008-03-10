@@ -327,7 +327,7 @@ static inline void * map_pci_mem(ScrnInfoPtr pScrni, int vram,
   int map_size = size ? size : dev->regions[bar].size;
     
   int err = pci_device_map_range(dev,
-				 dev->regions[bar].base_addr
+				 dev->regions[bar].base_addr,
 				 map_size,
 				 PCI_DEV_MAP_FLAG_WRITABLE |
 				 (vram ? PCI_DEV_MAP_FLAG_WRITE_COMBINE : 0),
