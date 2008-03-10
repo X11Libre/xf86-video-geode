@@ -54,7 +54,8 @@ typedef struct _GXRandRInfo
     Rotation supported_rotations;      /* driver supported */
 } XF86RandRInfoRec, *XF86RandRInfoPtr;
 
-#if XORG_VERSION_CURRENT < XORG_VERSION_NUMERIC(7,0,0,0,0)
+#define AMD_OLDPRIV (GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 4)
+#if AMD_OLDPRIV
 
 static DevPrivateKey GXRandRKey;
 #define XF86RANDRINFO(p) ((XF86RandRInfoPtr) \
@@ -310,7 +311,7 @@ GXRandRInit(ScreenPtr pScreen, int rotation)
 	GXRandRGeneration = serverGeneration;
     }
 
-#if XORG_VERSION_CURRENT < XORG_VERSION_NUMERIC(7,0,0,0,0)
+#if AMD_OLDPRIV
     GXRandRIndex = AllocateScreenPrivateIndex();
 #else
     GXRandRKey = &GXRandRKey;
@@ -339,7 +340,7 @@ GXRandRInit(ScreenPtr pScreen, int rotation)
     pRandr->supported_rotations = rotation;
     pRandr->maxX = pRandr->maxY = 0;
 
-#if XORG_VERSION_CURRENT < XORG_VERSION_NUMERIC(7,0,0,0,0)
+#if AMD_OLDPRIV
     dixSetPrivate(&pScreen->devPrivates, GXRandRKey, pRandr);
 #else
     pScreen->devPrivates[GXRandRIndex].ptr = pRandr;
