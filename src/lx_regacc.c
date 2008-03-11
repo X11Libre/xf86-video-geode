@@ -25,16 +25,16 @@
  */
 
 /*
- * This is the main file used to add Cimarron graphics support to a software 
+ * This is the main file used to add Cimarron graphics support to a software
  * project.  The main reason to have a single file include the other files
  * is that it centralizes the location of the compiler options.  This file
  * should be tuned for a specific implementation, and then modified as needed
  * for new Cimarron releases.  The releases.txt file indicates any updates to
- * this main file, such as a new definition for a new hardware platform. 
+ * this main file, such as a new definition for a new hardware platform.
  *
  * In other words, this file should be copied from the Cimarron source files
- * once when a software project starts, and then maintained as necessary.  
- * It should not be recopied with new versions of Cimarron unless the 
+ * once when a software project starts, and then maintained as necessary.
+ * It should not be recopied with new versions of Cimarron unless the
  * developer is willing to tune the file again for the specific project.
  */
 

@@ -37,20 +37,19 @@
 #include <unistd.h>
 #include <errno.h>
 #include <compiler.h>
-#include <os.h> /* ErrorF() */
+#include <os.h>			       /* ErrorF() */
 
 /* Compiler options */
-
 
 #define GFX_DISPLAY_GU1	       0       /* 1st generation display controller */
 #define GFX_DISPLAY_GU2	       1       /* 2nd generation display controller */
 
-#define GFX_INIT_DYNAMIC       0  /* runtime selection */
-#define GFX_INIT_GU1           0  /* SC1200/GX1        */
-#define GFX_INIT_GU2           1  /* GX                */
+#define GFX_INIT_DYNAMIC       0       /* runtime selection */
+#define GFX_INIT_GU1           0       /* SC1200/GX1        */
+#define GFX_INIT_GU2           1       /* GX                */
 
-#define GFX_MSR_DYNAMIC        0  /* runtime selection */
-#define GFX_MSR_REDCLOUD       1  /* GX */
+#define GFX_MSR_DYNAMIC        0       /* runtime selection */
+#define GFX_MSR_REDCLOUD       1       /* GX */
 
 #define GFX_2DACCEL_DYNAMIC    0       /* runtime selection                                */
 #define GFX_2DACCEL_GU1	       0       /* 1st generation 2D accelerator    */
@@ -81,7 +80,7 @@
 #define FB4MB		       1       /* Set to use 4Mb vid ram for Pyramid */
 
 #define GFX_NO_IO_IN_WAIT_MACROS    1  /* Set to remove I/O accesses in GP
-					  bit testing */
+				        * bit testing */
 #define GFX_READ_ROUTINES  1
 
 #include "gfx_rtns.h"
@@ -156,7 +155,6 @@ gfx_outd(unsigned short port, unsigned long data)
         : "=a" (*(low)), "=d" (*(high))         \
         : "c" (msr | adr))
 
-
 #define vsa_msr_write(msr,adr,high,low) \
   { int d0, d1, d2, d3, d4;        \
   __asm__ __volatile__(            \
@@ -180,37 +178,39 @@ gfx_outd(unsigned short port, unsigned long data)
 extern int GeodeWriteMSR(unsigned long, unsigned long, unsigned long);
 extern int GeodeReadMSR(unsigned long, unsigned long *, unsigned long *);
 
-void gfx_msr_asm_write(unsigned short reg, unsigned long addr,
-unsigned long *hi, unsigned long *lo)
+void
+gfx_msr_asm_write(unsigned short reg, unsigned long addr,
+    unsigned long *hi, unsigned long *lo)
 {
-  static int msr_method = 0;
+    static int msr_method = 0;
 
-  if (msr_method == 0) {
-    if (!GeodeWriteMSR(addr | reg, *lo, *hi))
-      return;
+    if (msr_method == 0) {
+	if (!GeodeWriteMSR(addr | reg, *lo, *hi))
+	    return;
 
-    msr_method = 1;
-  }
+	msr_method = 1;
+    }
 
-  /* This is the fallback VSA method - not preferred */
-  vsa_msr_write(reg, addr, hi, lo);
+    /* This is the fallback VSA method - not preferred */
+    vsa_msr_write(reg, addr, hi, lo);
 }
 
-void gfx_msr_asm_read(unsigned short reg, unsigned long addr,
-unsigned long *hi, unsigned long *lo)
+void
+gfx_msr_asm_read(unsigned short reg, unsigned long addr,
+    unsigned long *hi, unsigned long *lo)
 {
-  static int msr_method = 0;
+    static int msr_method = 0;
 
-  if (msr_method == 0) {
-    if (!GeodeReadMSR(addr | reg, lo, hi))
-      return;
+    if (msr_method == 0) {
+	if (!GeodeReadMSR(addr | reg, lo, hi))
+	    return;
 
-    ErrorF("Unable to read the MSR - reverting to the VSA method.\n");
-    msr_method = 1;
-  }
+	ErrorF("Unable to read the MSR - reverting to the VSA method.\n");
+	msr_method = 1;
+    }
 
-  /* This is the fallback VSA method - not preferred */
-  vsa_msr_read(reg, addr, hi, lo);
+    /* This is the fallback VSA method - not preferred */
+    vsa_msr_read(reg, addr, hi, lo);
 }
 
 #include "gfx_init.c"

@@ -38,5 +38,6 @@ int
 gu3_get_vga_active(void)
 {
     int data = READ_REG32(DC3_GENERAL_CFG);
+
     return (data & DC3_GCFG_VGAE) ? 1 : 0;
 }

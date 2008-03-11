@@ -99,9 +99,9 @@ static Bool AmdProbe(DriverPtr, int);
 #ifdef XSERVER_LIBPCIACCESS
 static const struct pci_id_match amdDeviceMatch[] = {
     {PCI_VENDOR_ID_NS, PCI_CHIP_REDCLOUD, PCI_MATCH_ANY, PCI_MATCH_ANY, 0, 0,
-	    0},
+	0},
     {PCI_VENDOR_ID_AMD, PCI_CHIP_GEODELX, PCI_MATCH_ANY, PCI_MATCH_ANY, 0, 0,
-	    0},
+	0},
     {0, 0, 0}
 };
 #endif /* XSERVER_LIBPCIACCESS */
@@ -502,7 +502,7 @@ AmdPciProbe(DriverPtr driver,
  * Parameters.
  *     drv	:a pointer to the geode driver
  *     flags    :flags may passed to check the config and probe detect
- * 
+ *
  * Returns	:TRUE on success and FALSE on failure.
  *
  * Comments     :This should ne minimal probe and it should under no

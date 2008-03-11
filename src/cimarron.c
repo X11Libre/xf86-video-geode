@@ -178,8 +178,8 @@ unsigned char *cim_vg_ptr = (unsigned char *)0;
  * to share the MSR code with the GX code */
 
 #ifdef CIMARRON_MSR_HOOKS
-void (*cim_rdmsr)(unsigned long, unsigned long *, unsigned long *);
-void (*cim_wrmsr)(unsigned long, unsigned long, unsigned long);
+void (*cim_rdmsr) (unsigned long, unsigned long *, unsigned long *);
+void (*cim_wrmsr) (unsigned long, unsigned long, unsigned long);
 #endif
 
 /*----------------------------------------------------------------------*/

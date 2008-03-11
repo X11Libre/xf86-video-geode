@@ -55,7 +55,7 @@
 #include "xf86cmap.h"
 #include "compiler.h"
 #include "mipointer.h"
-#include <shadow.h> /* setupShadow() */
+#include <shadow.h>		       /* setupShadow() */
 #include <X11/extensions/randr.h>
 #include "fb.h"
 #include "miscstruct.h"
@@ -98,7 +98,7 @@ unsigned char *XpressROMPtr;
 
 /* Reference: Video Graphics Suite Specification:
  * VG Config Register (0x00) page 16
- * VG FP Register (0x02) page 18 
+ * VG FP Register (0x02) page 18
  */
 
 #define LX_READ_VG(reg) \
@@ -107,137 +107,145 @@ unsigned char *XpressROMPtr;
 static inline void
 lx_enable_dac_power(ScrnInfoPtr pScrni, int option)
 {
-  GeodeRec *pGeode = GEODEPTR(pScrni);
+    GeodeRec *pGeode = GEODEPTR(pScrni);
 
-  df_set_crt_enable(DF_CRT_ENABLE);
+    df_set_crt_enable(DF_CRT_ENABLE);
 
-  /* Turn off the DAC if we don't need the CRT */
+    /* Turn off the DAC if we don't need the CRT */
 
-  if (option && (!(pGeode->Output & OUTPUT_CRT))) {
-    unsigned int misc = READ_VID32(DF_VID_MISC);
-    misc |= DF_DAC_POWER_DOWN;
-    WRITE_VID32(DF_VID_MISC, misc);
-  }
+    if (option && (!(pGeode->Output & OUTPUT_CRT))) {
+	unsigned int misc = READ_VID32(DF_VID_MISC);
 
-  if (pGeode->Output & OUTPUT_PANEL)
-    df_set_panel_enable(1);
+	misc |= DF_DAC_POWER_DOWN;
+	WRITE_VID32(DF_VID_MISC, misc);
+    }
+
+    if (pGeode->Output & OUTPUT_PANEL)
+	df_set_panel_enable(1);
 }
 
 static inline void
 lx_disable_dac_power(ScrnInfoPtr pScrni, int option)
 {
-  GeodeRec *pGeode = GEODEPTR(pScrni);
-
-  if (pGeode->Output & OUTPUT_PANEL)
-    df_set_panel_enable(0);
-
-  if (pGeode->Output & OUTPUT_CRT) {
-
-    /* Wait for the panel to finish its procedure */
+    GeodeRec *pGeode = GEODEPTR(pScrni);
 
     if (pGeode->Output & OUTPUT_PANEL)
-      while ((READ_VID32(DF_POWER_MANAGEMENT) & 2) == 0);
-    df_set_crt_enable(option);
-  }
+	df_set_panel_enable(0);
+
+    if (pGeode->Output & OUTPUT_CRT) {
+
+	/* Wait for the panel to finish its procedure */
+
+	if (pGeode->Output & OUTPUT_PANEL)
+	    while ((READ_VID32(DF_POWER_MANAGEMENT) & 2) == 0) ;
+	df_set_crt_enable(option);
+    }
 }
 
 static int
 lx_get_panel(int *xres, int *yres)
 {
-  static struct {
-    int xres, yres;
-  } fpres[] = {
-    {  320,  240 }, {  640,  480 }, {  800,  600 }, { 1024,  768 },
-    { 1152, 864 }, { 1280, 1024 }, { 1600, 1200 } };
-  
-  unsigned short reg = LX_READ_VG(0x00);
-  unsigned char ret = (reg >> 8) & 0x07;
-  
-  if ((ret == 1 || ret == 5)) {
+    static struct
+    {
+	int xres, yres;
+    } fpres[] = {
+	{
+	320, 240}, {
+	640, 480}, {
+	800, 600}, {
+	1024, 768}, {
+	1152, 864}, {
+	1280, 1024}, {
+    1600, 1200}};
 
-    reg = LX_READ_VG(0x02);
-    ret = (reg >> 3) & 0x07;
+    unsigned short reg = LX_READ_VG(0x00);
+    unsigned char ret = (reg >> 8) & 0x07;
 
-    /* 7 is a "reserved" value - if we get it, we can only assume that
-       a panel doesn't exist (or it hasn't been configured in the BIOS)
-    */
+    if ((ret == 1 || ret == 5)) {
 
-    if (ret < 7) {
-      *xres = fpres[ret].xres;
-      *yres = fpres[ret].yres;
-    
-      return TRUE;
+	reg = LX_READ_VG(0x02);
+	ret = (reg >> 3) & 0x07;
+
+	/* 7 is a "reserved" value - if we get it, we can only assume that
+	 * a panel doesn't exist (or it hasn't been configured in the BIOS)
+	 */
+
+	if (ret < 7) {
+	    *xres = fpres[ret].xres;
+	    *yres = fpres[ret].yres;
+
+	    return TRUE;
+	}
     }
-  }
 
-  return FALSE;
+    return FALSE;
 }
 
 static int
-lx_set_custom_mode(GeodeRec *pGeode, DisplayModePtr pMode, int bpp)
+lx_set_custom_mode(GeodeRec * pGeode, DisplayModePtr pMode, int bpp)
 {
-  VG_DISPLAY_MODE mode;
-  int hsync, vsync;
+    VG_DISPLAY_MODE mode;
+    int hsync, vsync;
 
-  memset(&mode, 0, sizeof(mode));
+    memset(&mode, 0, sizeof(mode));
 
-  /* Cimarron purposely swaps the sync when panels are enabled -this is
-   * presumably to allow for "default" panels which are normally active
-   * low, so we need to swizzle the flags
-   */
+    /* Cimarron purposely swaps the sync when panels are enabled -this is
+     * presumably to allow for "default" panels which are normally active
+     * low, so we need to swizzle the flags
+     */
 
-  hsync = (pMode->Flags & V_NHSYNC) ? 1 : 0;
-  vsync = (pMode->Flags & V_NVSYNC) ? 1 : 0;
+    hsync = (pMode->Flags & V_NHSYNC) ? 1 : 0;
+    vsync = (pMode->Flags & V_NVSYNC) ? 1 : 0;
 
-  if (pGeode->Output & OUTPUT_PANEL) {
+    if (pGeode->Output & OUTPUT_PANEL) {
 	hsync = !vsync;
 	vsync = !vsync;
-  }
+    }
 
-  mode.flags |= (hsync) ? VG_MODEFLAG_NEG_HSYNC : 0;
-  mode.flags |= (vsync) ? VG_MODEFLAG_NEG_VSYNC : 0;
+    mode.flags |= (hsync) ? VG_MODEFLAG_NEG_HSYNC : 0;
+    mode.flags |= (vsync) ? VG_MODEFLAG_NEG_VSYNC : 0;
 
-  mode.flags |= pGeode->Output & OUTPUT_CRT ? VG_MODEFLAG_CRT_AND_FP : 0;
-
-  if (pGeode->Output & OUTPUT_PANEL) {
-    mode.panel_width = mode.mode_width = pGeode->PanelX;
-    mode.panel_height = mode.mode_height = pGeode->PanelY;
-
-    mode.flags |= VG_MODEFLAG_PANELOUT;
     mode.flags |= pGeode->Output & OUTPUT_CRT ? VG_MODEFLAG_CRT_AND_FP : 0;
-  }
-  else {
-    mode.mode_width = pMode->CrtcHDisplay;
-    mode.mode_height = pMode->CrtcVDisplay;
-  }
 
-  mode.src_width = pMode->CrtcHDisplay;
-  mode.src_height = pMode->CrtcVDisplay;
+    if (pGeode->Output & OUTPUT_PANEL) {
+	mode.panel_width = mode.mode_width = pGeode->PanelX;
+	mode.panel_height = mode.mode_height = pGeode->PanelY;
 
-  mode.hactive = pMode->CrtcHDisplay;
-  mode.hblankstart = pMode->CrtcHBlankStart;
-  mode.hsyncstart = pMode->CrtcHSyncStart;
-  mode.hsyncend = pMode->CrtcHSyncEnd;
-  mode.hblankend = pMode->CrtcHBlankEnd;
-  mode.htotal = pMode->CrtcHTotal;
+	mode.flags |= VG_MODEFLAG_PANELOUT;
+	mode.flags |=
+	    pGeode->Output & OUTPUT_CRT ? VG_MODEFLAG_CRT_AND_FP : 0;
+    } else {
+	mode.mode_width = pMode->CrtcHDisplay;
+	mode.mode_height = pMode->CrtcVDisplay;
+    }
 
-  mode.vactive = pMode->CrtcVDisplay;
-  mode.vblankstart = pMode->CrtcVBlankStart;
-  mode.vsyncstart = pMode->CrtcVSyncStart;
-  mode.vsyncend = pMode->CrtcVSyncEnd;
-  mode.vblankend = pMode->CrtcVBlankEnd;
-  mode.vtotal = pMode->CrtcVTotal;
+    mode.src_width = pMode->CrtcHDisplay;
+    mode.src_height = pMode->CrtcVDisplay;
 
-  mode.vactive_even = pMode->CrtcVDisplay;
-  mode.vblankstart_even = pMode->CrtcVBlankStart;
-  mode.vsyncstart_even = pMode->CrtcVSyncStart;
-  mode.vsyncend_even = pMode->CrtcVSyncEnd;
-  mode.vblankend_even = pMode->CrtcVBlankEnd;
-  mode.vtotal_even = pMode->CrtcVTotal;
+    mode.hactive = pMode->CrtcHDisplay;
+    mode.hblankstart = pMode->CrtcHBlankStart;
+    mode.hsyncstart = pMode->CrtcHSyncStart;
+    mode.hsyncend = pMode->CrtcHSyncEnd;
+    mode.hblankend = pMode->CrtcHBlankEnd;
+    mode.htotal = pMode->CrtcHTotal;
 
-  mode.frequency = (int)((pMode->SynthClock / 1000.0) * 0x10000);
+    mode.vactive = pMode->CrtcVDisplay;
+    mode.vblankstart = pMode->CrtcVBlankStart;
+    mode.vsyncstart = pMode->CrtcVSyncStart;
+    mode.vsyncend = pMode->CrtcVSyncEnd;
+    mode.vblankend = pMode->CrtcVBlankEnd;
+    mode.vtotal = pMode->CrtcVTotal;
 
-  return vg_set_custom_mode(&mode, bpp);
+    mode.vactive_even = pMode->CrtcVDisplay;
+    mode.vblankstart_even = pMode->CrtcVBlankStart;
+    mode.vsyncstart_even = pMode->CrtcVSyncStart;
+    mode.vsyncend_even = pMode->CrtcVSyncEnd;
+    mode.vblankend_even = pMode->CrtcVBlankEnd;
+    mode.vtotal_even = pMode->CrtcVTotal;
+
+    mode.frequency = (int)((pMode->SynthClock / 1000.0) * 0x10000);
+
+    return vg_set_custom_mode(&mode, bpp);
 }
 
 static Bool
@@ -259,7 +267,6 @@ LXAllocateMemory(ScreenPtr pScrn, ScrnInfoPtr pScrni, int rotate)
 
     pGeode->displayWidth = pGeode->displayPitch / bytpp;
 
-
     /* Sets pGeode->Pitch and pScrni->displayWidth based on the rotate settings */
     LXSetRotatePitch(pScrni);
 
@@ -275,13 +282,13 @@ LXAllocateMemory(ScreenPtr pScrn, ScrnInfoPtr pScrni, int rotate)
 	size = pScrni->virtualY * LX_CB_PITCH;
 
 	if (size <= fbavail) {
-	  pGeode->CBData.compression_offset = fboffset;
-	  pGeode->CBData.size = LX_CB_PITCH;
-	  pGeode->CBData.pitch = LX_CB_PITCH;
-	  fboffset += size;
-	  fbavail -= size;
+	    pGeode->CBData.compression_offset = fboffset;
+	    pGeode->CBData.size = LX_CB_PITCH;
+	    pGeode->CBData.pitch = LX_CB_PITCH;
+	    fboffset += size;
+	    fbavail -= size;
 
-	  pGeode->Compression = TRUE;
+	    pGeode->Compression = TRUE;
 	} else {
 	    xf86DrvMsg(pScrni->scrnIndex, X_ERROR,
 		"Not enough memory for compression\n");
@@ -309,18 +316,18 @@ LXAllocateMemory(ScreenPtr pScrn, ScrnInfoPtr pScrni, int rotate)
     pGeode->exaBfrOffset = 0;
 
     if (!pGeode->NoAccel) {
-      if (pGeode->exaBfrSz > 0 && pGeode->exaBfrSz <= fbavail) {
-	pGeode->exaBfrOffset = fboffset;
-	fboffset += pGeode->exaBfrSz;
-	fbavail -= pGeode->exaBfrSz;
-      }
+	if (pGeode->exaBfrSz > 0 && pGeode->exaBfrSz <= fbavail) {
+	    pGeode->exaBfrOffset = fboffset;
+	    fboffset += pGeode->exaBfrSz;
+	    fbavail -= pGeode->exaBfrSz;
+	}
     }
 
     /* Adjust the available EXA offscreen space to account for the buffer */
 
     if (!pGeode->NoAccel && pGeode->pExa) {
-       pGeode->pExa->offScreenBase = fboffset;
-       pGeode->pExa->memorySize = fboffset + fbavail;
+	pGeode->pExa->offScreenBase = fboffset;
+	pGeode->pExa->memorySize = fboffset + fbavail;
     }
 
     return ret;
@@ -375,41 +382,41 @@ LXSaveScreen(ScreenPtr pScrn, int mode)
 static void
 LXReadMSR(unsigned long addr, unsigned long *lo, unsigned long *hi)
 {
-  if (GeodeReadMSR(addr, lo, hi) == -1) {
-    unsigned int l, h;
+    if (GeodeReadMSR(addr, lo, hi) == -1) {
+	unsigned int l, h;
 
-    LX_MSR_READ(addr, l, h);
-    *lo = l;
-    *hi = h;
-  }
+	LX_MSR_READ(addr, l, h);
+	*lo = l;
+	*hi = h;
+    }
 }
 
 static void
 LXWriteMSR(unsigned long addr, unsigned long lo, unsigned long hi)
 {
-  if (GeodeWriteMSR(addr, lo, hi) == -1)
-    LX_MSR_WRITE(addr, lo, hi);
+    if (GeodeWriteMSR(addr, lo, hi) == -1)
+	LX_MSR_WRITE(addr, lo, hi);
 }
 
 #ifdef XSERVER_LIBPCIACCESS
-static inline void * map_pci_mem(ScrnInfoPtr pScrni, int vram,
-				 struct pci_device *dev,
-				 int bar, int size)
+static inline void *
+map_pci_mem(ScrnInfoPtr pScrni, int vram,
+    struct pci_device *dev, int bar, int size)
 {
-  void *ptr;
-  void** result = (void**)&ptr;
-  int map_size = size ? size : dev->regions[bar].size;
-    
-  int err = pci_device_map_range(dev,
-				 dev->regions[bar].base_addr,
-				 map_size,
-				 PCI_DEV_MAP_FLAG_WRITABLE |
-				 (vram ? PCI_DEV_MAP_FLAG_WRITE_COMBINE : 0),
-				 result);
-  
-  if (err) 
-    return NULL;
-  return ptr;
+    void *ptr;
+    void **result = (void **)&ptr;
+    int map_size = size ? size : dev->regions[bar].size;
+
+    int err = pci_device_map_range(dev,
+	dev->regions[bar].base_addr,
+	map_size,
+	PCI_DEV_MAP_FLAG_WRITABLE |
+	(vram ? PCI_DEV_MAP_FLAG_WRITE_COMBINE : 0),
+	result);
+
+    if (err)
+	return NULL;
+    return ptr;
 }
 #endif
 
@@ -428,39 +435,40 @@ LXMapMem(ScrnInfoPtr pScrni)
     tag = pciTag(pci->bus, pci->device, pci->func);
 
     cim_gp_ptr = (unsigned char *)xf86MapPciMem(index, VIDMEM_MMIO,
-						tag, pci->memBase[1], LX_GP_REG_SIZE);
+	tag, pci->memBase[1], LX_GP_REG_SIZE);
 
     cim_vg_ptr = (unsigned char *)xf86MapPciMem(index, VIDMEM_MMIO,
-						tag, pci->memBase[2], LX_VG_REG_SIZE);
+	tag, pci->memBase[2], LX_VG_REG_SIZE);
 
     cim_vid_ptr = (unsigned char *)xf86MapPciMem(index, VIDMEM_MMIO,
-						 tag, pci->memBase[3], LX_VID_REG_SIZE);
-    
+	tag, pci->memBase[3], LX_VID_REG_SIZE);
+
     cim_vip_ptr = (unsigned char *)xf86MapPciMem(index, VIDMEM_MMIO,
-						 tag, pci->memBase[4], LX_VIP_REG_SIZE);
+	tag, pci->memBase[4], LX_VIP_REG_SIZE);
 
     cim_fb_ptr = (unsigned char *)xf86MapPciMem(index, VIDMEM_FRAMEBUFFER,
-						tag, pci->memBase[0], pGeode->FBAvail + CIM_CMD_BFR_SZ);
+	tag, pci->memBase[0], pGeode->FBAvail + CIM_CMD_BFR_SZ);
 #else
     cim_gp_ptr = map_pci_mem(pScrni, 0, pci, 1, LX_GP_REG_SIZE);
     cim_vg_ptr = map_pci_mem(pScrni, 0, pci, 2, LX_VG_REG_SIZE);
     cim_vid_ptr = map_pci_mem(pScrni, 0, pci, 3, LX_VID_REG_SIZE);
     cim_vip_ptr = map_pci_mem(pScrni, 0, pci, 4, LX_VIP_REG_SIZE);
-    cim_fb_ptr = map_pci_mem(pScrni, 1, pci, 0, pGeode->FBAvail + CIM_CMD_BFR_SZ);
+    cim_fb_ptr =
+	map_pci_mem(pScrni, 1, pci, 0, pGeode->FBAvail + CIM_CMD_BFR_SZ);
 #endif
 
     if (pScrni->memPhysBase == 0)
-      pScrni->memPhysBase = PCI_REGION_BASE(pci, 0, REGION_MEM);
-      
+	pScrni->memPhysBase = PCI_REGION_BASE(pci, 0, REGION_MEM);
 
     cmd_bfr_phys = PCI_REGION_BASE(pci, 0, REGION_MEM) + pGeode->CmdBfrOffset;
     cim_cmd_base_ptr = cim_fb_ptr + pGeode->CmdBfrOffset;
 
     if (!cim_gp_ptr || !cim_vg_ptr || !cim_vid_ptr || !cim_fb_ptr ||
 	!cim_vip_ptr)
-      return FALSE;
+	return FALSE;
 
-    gp_set_frame_buffer_base(PCI_REGION_BASE(pci, 0, REGION_MEM), pGeode->FBAvail);
+    gp_set_frame_buffer_base(PCI_REGION_BASE(pci, 0, REGION_MEM),
+	pGeode->FBAvail);
     gp_set_command_buffer_base(cmd_bfr_phys, 0, pGeode->CmdBfrSize);
 
     XpressROMPtr = xf86MapVidMem(index, VIDMEM_FRAMEBUFFER, 0xF0000, 0x10000);
@@ -468,7 +476,7 @@ LXMapMem(ScrnInfoPtr pScrni)
     pGeode->FBBase = cim_fb_ptr;
 
     if (!pGeode->NoAccel)
-      pGeode->pExa->memoryBase = pGeode->FBBase;
+	pGeode->pExa->memoryBase = pGeode->FBBase;
 
     xf86DrvMsg(index, X_INFO, "Geode LX video memory %x bytes at %p\n",
 	pGeode->FBAvail, pGeode->FBBase);
@@ -481,21 +489,24 @@ LXMapMem(ScrnInfoPtr pScrni)
 */
 
 static Bool
-LXCheckVGA(ScrnInfoPtr pScrni) {
+LXCheckVGA(ScrnInfoPtr pScrni)
+{
 
-  unsigned char *ptr;
-  const char *vgasig = "IBM VGA Compatible";
-  int ret;
+    unsigned char *ptr;
+    const char *vgasig = "IBM VGA Compatible";
+    int ret;
 
-  ptr = xf86MapVidMem(pScrni->scrnIndex, VIDMEM_FRAMEBUFFER, 0xC001E, strlen(vgasig));
+    ptr =
+	xf86MapVidMem(pScrni->scrnIndex, VIDMEM_FRAMEBUFFER, 0xC001E,
+	strlen(vgasig));
 
-  if (ptr == NULL)
-    return FALSE;
+    if (ptr == NULL)
+	return FALSE;
 
-  ret = memcmp(ptr, vgasig, strlen(vgasig));
-  xf86UnMapVidMem(pScrni->scrnIndex, (pointer) ptr, strlen(vgasig));
+    ret = memcmp(ptr, vgasig, strlen(vgasig));
+    xf86UnMapVidMem(pScrni->scrnIndex, (pointer) ptr, strlen(vgasig));
 
-  return ret ? FALSE : TRUE;
+    return ret ? FALSE : TRUE;
 }
 
 static Bool
@@ -511,18 +522,18 @@ LXPreInit(ScrnInfoPtr pScrni, int flags)
     Bool useVGA;
 
     if (pScrni->numEntities != 1)
-      return FALSE;
+	return FALSE;
 
     pEnt = xf86GetEntityInfo(pScrni->entityList[0]);
 
     if (pEnt->resources)
-      return FALSE;
+	return FALSE;
 
     useVGA = LXCheckVGA(pScrni);
 
     if (flags & PROBE_DETECT) {
 	if (useVGA)
-		GeodeProbeDDC(pScrni, pEnt->index);
+	    GeodeProbeDDC(pScrni, pEnt->index);
 
 	return TRUE;
     }
@@ -530,18 +541,17 @@ LXPreInit(ScrnInfoPtr pScrni, int flags)
     pGeode = pScrni->driverPrivate = xnfcalloc(sizeof(GeodeRec), 1);
 
     if (pGeode == NULL)
-      return FALSE;
+	return FALSE;
 
     pGeode->useVGA = useVGA;
     pGeode->VGAActive = FALSE;
     pGeode->pEnt = pEnt;
 
     if (pGeode->useVGA) {
-	if (!xf86LoadSubModule(pScrni, "vgahw") ||
-		!vgaHWGetHWRec(pScrni))
-		pGeode->useVGA = FALSE;
+	if (!xf86LoadSubModule(pScrni, "vgahw") || !vgaHWGetHWRec(pScrni))
+	    pGeode->useVGA = FALSE;
 
-        pGeode->vesa = xcalloc(sizeof(VESARec), 1);
+	pGeode->vesa = xcalloc(sizeof(VESARec), 1);
     }
 
     cim_rdmsr = LXReadMSR;
@@ -588,11 +598,11 @@ LXPreInit(ScrnInfoPtr pScrni, int flags)
      * here.
      */
     {
-        Gamma zeros = { 0.0, 0.0, 0.0 };
+	Gamma zeros = { 0.0, 0.0, 0.0 };
 
-        if (!xf86SetGamma(pScrni, zeros)) {
-            return FALSE;
-        }
+	if (!xf86SetGamma(pScrni, zeros)) {
+	    return FALSE;
+	}
     }
 
     pScrni->progClock = TRUE;
@@ -609,11 +619,11 @@ LXPreInit(ScrnInfoPtr pScrni, int flags)
 #if (EXA_VERSION_MAJOR < 2)
     pGeode->NoAccel = TRUE;
     xf86DrvMsg(pScrni->scrnIndex, X_ERROR,
-		"*** This driver was compiled with EXA version %d\n");
+	"*** This driver was compiled with EXA version %d\n");
     xf86DrvMsg(pScrni->scrnIndex, X_ERROR,
-		"*** we need version 2 or greater\n");
+	"*** we need version 2 or greater\n");
     xf86DrvMsg(pScrni->scrnIndex, X_ERROR,
-		"*** All accelerations are being turned off.\n");
+	"*** All accelerations are being turned off.\n");
 #else
     pGeode->NoAccel = FALSE;
 #endif
@@ -624,7 +634,7 @@ LXPreInit(ScrnInfoPtr pScrni, int flags)
 	&pGeode->tryHWCursor);
 
     if (!xf86GetOptValInteger(GeodeOptions, LX_OPTION_FBSIZE,
-			       &(pGeode->FBAvail)))
+	    &(pGeode->FBAvail)))
 	pGeode->FBAvail = 0;
 
     /* For compatability - allow SWCursor too */
@@ -642,15 +652,15 @@ LXPreInit(ScrnInfoPtr pScrni, int flags)
 
     if ((s = xf86GetOptValString(GeodeOptions, LX_OPTION_ROTATE))) {
 
-      if (!xf86NameCmp(s, "LEFT"))
-	pGeode->rotation = RR_Rotate_90;
-      else if (!xf86NameCmp(s, "INVERT"))
-	pGeode->rotation = RR_Rotate_180;
-      else if (!xf86NameCmp(s, "CCW"))
-	pGeode->rotation = RR_Rotate_270;
-      else
-	xf86DrvMsg(pScrni->scrnIndex, X_ERROR,
-		   "Invalid rotation %s.\n", s);
+	if (!xf86NameCmp(s, "LEFT"))
+	    pGeode->rotation = RR_Rotate_90;
+	else if (!xf86NameCmp(s, "INVERT"))
+	    pGeode->rotation = RR_Rotate_180;
+	else if (!xf86NameCmp(s, "CCW"))
+	    pGeode->rotation = RR_Rotate_270;
+	else
+	    xf86DrvMsg(pScrni->scrnIndex, X_ERROR,
+		"Invalid rotation %s.\n", s);
     }
 
     xf86GetOptValInteger(GeodeOptions, LX_OPTION_EXA_SCRATCH_BFRSZ,
@@ -660,8 +670,8 @@ LXPreInit(ScrnInfoPtr pScrni, int flags)
 	pGeode->exaBfrSz = 0;
 
     if (pGeode->Output & OUTPUT_PANEL) {
-      if (xf86ReturnOptValBool(GeodeOptions, LX_OPTION_NOPANEL, FALSE))
-	pGeode->Output &= ~OUTPUT_PANEL;
+	if (xf86ReturnOptValBool(GeodeOptions, LX_OPTION_NOPANEL, FALSE))
+	    pGeode->Output &= ~OUTPUT_PANEL;
     }
 
     panelgeo = xf86GetOptValString(GeodeOptions, LX_OPTION_PANEL_GEOMETRY);
@@ -675,13 +685,14 @@ LXPreInit(ScrnInfoPtr pScrni, int flags)
     if (dcon_init(pScrni)) {
 	pGeode->Output = OUTPUT_PANEL;
     } else if (pGeode->Output & OUTPUT_PANEL) {
-      if (panelgeo != NULL) 
-		GeodeGetFPGeometry(panelgeo, &pGeode->PanelX, &pGeode->PanelY);
-      else {
-	Bool ret = lx_get_panel(&pGeode->PanelX, &pGeode->PanelY);
-	if (ret == FALSE)
-	  pGeode->Output &= ~OUTPUT_PANEL;
-      }
+	if (panelgeo != NULL)
+	    GeodeGetFPGeometry(panelgeo, &pGeode->PanelX, &pGeode->PanelY);
+	else {
+	    Bool ret = lx_get_panel(&pGeode->PanelX, &pGeode->PanelY);
+
+	    if (ret == FALSE)
+		pGeode->Output &= ~OUTPUT_PANEL;
+	}
     }
 
     xf86DrvMsg(pScrni->scrnIndex, X_INFO, "LX output options:\n");
@@ -696,37 +707,38 @@ LXPreInit(ScrnInfoPtr pScrni, int flags)
 
     /* Set up VGA */
     if (pGeode->useVGA) {
-	    xf86LoaderReqSymLists(amdVgahwSymbols, NULL);
+	xf86LoaderReqSymLists(amdVgahwSymbols, NULL);
 
-	    VESARec *pVesa;
-	    
-	    if (!xf86LoadSubModule(pScrni, "int10"))
-	      return FALSE;
-	    
-	    xf86LoaderReqSymLists(amdInt10Symbols, NULL);
+	VESARec *pVesa;
 
-	    pVesa = pGeode->vesa;
+	if (!xf86LoadSubModule(pScrni, "int10"))
+	    return FALSE;
 
-	    if ((pVesa->pInt = xf86InitInt10(pGeode->pEnt->index)) == NULL) {
-		    xf86DrvMsg(pScrni->scrnIndex, X_ERROR,
-			       "Unable to initialize 1NT10 support\n");
-		    pGeode->useVGA = FALSE;
-	    }
+	xf86LoaderReqSymLists(amdInt10Symbols, NULL);
+
+	pVesa = pGeode->vesa;
+
+	if ((pVesa->pInt = xf86InitInt10(pGeode->pEnt->index)) == NULL) {
+	    xf86DrvMsg(pScrni->scrnIndex, X_ERROR,
+		"Unable to initialize 1NT10 support\n");
+	    pGeode->useVGA = FALSE;
+	}
     }
 
     /* Read the amount of framebuffer memory */
     /* First try to read it from the framebuffer, and if that fails,
      * do it the legacy way
      */
-    
-    if (pGeode->FBAvail  == 0) {
-        if (GeodeGetSizeFromFB(&pGeode->FBAvail)) {
-		unsigned long value;
-		cim_outw(0xAC1C, 0xFC53);
-		cim_outw(0xAC1C, 0x0200);
 
-		value = (unsigned long)(cim_inw(0xAC1E)) & 0xFE;
-		pGeode->FBAvail = value << 20;
+    if (pGeode->FBAvail == 0) {
+	if (GeodeGetSizeFromFB(&pGeode->FBAvail)) {
+	    unsigned long value;
+
+	    cim_outw(0xAC1C, 0xFC53);
+	    cim_outw(0xAC1C, 0x0200);
+
+	    value = (unsigned long)(cim_inw(0xAC1E)) & 0xFE;
+	    pGeode->FBAvail = value << 20;
 	}
     }
 
@@ -745,7 +757,7 @@ LXPreInit(ScrnInfoPtr pScrni, int flags)
     pGeode->FBAvail -= CIM_CMD_BFR_SZ;
 
     pGeode->CmdBfrOffset = pGeode->FBAvail;
-    
+
     pGeode->maxWidth = LX_MAX_WIDTH;
     pGeode->maxHeight = LX_MAX_HEIGHT;
 
@@ -800,10 +812,10 @@ LXPreInit(ScrnInfoPtr pScrni, int flags)
     xf86LoaderReqSymLists(amdFbSymbols, NULL);
 
     if (!pGeode->NoAccel) {
-      if (!xf86LoadSubModule(pScrni, "exa"))
-	return FALSE;
-      
-      xf86LoaderReqSymLists(&amdExaSymbols[0], NULL);
+	if (!xf86LoadSubModule(pScrni, "exa"))
+	    return FALSE;
+
+	xf86LoaderReqSymLists(&amdExaSymbols[0], NULL);
     }
 
     if (pGeode->tryHWCursor == TRUE) {
@@ -844,8 +856,10 @@ LXUnmapMem(ScrnInfoPtr pScrni)
 
     xf86UnMapVidMem(pScrni->scrnIndex, (pointer) cim_gp_ptr, LX_GP_REG_SIZE);
     xf86UnMapVidMem(pScrni->scrnIndex, (pointer) cim_vg_ptr, LX_VG_REG_SIZE);
-    xf86UnMapVidMem(pScrni->scrnIndex, (pointer) cim_vid_ptr, LX_VID_REG_SIZE);
-    xf86UnMapVidMem(pScrni->scrnIndex, (pointer) cim_vip_ptr, LX_VIP_REG_SIZE);
+    xf86UnMapVidMem(pScrni->scrnIndex, (pointer) cim_vid_ptr,
+	LX_VID_REG_SIZE);
+    xf86UnMapVidMem(pScrni->scrnIndex, (pointer) cim_vip_ptr,
+	LX_VIP_REG_SIZE);
 
     xf86UnMapVidMem(pScrni->scrnIndex, cim_fb_ptr, pGeode->FBAvail);
     xf86UnMapVidMem(pScrni->scrnIndex, XpressROMPtr, 0x10000);
@@ -862,12 +876,12 @@ LXAdjustFrame(int scrnIndex, int x, int y, int flags)
     GeodeRec *pGeode = GEODEPTR(pScrni);
 
     unsigned long offset;
-    
+
     /* XXX:  Is pitch correct here? */
 
     offset = pGeode->FBOffset + (y * pGeode->Pitch);
     offset += x * (pScrni->bitsPerPixel >> 3);
-    
+
     vg_set_display_offset(offset);
 }
 
@@ -883,7 +897,7 @@ LXSetVideoMode(ScrnInfoPtr pScrni, DisplayModePtr pMode)
     df_get_video_enable(&video_enable, &video_flags);
 
     if (video_enable != 0)
-        df_set_video_enable(0, 0);
+	df_set_video_enable(0, 0);
 
     df_get_video_source_configuration(&vs_odd, &vs_even);
     lx_disable_dac_power(pScrni, DF_CRT_DISABLE);
@@ -893,38 +907,36 @@ LXSetVideoMode(ScrnInfoPtr pScrni, DisplayModePtr pMode)
      * tables */
 
     if ((pMode->type & M_T_BUILTIN) || (pMode->type & M_T_DEFAULT)) {
-      if (pMode->Flags & V_NHSYNC)
-	flags |= VG_MODEFLAG_NEG_HSYNC;
-      if (pMode->Flags & V_NVSYNC)
-	flags |= VG_MODEFLAG_NEG_VSYNC;
-      
-      if (pGeode->Output & OUTPUT_PANEL) {
-	int activex = pGeode->PanelX;
-	int activey = pGeode->PanelY;
-	
-	flags = pGeode->Output & OUTPUT_CRT ? VG_MODEFLAG_CRT_AND_FP : 0;
+	if (pMode->Flags & V_NHSYNC)
+	    flags |= VG_MODEFLAG_NEG_HSYNC;
+	if (pMode->Flags & V_NVSYNC)
+	    flags |= VG_MODEFLAG_NEG_VSYNC;
 
-	if (pMode->CrtcHDisplay > 1024 &&
-	    pMode->CrtcHDisplay != pGeode->PanelX) {
-	  ErrorF("The source is greater then 1024 - scaling is disabled.\n");
-	  activex = pMode->CrtcHDisplay;
-	  activey = pMode->CrtcVDisplay;
-	  
-	  vg_set_border_color(0);
+	if (pGeode->Output & OUTPUT_PANEL) {
+	    int activex = pGeode->PanelX;
+	    int activey = pGeode->PanelY;
+
+	    flags = pGeode->Output & OUTPUT_CRT ? VG_MODEFLAG_CRT_AND_FP : 0;
+
+	    if (pMode->CrtcHDisplay > 1024 &&
+		pMode->CrtcHDisplay != pGeode->PanelX) {
+		ErrorF
+		    ("The source is greater then 1024 - scaling is disabled.\n");
+		activex = pMode->CrtcHDisplay;
+		activey = pMode->CrtcVDisplay;
+
+		vg_set_border_color(0);
+	    }
+
+	    vg_set_panel_mode(pMode->CrtcHDisplay, pMode->CrtcVDisplay,
+		activex, activey, activex, activey,
+		pScrni->bitsPerPixel, flags);
+	} else {
+	    vg_set_display_mode(pMode->CrtcHDisplay, pMode->CrtcVDisplay,
+		pMode->CrtcHDisplay, pMode->CrtcVDisplay,
+		pScrni->bitsPerPixel, GeodeGetRefreshRate(pMode), 0);
 	}
-
-	vg_set_panel_mode(pMode->CrtcHDisplay, pMode->CrtcVDisplay,
-			  activex, activey, activex, activey, 
-			  pScrni->bitsPerPixel, flags);
-      }
-      else {
-	vg_set_display_mode(pMode->CrtcHDisplay, pMode->CrtcVDisplay,
-			    pMode->CrtcHDisplay, pMode->CrtcVDisplay,
-			    pScrni->bitsPerPixel, GeodeGetRefreshRate(pMode), 
-			    0);
-      }
-    }
-    else {
+    } else {
 	/* For anything other then a default mode - use the passed in
 	 * timings */
 
@@ -932,30 +944,31 @@ LXSetVideoMode(ScrnInfoPtr pScrni, DisplayModePtr pMode)
     }
 
     if (pGeode->Output & OUTPUT_PANEL)
-      df_set_output_path((pGeode->Output & OUTPUT_CRT) ? DF_DISPLAY_CRT_FP : DF_DISPLAY_FP);
+	df_set_output_path((pGeode->
+		Output & OUTPUT_CRT) ? DF_DISPLAY_CRT_FP : DF_DISPLAY_FP);
     else
-      df_set_output_path(DF_DISPLAY_CRT);
-			 
+	df_set_output_path(DF_DISPLAY_CRT);
+
     vg_set_display_pitch(pGeode->Pitch);
     gp_set_bpp(pScrni->bitsPerPixel);
-   
+
     vg_set_display_offset(0);
     vg_wait_vertical_blank();
 
-    if (pGeode->Compression) {	    
-      vg_configure_compression(&(pGeode->CBData));
-      vg_set_compression_enable(1);
+    if (pGeode->Compression) {
+	vg_configure_compression(&(pGeode->CBData));
+	vg_set_compression_enable(1);
     }
 
     if (pGeode->HWCursor && !(pMode->Flags & V_DBLSCAN)) {
-      VG_PANNING_COORDINATES panning;
+	VG_PANNING_COORDINATES panning;
 
-      LXLoadCursorImage(pScrni, NULL);
-      vg_set_cursor_position(0, 0, &panning);
-      LXShowCursor(pScrni);
+	LXLoadCursorImage(pScrni, NULL);
+	vg_set_cursor_position(0, 0, &panning);
+	LXShowCursor(pScrni);
     } else {
-      vg_set_cursor_enable(0);
-      pGeode->HWCursor = FALSE;
+	vg_set_cursor_enable(0);
+	pGeode->HWCursor = FALSE;
     }
 
     LXAdjustFrame(pScrni->scrnIndex, pScrni->frameX0, pScrni->frameY0, 0);
@@ -963,7 +976,7 @@ LXSetVideoMode(ScrnInfoPtr pScrni, DisplayModePtr pMode)
     df_configure_video_source(&vs_odd, &vs_even);
 
     if (video_enable != 0)
-      df_set_video_enable(video_enable, video_flags);
+	df_set_video_enable(video_enable, video_flags);
 
     lx_enable_dac_power(pScrni, 1);
 
@@ -1008,44 +1021,43 @@ LXSwitchMode(int index, DisplayModePtr pMode, int flags)
 static void
 LXLeaveGraphics(ScrnInfoPtr pScrni)
 {
-  GeodeRec *pGeode = GEODEPTR(pScrni);
-  VG_PANNING_COORDINATES panning;
+    GeodeRec *pGeode = GEODEPTR(pScrni);
+    VG_PANNING_COORDINATES panning;
 
-  gp_wait_until_idle();
- 
-  lx_disable_dac_power(pScrni, DF_CRT_DISABLE);
+    gp_wait_until_idle();
 
-  vg_set_custom_mode(&(pGeode->FBcimdisplaytiming.vgDisplayMode),
-		     pGeode->FBcimdisplaytiming.wBpp);
-  
-  vg_set_compression_enable(0);
+    lx_disable_dac_power(pScrni, DF_CRT_DISABLE);
 
-  /* Restore the previous Compression state */
-  if (pGeode->FBCompressionEnable) {
-    vg_configure_compression(&(pGeode->FBCBData));
-    vg_set_compression_enable(1);
-  }
+    vg_set_custom_mode(&(pGeode->FBcimdisplaytiming.vgDisplayMode),
+	pGeode->FBcimdisplaytiming.wBpp);
 
-  vg_set_display_pitch(pGeode->FBcimdisplaytiming.wPitch);
-  vg_set_display_offset(pGeode->FBDisplayOffset);
-  
-  /* Restore Cursor */
-  vg_set_cursor_position(pGeode->FBCursor.cursor_x,
-			 pGeode->FBCursor.cursor_y, &panning);
-  
-  LXRestore(pScrni);
-  
-  if (pGeode->useVGA && pGeode->VGAActive) {
-    pGeode->vesa->pInt->num = 0x10;
-    pGeode->vesa->pInt->ax = 0x0 | pGeode->FBBIOSMode;
-    pGeode->vesa->pInt->bx = 0;
-    xf86ExecX86int10(pGeode->vesa->pInt);
-    vg_delay_milliseconds(3);
-  }
-  
+    vg_set_compression_enable(0);
 
-  lx_enable_dac_power(pScrni, 1);
-  pScrni->vtSema = FALSE;
+    /* Restore the previous Compression state */
+    if (pGeode->FBCompressionEnable) {
+	vg_configure_compression(&(pGeode->FBCBData));
+	vg_set_compression_enable(1);
+    }
+
+    vg_set_display_pitch(pGeode->FBcimdisplaytiming.wPitch);
+    vg_set_display_offset(pGeode->FBDisplayOffset);
+
+    /* Restore Cursor */
+    vg_set_cursor_position(pGeode->FBCursor.cursor_x,
+	pGeode->FBCursor.cursor_y, &panning);
+
+    LXRestore(pScrni);
+
+    if (pGeode->useVGA && pGeode->VGAActive) {
+	pGeode->vesa->pInt->num = 0x10;
+	pGeode->vesa->pInt->ax = 0x0 | pGeode->FBBIOSMode;
+	pGeode->vesa->pInt->bx = 0;
+	xf86ExecX86int10(pGeode->vesa->pInt);
+	vg_delay_milliseconds(3);
+    }
+
+    lx_enable_dac_power(pScrni, 1);
+    pScrni->vtSema = FALSE;
 }
 
 static Bool
@@ -1058,21 +1070,21 @@ LXCloseScreen(int scrnIndex, ScreenPtr pScrn)
 	LXLeaveGraphics(pScrni);
 
     if (pGeode->pExa) {
-      exaDriverFini(pScrn);
-      xfree(pGeode->pExa);
-      pGeode->pExa = NULL;
+	exaDriverFini(pScrn);
+	xfree(pGeode->pExa);
+	pGeode->pExa = NULL;
     }
 
     LXUnmapMem(pScrni);
 
     if (pGeode->useVGA)
-      vgaHWUnmapMem(pScrni);
+	vgaHWUnmapMem(pScrni);
 
     pScrni->PointerMoved = pGeode->PointerMoved;
     pScrn->CloseScreen = pGeode->CloseScreen;
 
     if (pScrn->CloseScreen)
-      return (*pScrn->CloseScreen)(scrnIndex, pScrn);
+	return (*pScrn->CloseScreen) (scrnIndex, pScrn);
 
     return TRUE;
 }
@@ -1080,83 +1092,85 @@ LXCloseScreen(int scrnIndex, ScreenPtr pScrn)
 static Bool
 LXEnterGraphics(ScreenPtr pScrn, ScrnInfoPtr pScrni)
 {
-  int bpp;
-  GeodeRec *pGeode = GEODEPTR(pScrni);
+    int bpp;
+    GeodeRec *pGeode = GEODEPTR(pScrni);
 
-  pGeode->curMode = NULL;
+    pGeode->curMode = NULL;
 
-  pGeode->VGAActive = gu3_get_vga_active();
+    pGeode->VGAActive = gu3_get_vga_active();
 
-  gp_wait_until_idle();
-  
-  //lx_disable_dac_power(pScrni, DF_CRT_DISABLE);
-  
-  vg_get_current_display_mode(&pGeode->FBcimdisplaytiming.vgDisplayMode, &bpp);
-  
-  //dump_previous(&pGeode->FBcimdisplaytiming.vgDisplayMode);
+    gp_wait_until_idle();
 
-  pGeode->FBcimdisplaytiming.wBpp = bpp;
-  pGeode->FBcimdisplaytiming.wPitch = vg_get_display_pitch();
+    //lx_disable_dac_power(pScrni, DF_CRT_DISABLE);
 
-  pGeode->FBDisplayOffset = vg_get_display_offset();
+    vg_get_current_display_mode(&pGeode->FBcimdisplaytiming.vgDisplayMode,
+	&bpp);
 
-  if (pGeode->useVGA && pGeode->VGAActive) {
-    vgaHWPtr pvgaHW = VGAHWPTR(pScrni);
-    pGeode->FBBIOSMode = pvgaHW->readCrtc(pvgaHW, 0x040);
-  }
-  
-  pGeode->FBCompressionEnable = vg_get_compression_enable();  
-  vg_get_compression_info(&(pGeode->FBCBData));
+    //dump_previous(&pGeode->FBcimdisplaytiming.vgDisplayMode);
 
-  /* Save Cursor offset */
-  vg_get_cursor_info(&pGeode->FBCursor);
+    pGeode->FBcimdisplaytiming.wBpp = bpp;
+    pGeode->FBcimdisplaytiming.wPitch = vg_get_display_pitch();
 
-  /* Turn off the VGA */
-  
-  if (pGeode->useVGA) {
-    unsigned short sequencer;
-    vgaHWPtr pvgaHW = VGAHWPTR(pScrni);
-        
-    /* Unlock VGA registers */
-    vgaHWUnlock(pvgaHW);
-    
+    pGeode->FBDisplayOffset = vg_get_display_offset();
+
+    if (pGeode->useVGA && pGeode->VGAActive) {
+	vgaHWPtr pvgaHW = VGAHWPTR(pScrni);
+
+	pGeode->FBBIOSMode = pvgaHW->readCrtc(pvgaHW, 0x040);
+    }
+
+    pGeode->FBCompressionEnable = vg_get_compression_enable();
+    vg_get_compression_info(&(pGeode->FBCBData));
+
+    /* Save Cursor offset */
+    vg_get_cursor_info(&pGeode->FBCursor);
+
+    /* Turn off the VGA */
+
+    if (pGeode->useVGA) {
+	unsigned short sequencer;
+	vgaHWPtr pvgaHW = VGAHWPTR(pScrni);
+
+	/* Unlock VGA registers */
+	vgaHWUnlock(pvgaHW);
+
 	/* Save the current state and setup the current mode */
-    vgaHWSave(pScrni, &VGAHWPTR(pScrni)->SavedReg, VGA_SR_ALL);
-    
-    /* DISABLE VGA SEQUENCER */
-    /* This allows the VGA state machine to terminate. We must delay */
-    /* such that there are no pending MBUS requests.  */
-    
-    cim_outb(DC3_SEQUENCER_INDEX, DC3_SEQUENCER_CLK_MODE);
-    sequencer = cim_inb(DC3_SEQUENCER_DATA);
-    sequencer |= DC3_CLK_MODE_SCREEN_OFF;
-    cim_outb(DC3_SEQUENCER_DATA, sequencer);
-    
-    vg_delay_milliseconds(1);
-    
-    /* BLANK THE VGA DISPLAY */
-    cim_outw(DC3_SEQUENCER_INDEX, DC3_SEQUENCER_RESET);
-    sequencer = cim_inb(DC3_SEQUENCER_DATA);
-    sequencer &= ~DC3_RESET_VGA_DISP_ENABLE;
-    cim_outb(DC3_SEQUENCER_DATA, sequencer);
-    
-    vg_delay_milliseconds(1);
-  }
-  
-  /* Set up the memory */
-  /* XXX - FIXME - when we alow inital rotation, it should be here */
-  LXAllocateMemory(pScrn, pScrni, pGeode->rotation);
-  
-  /* Clear the framebuffer */
-  memset(pGeode->FBBase + pGeode->displayOffset, 0, pGeode->displaySize);
+	vgaHWSave(pScrni, &VGAHWPTR(pScrni)->SavedReg, VGA_SR_ALL);
 
-  /* Set the video mode */
-  LXSetVideoMode(pScrni, pScrni->currentMode);
+	/* DISABLE VGA SEQUENCER */
+	/* This allows the VGA state machine to terminate. We must delay */
+	/* such that there are no pending MBUS requests.  */
 
-  pGeode->curMode = pScrni->currentMode;
-  pScrni->vtSema = TRUE;
+	cim_outb(DC3_SEQUENCER_INDEX, DC3_SEQUENCER_CLK_MODE);
+	sequencer = cim_inb(DC3_SEQUENCER_DATA);
+	sequencer |= DC3_CLK_MODE_SCREEN_OFF;
+	cim_outb(DC3_SEQUENCER_DATA, sequencer);
 
-  return TRUE;
+	vg_delay_milliseconds(1);
+
+	/* BLANK THE VGA DISPLAY */
+	cim_outw(DC3_SEQUENCER_INDEX, DC3_SEQUENCER_RESET);
+	sequencer = cim_inb(DC3_SEQUENCER_DATA);
+	sequencer &= ~DC3_RESET_VGA_DISP_ENABLE;
+	cim_outb(DC3_SEQUENCER_DATA, sequencer);
+
+	vg_delay_milliseconds(1);
+    }
+
+    /* Set up the memory */
+    /* XXX - FIXME - when we alow inital rotation, it should be here */
+    LXAllocateMemory(pScrn, pScrni, pGeode->rotation);
+
+    /* Clear the framebuffer */
+    memset(pGeode->FBBase + pGeode->displayOffset, 0, pGeode->displaySize);
+
+    /* Set the video mode */
+    LXSetVideoMode(pScrni, pScrni->currentMode);
+
+    pGeode->curMode = pScrni->currentMode;
+    pScrni->vtSema = TRUE;
+
+    return TRUE;
 }
 
 static void
@@ -1180,27 +1194,27 @@ LXLoadPalette(ScrnInfoPtr pScrni,
 static void
 LXDPMSSet(ScrnInfoPtr pScrni, int mode, int flags)
 {
-  GeodeRec *pGeode = GEODEPTR(pScrni);
+    GeodeRec *pGeode = GEODEPTR(pScrni);
 
-   if (!pScrni->vtSema)
+    if (!pScrni->vtSema)
 	return;
 
     switch (mode) {
     case DPMSModeOn:
-      lx_enable_dac_power(pScrni, 1);
-      break;
+	lx_enable_dac_power(pScrni, 1);
+	break;
 
     case DPMSModeStandby:
-      lx_disable_dac_power(pScrni, DF_CRT_STANDBY);
-      break;
+	lx_disable_dac_power(pScrni, DF_CRT_STANDBY);
+	break;
 
     case DPMSModeSuspend:
-      lx_disable_dac_power(pScrni, DF_CRT_SUSPEND);
-      break;
+	lx_disable_dac_power(pScrni, DF_CRT_SUSPEND);
+	break;
 
     case DPMSModeOff:
-      lx_disable_dac_power(pScrni, DF_CRT_DISABLE);
-      break;
+	lx_disable_dac_power(pScrni, DF_CRT_DISABLE);
+	break;
     }
 }
 
@@ -1257,41 +1271,41 @@ LXScreenInit(int scrnIndex, ScreenPtr pScrn, int argc, char **argv)
 
     if (pGeode->useVGA) {
 
-      if (!vgaHWMapMem(pScrni))
-	return FALSE;
+	if (!vgaHWMapMem(pScrni))
+	    return FALSE;
 
-      vgaHWGetIOBase(VGAHWPTR(pScrni));
+	vgaHWGetIOBase(VGAHWPTR(pScrni));
     }
-    
+
     if (!pGeode->NoAccel) {
 
-      pGeode->pExa = xnfcalloc(sizeof(ExaDriverRec), 1);
+	pGeode->pExa = xnfcalloc(sizeof(ExaDriverRec), 1);
 
-      if (pGeode->pExa) {
+	if (pGeode->pExa) {
 
-	/* THis is set in LXAllocMem */
-	pGeode->pExa->memoryBase = 0;
-	
-	/* This is set in LXAllocateMemory */
-	pGeode->pExa->memorySize = 0;
-	
-	pGeode->pExa->pixmapOffsetAlign = 32;
-	pGeode->pExa->pixmapPitchAlign = 32;
-	pGeode->pExa->flags = EXA_OFFSCREEN_PIXMAPS;
-	pGeode->pExa->maxX = pGeode->maxWidth - 1;
-	pGeode->pExa->maxY = pGeode->maxHeight - 1;
-      }
-      else {
-	xf86DrvMsg(scrnIndex, X_ERROR, "Couldn't allocate the EXA structure.\n");
-	pGeode->NoAccel = TRUE;
-      }
+	    /* THis is set in LXAllocMem */
+	    pGeode->pExa->memoryBase = 0;
+
+	    /* This is set in LXAllocateMemory */
+	    pGeode->pExa->memorySize = 0;
+
+	    pGeode->pExa->pixmapOffsetAlign = 32;
+	    pGeode->pExa->pixmapPitchAlign = 32;
+	    pGeode->pExa->flags = EXA_OFFSCREEN_PIXMAPS;
+	    pGeode->pExa->maxX = pGeode->maxWidth - 1;
+	    pGeode->pExa->maxY = pGeode->maxHeight - 1;
+	} else {
+	    xf86DrvMsg(scrnIndex, X_ERROR,
+		"Couldn't allocate the EXA structure.\n");
+	    pGeode->NoAccel = TRUE;
+	}
     }
 
     /* Map the memory here before doing anything else */
 
     if (!LXMapMem(pScrni))
-      return FALSE;
-  
+	return FALSE;
+
     /* XXX FIXME - Take down any of the structures on failure? */
     if (!LXEnterGraphics(pScrn, pScrni))
 	return FALSE;
@@ -1347,7 +1361,7 @@ LXScreenInit(int scrnIndex, ScreenPtr pScrn, int argc, char **argv)
     fbPictureInit(pScrn, 0, 0);
 
     if (!pGeode->NoAccel)
-      pGeode->NoAccel = LXExaInit(pScrn) ? FALSE : TRUE;
+	pGeode->NoAccel = LXExaInit(pScrn) ? FALSE : TRUE;
 
     miInitializeBackingStore(pScrn);
     xf86SetBackingStore(pScrn);
@@ -1382,7 +1396,7 @@ LXScreenInit(int scrnIndex, ScreenPtr pScrn, int argc, char **argv)
 #endif
 
     LXInitVideo(pScrn);
-    
+
     /* Set up RandR */
     /* We provide our own RandR goodness - disable the default */
     xf86DisableRandR();
@@ -1397,17 +1411,17 @@ LXScreenInit(int scrnIndex, ScreenPtr pScrn, int argc, char **argv)
 	rotate = RR_Rotate_0 | RR_Rotate_90 | RR_Rotate_180 | RR_Rotate_270;
 	shadowSetup(pScrn);
     } else {
-      LoaderErrorMsg(NULL, "shadow", maj, min);
-      xf86DrvMsg(pScrni->scrnIndex, X_ERROR,
-		 "Error loading shadow - rotation not available.\n");
-      
-      if (pGeode->rotation != RR_Rotate_0) 
+	LoaderErrorMsg(NULL, "shadow", maj, min);
 	xf86DrvMsg(pScrni->scrnIndex, X_ERROR,
-		   "Reverting back to normal rotation.\n");
-	
-      rotate = pGeode->rotation = RR_Rotate_0;      
+	    "Error loading shadow - rotation not available.\n");
+
+	if (pGeode->rotation != RR_Rotate_0)
+	    xf86DrvMsg(pScrni->scrnIndex, X_ERROR,
+		"Reverting back to normal rotation.\n");
+
+	rotate = pGeode->rotation = RR_Rotate_0;
     }
-    
+
     LXRandRInit(pScrn, rotate);
 
     pGeode->PointerMoved = pScrni->PointerMoved;
@@ -1440,42 +1454,44 @@ LXValidMode(int scrnIndex, DisplayModePtr pMode, Bool Verbose, int flags)
     /* For builtin and default modes, try to look up the mode in Cimarron */
 
     if ((pMode->type & M_T_BUILTIN) || (pMode->type & M_T_DEFAULT)) {
-      
-      if (pGeode->Output & OUTPUT_PANEL) {
 
-	/* Can't scale this mode */
-	
-	if ((pGeode->PanelY != pMode->CrtcHDisplay) &&
-	    pMode->CrtcHDisplay > 1024)
-	  return MODE_NOMODE;
-	
-	vgQueryMode.panel_width = pGeode->PanelX;
-	vgQueryMode.panel_height = pGeode->PanelY;
+	if (pGeode->Output & OUTPUT_PANEL) {
 
-	vgQueryMode.query_flags |= VG_QUERYFLAG_PANELWIDTH | VG_QUERYFLAG_PANELHEIGHT;
-      }
+	    /* Can't scale this mode */
 
-      vgQueryMode.active_width = pMode->CrtcHDisplay;
-      vgQueryMode.active_height = pMode->CrtcVDisplay;
-      vgQueryMode.bpp = pScrni->bitsPerPixel;
-      vgQueryMode.hz = GeodeGetRefreshRate(pMode);
-      vgQueryMode.query_flags |= VG_QUERYFLAG_REFRESH | VG_QUERYFLAG_BPP |
-	VG_QUERYFLAG_ACTIVEWIDTH | VG_QUERYFLAG_ACTIVEHEIGHT;
+	    if ((pGeode->PanelY != pMode->CrtcHDisplay) &&
+		pMode->CrtcHDisplay > 1024)
+		return MODE_NOMODE;
 
-      ret = vg_get_display_mode_index(&vgQueryMode);
+	    vgQueryMode.panel_width = pGeode->PanelX;
+	    vgQueryMode.panel_height = pGeode->PanelY;
 
-      if (ret < 0)
-	return MODE_BAD;
+	    vgQueryMode.query_flags |=
+		VG_QUERYFLAG_PANELWIDTH | VG_QUERYFLAG_PANELHEIGHT;
+	}
+
+	vgQueryMode.active_width = pMode->CrtcHDisplay;
+	vgQueryMode.active_height = pMode->CrtcVDisplay;
+	vgQueryMode.bpp = pScrni->bitsPerPixel;
+	vgQueryMode.hz = GeodeGetRefreshRate(pMode);
+	vgQueryMode.query_flags |= VG_QUERYFLAG_REFRESH | VG_QUERYFLAG_BPP |
+	    VG_QUERYFLAG_ACTIVEWIDTH | VG_QUERYFLAG_ACTIVEHEIGHT;
+
+	ret = vg_get_display_mode_index(&vgQueryMode);
+
+	if (ret < 0)
+	    return MODE_BAD;
     }
-    
+
     if (pGeode->tryCompression)
-      p = GeodeCalculatePitchBytes(pMode->CrtcHDisplay, pScrni->bitsPerPixel);
+	p = GeodeCalculatePitchBytes(pMode->CrtcHDisplay,
+	    pScrni->bitsPerPixel);
     else
-      p = ((pMode->CrtcHDisplay + 3) & ~3) * (pScrni->bitsPerPixel >> 3);
-    
+	p = ((pMode->CrtcHDisplay + 3) & ~3) * (pScrni->bitsPerPixel >> 3);
+
     if (p * pMode->CrtcVDisplay > pGeode->FBAvail)
-      return MODE_MEM;
-    
+	return MODE_MEM;
+
     return MODE_OK;
 }
 
@@ -1484,15 +1500,15 @@ LXValidMode(int scrnIndex, DisplayModePtr pMode, Bool Verbose, int flags)
 static Bool
 LXEnterVT(int scrnIndex, int flags)
 {
-  ScrnInfoPtr pScrni = xf86Screens[scrnIndex];
-  Bool ret = LXEnterGraphics(NULL, pScrni);
+    ScrnInfoPtr pScrni = xf86Screens[scrnIndex];
+    Bool ret = LXEnterGraphics(NULL, pScrni);
 
-  /* Reallocate a shadow area, if we need it */
+    /* Reallocate a shadow area, if we need it */
 
-  if (ret == TRUE)
-    ret = LXAllocShadow(pScrni);
+    if (ret == TRUE)
+	ret = LXAllocShadow(pScrni);
 
-  return ret;
+    return ret;
 }
 
 static void
@@ -1503,13 +1519,13 @@ LXLeaveVT(int scrnIndex, int flags)
 
     pGeode->PrevDisplayOffset = vg_get_display_offset();
     LXLeaveGraphics(xf86Screens[scrnIndex]);
-    
+
     /* Destroy any shadow area, if we have it */
-    
+
     if (pGeode->shadowArea != NULL) {
-      exaOffscreenFree(pScrni->pScreen, pGeode->shadowArea);
-      pGeode->shadowArea = NULL;
-    }    
+	exaOffscreenFree(pScrni->pScreen, pGeode->shadowArea);
+	pGeode->shadowArea = NULL;
+    }
 }
 
 void
@@ -1524,5 +1540,3 @@ LXSetupChipsetFPtr(ScrnInfoPtr pScrn)
     pScrn->FreeScreen = GeodeFreeScreen;
     pScrn->ValidMode = LXValidMode;
 }
-
-

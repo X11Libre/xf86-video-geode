@@ -1,29 +1,28 @@
  /*
   * (c) 2006 Advanced Micro Devices, Inc.
- *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
- * DEALINGS IN THE SOFTWARE.
- *
- * Neither the name of the Advanced Micro Devices, Inc. nor the names of its
- * contributors may be used to endorse or promote products derived from this
- * software without specific prior written permission.
- */
-
+  *
+  * Permission is hereby granted, free of charge, to any person obtaining a
+  * copy of this software and associated documentation files (the "Software"),
+  * to deal in the Software without restriction, including without limitation
+  * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+  * and/or sell copies of the Software, and to permit persons to whom the
+  * Software is furnished to do so, subject to the following conditions:
+  *
+  * The above copyright notice and this permission notice shall be included in
+  * all copies or substantial portions of the Software.
+  *
+  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+  * DEALINGS IN THE SOFTWARE.
+  *
+  * Neither the name of the Advanced Micro Devices, Inc. nor the names of its
+  * contributors may be used to endorse or promote products derived from this
+  * software without specific prior written permission.
+  */
 
 #ifndef _AMD_GEODE_H_
 #define _AMD_GEODE_H_
@@ -76,7 +75,7 @@
 #ifdef HAVE_GX
 #define GX_FILL_RECT_SUPPORT 1
 #define GX_BRES_LINE_SUPPORT 1
-#define GX_DASH_LINE_SUPPORT 0         /* does not do dashed lines */
+#define GX_DASH_LINE_SUPPORT 0	       /* does not do dashed lines */
 #define GX_MONO_8X8_PAT_SUPPORT 1
 #define GX_CLREXP_8X8_PAT_SUPPORT 1
 #define GX_SCR2SCREXP_SUPPORT 1
@@ -240,130 +239,130 @@ VESARec;
 
 typedef struct _geodeRec
 {
-  /* Common */
+    /* Common */
 
-  int Output;   /* Bitmask indicating the valid output options */
-  
-  Bool HWCursor;
-  Bool NoAccel;
-  Bool useVGA;
-  Bool VGAActive;       /* Flag indicating if LX VGA is active */
-  Bool Compression;
-  Bool useEXA;
+    int Output;			       /* Bitmask indicating the valid output options */
 
-  int rotation;
-  int displayWidth;
-  Bool starting;
-  Bool tryCompression;
-  Bool tryHWCursor;
-  unsigned int shadowSize;
-  unsigned int shadowOffset;
+    Bool HWCursor;
+    Bool NoAccel;
+    Bool useVGA;
+    Bool VGAActive;		       /* Flag indicating if LX VGA is active */
+    Bool Compression;
+    Bool useEXA;
 
-  ExaOffscreenArea *shadowArea;
+    int rotation;
+    int displayWidth;
+    Bool starting;
+    Bool tryCompression;
+    Bool tryHWCursor;
+    unsigned int shadowSize;
+    unsigned int shadowOffset;
 
-  DisplayModePtr curMode;
-  VG_COMPRESSION_DATA CBData;
-  
-  unsigned long CursorStartOffset;
-  unsigned int CursorSize;
-  xf86CursorInfoPtr CursorInfo;
-  int CursorXHot;
-  int CursorYHot;
+    ExaOffscreenArea *shadowArea;
 
-  /* Geometry information */  
-  unsigned int maxWidth;        /* Maximum possible width of the screen */
-  unsigned int maxHeight;       /* Maximum possible height of the screen */
-  
-  int Pitch;                         /* display FB pitch */
-  
-  int displayPitch;  /* The pitch ofthe visible area */
-  int displayOffset; /* The offset of the visible area */
-  int displaySize;   /* The size of the visibile area */
+    DisplayModePtr curMode;
+    VG_COMPRESSION_DATA CBData;
 
-  int PanelX;
-  int PanelY;
+    unsigned long CursorStartOffset;
+    unsigned int CursorSize;
+    xf86CursorInfoPtr CursorInfo;
+    int CursorXHot;
+    int CursorYHot;
 
-  /* Framebuffer memory */
+    /* Geometry information */
+    unsigned int maxWidth;	       /* Maximum possible width of the screen */
+    unsigned int maxHeight;	       /* Maximum possible height of the screen */
 
-  unsigned long FBLinearAddr;
-  unsigned char *FBBase;
-  unsigned int FBAvail;
-  unsigned int FBOffset;
-  unsigned int FBSize;
+    int Pitch;			       /* display FB pitch */
 
-  /* Video information */
-  int video_x;
-  int video_y;
-  short video_w;
-  short video_h;
-  short video_srcw;
-  short video_srch;
-  short video_dstw;
-  short video_dsth;
-  int video_id;
-  int video_offset;
-  ScrnInfoPtr video_scrnptr;
-  BOOL OverlayON;
-  int videoKey;
+    int displayPitch;		       /* The pitch ofthe visible area */
+    int displayOffset;		       /* The offset of the visible area */
+    int displaySize;		       /* The size of the visibile area */
 
-  /* EXA structures */
+    int PanelX;
+    int PanelY;
 
-  ExaDriverPtr pExa;
-  unsigned int exaBfrOffset;
-  unsigned int exaBfrSz;
-  
-  /* XAA structures */
-  unsigned char **AccelImageWriteBuffers;
-  int NoOfImgBuffers;
-  unsigned char **AccelColorExpandBuffers;
-  int NoOfColorExpandLines;
-  XAAInfoRecPtr AccelInfoRec;
+    /* Framebuffer memory */
 
-  /* Other structures */
+    unsigned long FBLinearAddr;
+    unsigned char *FBBase;
+    unsigned int FBAvail;
+    unsigned int FBOffset;
+    unsigned int FBSize;
 
-  EntityInfoPtr pEnt;
-  ScreenBlockHandlerProcPtr BlockHandler;     /* needed for video */
-  XF86VideoAdaptorPtr adaptor;
+    /* Video information */
+    int video_x;
+    int video_y;
+    short video_w;
+    short video_h;
+    short video_srcw;
+    short video_srch;
+    short video_dstw;
+    short video_dsth;
+    int video_id;
+    int video_offset;
+    ScrnInfoPtr video_scrnptr;
+    BOOL OverlayON;
+    int videoKey;
 
-  /* State save structures */
+    /* EXA structures */
 
-  gfx_vga_struct FBgfxVgaRegs;
-  TVTIMING FBtvtiming;
-  GFX_DISPLAYTIMING FBgfxdisplaytiming;
-  CIM_DISPLAYTIMING FBcimdisplaytiming;
+    ExaDriverPtr pExa;
+    unsigned int exaBfrOffset;
+    unsigned int exaBfrSz;
 
-  unsigned int FBTVActive;
-  unsigned int FBSupport;
-  unsigned long FBDisplayOffset;
-  unsigned long PrevDisplayOffset;
+    /* XAA structures */
+    unsigned char **AccelImageWriteBuffers;
+    int NoOfImgBuffers;
+    unsigned char **AccelColorExpandBuffers;
+    int NoOfColorExpandLines;
+    XAAInfoRecPtr AccelInfoRec;
 
-  VESARec *vesa;
-  
-  int FBCompressionEnable;
-  VG_COMPRESSION_DATA FBCBData;
-  VG_CURSOR_DATA FBCursor;
-  unsigned long FBCompressionOffset;
-  unsigned short FBCompressionPitch;
-  unsigned short FBCompressionSize;
-  
-  /* Save the Cursor offset of the FB */
-  unsigned long FBCursorOffset;
-  unsigned char FBBIOSMode;
-  
-  /* Hooks */
+    /* Other structures */
 
-  void (*WritePixmap) (ScrnInfoPtr pScrni, int x, int y, int w, int h,
-		       unsigned char *src, int srcwidth, int rop,
-		       unsigned int planemask, int trans, int bpp, int depth);
-  
-  void (*PointerMoved) (int index, int x, int y);
-  CloseScreenProcPtr CloseScreen;
-  Bool (*CreateScreenResources)(ScreenPtr);
+    EntityInfoPtr pEnt;
+    ScreenBlockHandlerProcPtr BlockHandler;	/* needed for video */
+    XF86VideoAdaptorPtr adaptor;
 
-  /* LX only */
+    /* State save structures */
 
-  unsigned long CmdBfrOffset;
-  unsigned long CmdBfrSize;
+    gfx_vga_struct FBgfxVgaRegs;
+    TVTIMING FBtvtiming;
+    GFX_DISPLAYTIMING FBgfxdisplaytiming;
+    CIM_DISPLAYTIMING FBcimdisplaytiming;
+
+    unsigned int FBTVActive;
+    unsigned int FBSupport;
+    unsigned long FBDisplayOffset;
+    unsigned long PrevDisplayOffset;
+
+    VESARec *vesa;
+
+    int FBCompressionEnable;
+    VG_COMPRESSION_DATA FBCBData;
+    VG_CURSOR_DATA FBCursor;
+    unsigned long FBCompressionOffset;
+    unsigned short FBCompressionPitch;
+    unsigned short FBCompressionSize;
+
+    /* Save the Cursor offset of the FB */
+    unsigned long FBCursorOffset;
+    unsigned char FBBIOSMode;
+
+    /* Hooks */
+
+    void (*WritePixmap) (ScrnInfoPtr pScrni, int x, int y, int w, int h,
+	unsigned char *src, int srcwidth, int rop,
+	unsigned int planemask, int trans, int bpp, int depth);
+
+    void (*PointerMoved) (int index, int x, int y);
+    CloseScreenProcPtr CloseScreen;
+        Bool(*CreateScreenResources) (ScreenPtr);
+
+    /* LX only */
+
+    unsigned long CmdBfrOffset;
+    unsigned long CmdBfrSize;
 
 #ifdef HAVE_TVSUPPORT
     Bool TVSupport;
@@ -383,20 +382,20 @@ typedef struct _geodeRec
     int TVOx, TVOy, TVOw, TVOh;
     Bool TV_Overscan_On;
 #endif
- 
-  /* To be killed! */
-  
-  int FBVGAActive;
-  unsigned int cpySrcOffset;
-  int cpySrcPitch, cpySrcBpp;
-  int cpyDx, cpyDy;
-  unsigned int cmpSrcOffset;
-  int cmpSrcPitch, cmpSrcBpp;
-  unsigned int cmpSrcFmt, cmpDstFmt;
-  int cmpOp;
 
-  Bool Panel;
-  
+    /* To be killed! */
+
+    int FBVGAActive;
+    unsigned int cpySrcOffset;
+    int cpySrcPitch, cpySrcBpp;
+    int cpyDx, cpyDy;
+    unsigned int cmpSrcOffset;
+    int cmpSrcPitch, cmpSrcBpp;
+    unsigned int cmpSrcFmt, cmpDstFmt;
+    int cmpOp;
+
+    Bool Panel;
+
 }
 GeodeRec, *GeodePtr;
 
@@ -464,7 +463,7 @@ extern int DCONDPMSSet(ScrnInfoPtr pScrni, int mode, int flags);
 /* amd_common.c */
 
 void geode_memory_to_screen_blt(unsigned long, unsigned long,
-				unsigned long, unsigned long, long, long, int);
+    unsigned long, unsigned long, long, long, int);
 int GeodeGetRefreshRate(DisplayModePtr);
 void GeodeCopyGreyscale(unsigned char *, unsigned char *, int, int, int, int);
 int GeodeGetSizeFromFB(unsigned int *);
@@ -473,8 +472,7 @@ int GeodeGetSizeFromFB(unsigned int *);
 
 int
 GeodeQueryImageAttributes(ScrnInfoPtr, int id, unsigned short *w,
-			  unsigned short *h, int *pitches, int *offsets);
-
+    unsigned short *h, int *pitches, int *offsets);
 
 Bool RegionsEqual(RegionPtr A, RegionPtr B);
 

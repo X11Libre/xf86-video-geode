@@ -1,5 +1,5 @@
 /* Copyrightg (c) 2006 Advanced Micro Devices, Inc.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
  * deal in the Software without restriction, including without limitation the
@@ -157,31 +157,31 @@ GXRotate(ScrnInfoPtr pScrni, DisplayModePtr mode)
     /* Don't use XAA pixmap cache or offscreen pixmaps when rotated */
 
     if (pGeode->AccelInfoRec) {
-        if (pGeode->rotation == RR_Rotate_0) {
-            pGeode->AccelInfoRec->Flags = LINEAR_FRAMEBUFFER | OFFSCREEN_PIXMAPS | PIXMAP_CACHE;
-            pGeode->AccelInfoRec->UsingPixmapCache = TRUE;
-            pGeode->AccelInfoRec->maxOffPixWidth = 0;
-            pGeode->AccelInfoRec->maxOffPixHeight = 0;
-        }
-        else {
-            pGeode->AccelInfoRec->Flags = LINEAR_FRAMEBUFFER;
-            pGeode->AccelInfoRec->UsingPixmapCache = FALSE;
-            pGeode->AccelInfoRec->maxOffPixWidth = 1;
-            pGeode->AccelInfoRec->maxOffPixHeight = 1;
-        }
+	if (pGeode->rotation == RR_Rotate_0) {
+	    pGeode->AccelInfoRec->Flags =
+		LINEAR_FRAMEBUFFER | OFFSCREEN_PIXMAPS | PIXMAP_CACHE;
+	    pGeode->AccelInfoRec->UsingPixmapCache = TRUE;
+	    pGeode->AccelInfoRec->maxOffPixWidth = 0;
+	    pGeode->AccelInfoRec->maxOffPixHeight = 0;
+	} else {
+	    pGeode->AccelInfoRec->Flags = LINEAR_FRAMEBUFFER;
+	    pGeode->AccelInfoRec->UsingPixmapCache = FALSE;
+	    pGeode->AccelInfoRec->maxOffPixWidth = 1;
+	    pGeode->AccelInfoRec->maxOffPixHeight = 1;
+	}
     }
 
     return TRUE;
 
-error:
+  error:
     /* Restore the old rotation */
     pScrni->displayWidth = curdw;
 
     if (curr & (RR_Rotate_0 | RR_Rotate_180)) {
-        pScrni->pScreen->width = pScrni->virtualX;
-        pScrni->pScreen->height = pScrni->virtualY;
+	pScrni->pScreen->width = pScrni->virtualX;
+	pScrni->pScreen->height = pScrni->virtualY;
     } else {
-        pScrni->pScreen->width = pScrni->virtualY;
+	pScrni->pScreen->width = pScrni->virtualY;
 	pScrni->pScreen->height = pScrni->virtualX;
     }
 

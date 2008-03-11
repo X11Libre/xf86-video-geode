@@ -2,7 +2,7 @@
  * Copyright (C) 2002 Keith Packard, member of The XFree86 Project, Inc.
 
  * Copyright (c) 2006 Advanced Micro Devices, Inc.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
  * deal in the Software without restriction, including without limitation the
@@ -60,13 +60,14 @@ typedef struct _GXRandRInfo
 #if AMD_OLDPRIV
 
 static int GXRandRIndex;
+
 #define XF86RANDRINFO(p) ((XF86RandRInfoPtr) (p)->devPrivates[GXRandRIndex].ptr)
 #else
 
 static DevPrivateKey GXRandRKey;
+
 #define XF86RANDRINFO(p) ((XF86RandRInfoPtr) \
 			  dixLookupPrivate(&(p)->devPrivates, GXRandRKey));
-
 
 #endif
 
@@ -208,7 +209,7 @@ GXRandRSetMode(ScreenPtr pScreen,
      * Get the new Screen pixmap ptr as SwitchMode might have called
      * ModifyPixmapHeader and xf86EnableDisableFBAccess will put it back...
      * Unfortunately.
-     
+
      */
 
     pspix = (*pScreen->GetScreenPixmap) (pScreen);
@@ -314,7 +315,6 @@ GXRandRInit(ScreenPtr pScreen, int rotation)
     if (GXRandRGeneration != serverGeneration) {
 	GXRandRGeneration = serverGeneration;
     }
-
 #if AMD_OLDPRIV
     GXRandRIndex = AllocateScreenPrivateIndex();
 #else

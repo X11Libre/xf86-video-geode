@@ -50,15 +50,15 @@ LXHWCursorInit(ScreenPtr pScrn)
 
     infoPtr = xf86CreateCursorInfoRec();
     if (!infoPtr)
-        return FALSE;
+	return FALSE;
     /* the geode structure is intiallized with the cursor infoRec */
     pGeode->CursorInfo = infoPtr;
     infoPtr->MaxWidth = 32;
     infoPtr->MaxHeight = 32;
     /* seeting up the cursor flags */
     infoPtr->Flags = HARDWARE_CURSOR_BIT_ORDER_MSBFIRST |
-        HARDWARE_CURSOR_TRUECOLOR_AT_8BPP |
-        HARDWARE_CURSOR_SOURCE_MASK_NOT_INTERLEAVED;
+	HARDWARE_CURSOR_TRUECOLOR_AT_8BPP |
+	HARDWARE_CURSOR_SOURCE_MASK_NOT_INTERLEAVED;
 
     infoPtr->SetCursorColors = LXSetCursorColors;
     infoPtr->SetCursorPosition = LXSetCursorPosition;
@@ -73,7 +73,7 @@ LXHWCursorInit(ScreenPtr pScrn)
 static void
 LXSetCursorColors(ScrnInfoPtr pScrni, int bg, int fg)
 {
-  vg_set_mono_cursor_colors(bg, fg);
+    vg_set_mono_cursor_colors(bg, fg);
 }
 
 static void
@@ -89,40 +89,47 @@ LXSetCursorPosition(ScrnInfoPtr pScrni, int x, int y)
     savex = x + pScrni->frameX0;
     savey = y + pScrni->frameY0;
 
-    switch(pGeode->rotation) {
+    switch (pGeode->rotation) {
     default:
-        ErrorF("%s:%d invalid rotation %d\n", __func__, __LINE__, pGeode->rotation);
+	ErrorF("%s:%d invalid rotation %d\n", __func__, __LINE__,
+	    pGeode->rotation);
     case RR_Rotate_0:
-      newX = savex; newY = savey;
-      hsx= 31; hsy = 31;
-      break;
+	newX = savex;
+	newY = savey;
+	hsx = 31;
+	hsy = 31;
+	break;
 
     case RR_Rotate_270:
-      newX = savey;
-      newY = pScrni->pScreen->width - savex;
-      hsx= 31; hsy = 0;
-      break;
+	newX = savey;
+	newY = pScrni->pScreen->width - savex;
+	hsx = 31;
+	hsy = 0;
+	break;
 
     case RR_Rotate_180:
-      newX = pScrni->pScreen->width - savex;
-      newY = pScrni->pScreen->height - savey;
-      hsx = 0; hsy = 0;
-      break;
+	newX = pScrni->pScreen->width - savex;
+	newY = pScrni->pScreen->height - savey;
+	hsx = 0;
+	hsy = 0;
+	break;
 
     case RR_Rotate_90:
-      newX = pScrni->pScreen->height - savey;
-      newY = savex;
-      hsx= 0; hsy= 31;
-      break;
+	newX = pScrni->pScreen->height - savey;
+	newY = savex;
+	hsx = 0;
+	hsy = 31;
+	break;
     }
 
     newX -= pScrni->frameX0;
     newY -= pScrni->frameY0;
 
     {
-      VG_PANNING_COORDINATES panning;
-      vg_set_cursor_position(newX + hsx, newY + hsy, &panning);
-   }
+	VG_PANNING_COORDINATES panning;
+
+	vg_set_cursor_position(newX + hsx, newY + hsy, &panning);
+    }
 
     vg_set_cursor_enable(1);
 
@@ -140,54 +147,55 @@ LXLoadCursorImage(ScrnInfoPtr pScrni, unsigned char *src)
     unsigned char *mskp = &src[128];
 
     if (src != NULL) {
-        mskb = rowb = 0;
-        for (y = 32; --y >= 0;)
-            andMask[y] = xorMask[y] = 0;
-        for (y = 0; y < 32; ++y) {
-            for (x = 0; x < 32; ++x) {
-                if ((i = x & 7) == 0) {
-                    rowb = (*rowp & *mskp);
-                    mskb = ~(*mskp);
-                    ++rowp;
-                    ++mskp;
-                }
-
-		switch(pGeode->rotation) {
-		default:
-                    ErrorF("%s:%d invalid rotation %d\n", __func__, __LINE__,
-                        pGeode->rotation);
-		case RR_Rotate_0:
-			newX = x;
-			newY = y;
-			break;
-		case RR_Rotate_270:
-			 newX = y;
-			 newY = 31 - x;
-			 break;
-		case RR_Rotate_180:
-			newX = 31 - x;
-			newY = 31 - y;
-			break;
-		case RR_Rotate_90:
-			newX = 31 - y;
-			newY = x;
-			break;
+	mskb = rowb = 0;
+	for (y = 32; --y >= 0;)
+	    andMask[y] = xorMask[y] = 0;
+	for (y = 0; y < 32; ++y) {
+	    for (x = 0; x < 32; ++x) {
+		if ((i = x & 7) == 0) {
+		    rowb = (*rowp & *mskp);
+		    mskb = ~(*mskp);
+		    ++rowp;
+		    ++mskp;
 		}
 
-                i = 7 - i;
-                n = 31 - newX;
-                andMask[newY] |= (((mskb >> i) & 1) << n);
-                xorMask[newY] |= (((rowb >> i) & 1) << n);
-            }
-        }
+		switch (pGeode->rotation) {
+		default:
+		    ErrorF("%s:%d invalid rotation %d\n", __func__, __LINE__,
+			pGeode->rotation);
+		case RR_Rotate_0:
+		    newX = x;
+		    newY = y;
+		    break;
+		case RR_Rotate_270:
+		    newX = y;
+		    newY = 31 - x;
+		    break;
+		case RR_Rotate_180:
+		    newX = 31 - x;
+		    newY = 31 - y;
+		    break;
+		case RR_Rotate_90:
+		    newX = 31 - y;
+		    newY = x;
+		    break;
+		}
+
+		i = 7 - i;
+		n = 31 - newX;
+		andMask[newY] |= (((mskb >> i) & 1) << n);
+		xorMask[newY] |= (((rowb >> i) & 1) << n);
+	    }
+	}
     } else {
-        for (y = 32; --y >= 0;) {
-            andMask[y] = ~0;
-            xorMask[y] = 0;
-        }
+	for (y = 32; --y >= 0;) {
+	    andMask[y] = ~0;
+	    xorMask[y] = 0;
+	}
     }
 
-    vg_set_mono_cursor_shape32(pGeode->CursorStartOffset,&andMask[0],&xorMask[0],31,31);
+    vg_set_mono_cursor_shape32(pGeode->CursorStartOffset, &andMask[0],
+	&xorMask[0], 31, 31);
 }
 
 void

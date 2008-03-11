@@ -6,60 +6,63 @@
 #include <sys/errno.h>
 #include "os.h"
 
-static int _msr_open(void)
+static int
+_msr_open(void)
 {
-  static int msrfd = 0;
+    static int msrfd = 0;
 
-  if (msrfd == 0) {
-    msrfd = open("/dev/cpu/0/msr", O_RDWR);
-    if (msrfd == -1)
-      ErrorF("Unable to open /dev/cpu/0/msr: %d\n", errno);
-  }
+    if (msrfd == 0) {
+	msrfd = open("/dev/cpu/0/msr", O_RDWR);
+	if (msrfd == -1)
+	    ErrorF("Unable to open /dev/cpu/0/msr: %d\n", errno);
+    }
 
-  return msrfd;
+    return msrfd;
 }
 
-int GeodeReadMSR(unsigned long addr, unsigned long *lo, unsigned long *hi)
+int
+GeodeReadMSR(unsigned long addr, unsigned long *lo, unsigned long *hi)
 {
-  unsigned int data[2];
-  int fd = _msr_open();
-  int ret;
+    unsigned int data[2];
+    int fd = _msr_open();
+    int ret;
 
-  if (fd == -1)
-    return -1;
-  
-  ret = lseek64(fd, (off64_t) addr, SEEK_SET);
-  
-  if (ret == -1)
-    return -1;
-  
-  ret = read(fd, (void *) data, sizeof(data));
-  
-  if (ret != 8) 
-    return -1;
+    if (fd == -1)
+	return -1;
 
-  *hi = data[1];
-  *lo = data[0];
+    ret = lseek64(fd, (off64_t) addr, SEEK_SET);
 
-  return 0;
+    if (ret == -1)
+	return -1;
+
+    ret = read(fd, (void *)data, sizeof(data));
+
+    if (ret != 8)
+	return -1;
+
+    *hi = data[1];
+    *lo = data[0];
+
+    return 0;
 }
 
-int GeodeWriteMSR(unsigned long addr, unsigned long lo, unsigned long hi)
+int
+GeodeWriteMSR(unsigned long addr, unsigned long lo, unsigned long hi)
 {
-  unsigned int data[2];
-  int fd = _msr_open();
+    unsigned int data[2];
+    int fd = _msr_open();
 
-  if (fd == -1)
-    return - 1;
+    if (fd == -1)
+	return -1;
 
-  if (lseek64(fd, (off64_t) addr, SEEK_SET) == -1)
-    return -1;
+    if (lseek64(fd, (off64_t) addr, SEEK_SET) == -1)
+	return -1;
 
-  data[0] = lo;
-  data[1] = hi;
+    data[0] = lo;
+    data[1] = hi;
 
-  if (write(fd, (void *) data, 8) != 8)
-    return -1;
+    if (write(fd, (void *)data, 8) != 8)
+	return -1;
 
-  return 0;
+    return 0;
 }

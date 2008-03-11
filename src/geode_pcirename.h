@@ -29,9 +29,10 @@
 #ifndef CIRPCIRENAME_H
 #define CIRPCIRENAME_H
 
-enum region_type {
+enum region_type
+{
     REGION_MEM,
-    REGION_IO 
+    REGION_IO
 };
 
 #ifndef XSERVER_LIBPCIACCESS

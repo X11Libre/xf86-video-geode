@@ -24,16 +24,16 @@
  * */
 
 /*
- * This is the main file used to add Durango graphics support to a software 
+ * This is the main file used to add Durango graphics support to a software
  * project.  The main reason to have a single file include the other files
  * is that it centralizes the location of the compiler options.  This file
  * should be tuned for a specific implementation, and then modified as needed
  * for new Durango releases.  The releases.txt file indicates any updates to
- * this main file, such as a new definition for a new hardware platform. 
+ * this main file, such as a new definition for a new hardware platform.
  *
  * In other words, this file should be copied from the Durango source files
- * once when a software project starts, and then maintained as necessary.  
- * It should not be recopied with new versions of Durango unless the 
+ * once when a software project starts, and then maintained as necessary.
+ * It should not be recopied with new versions of Durango unless the
  * developer is willing to tune the file again for the specific project.
  * */
 
@@ -171,15 +171,15 @@ gfx_mono_bitmap_to_screen_blt_swp(unsigned short srcx, unsigned short srcy,
     offset = (unsigned long)srcy *pitch + ((unsigned long)srcx >> 3);
 
     dstoffset = (unsigned long)dsty *gu2_pitch +
-        (((unsigned long)dstx) << gu2_xshift);
+	(((unsigned long)dstx) << gu2_xshift);
 
     /* CHECK IF PATTERN ORIGINS NEED TO BE SET */
 
     if (GFXpatternFlags) {
-        /* COMBINE X AND Y PATTERN ORIGINS WITH OFFSET */
+	/* COMBINE X AND Y PATTERN ORIGINS WITH OFFSET */
 
-        dstoffset |= ((unsigned long)(dstx & 7)) << 26;
-        dstoffset |= ((unsigned long)(dsty & 7)) << 29;
+	dstoffset |= ((unsigned long)(dstx & 7)) << 26;
+	dstoffset |= ((unsigned long)(dsty & 7)) << 29;
     }
 
     bytes = ((srcx & 7) + width + 7) >> 3;
@@ -200,7 +200,7 @@ gfx_mono_bitmap_to_screen_blt_swp(unsigned short srcx, unsigned short srcy,
     WRITE_GP32(MGP_WID_HEIGHT, size);
     WRITE_GP32(MGP_STRIDE, gu2_pitch);
     WRITE_GP16(MGP_BLT_MODE,
-        gu2_blt_mode | MGP_BM_SRC_HOST | MGP_BM_SRC_MONO);
+	gu2_blt_mode | MGP_BM_SRC_HOST | MGP_BM_SRC_MONO);
 
     /* WAIT FOR BLT TO BE LATCHED */
 
@@ -209,34 +209,34 @@ gfx_mono_bitmap_to_screen_blt_swp(unsigned short srcx, unsigned short srcy,
     /* WRITE ALL OF THE DATA TO THE HOST SOURCE REGISTER */
 
     while (height--) {
-        temp_offset = offset;
+	temp_offset = offset;
 
-        /* WRITE ALL FULL FIFO LINES */
+	/* WRITE ALL FULL FIFO LINES */
 
-        for (i = 0; i < fifo_lines; i++) {
-            GU2_WAIT_HALF_EMPTY;
-            WRITE_GPREG_STRING32_SWP(MGP_HST_SOURCE, 8, j, data, temp_offset,
-                temp1);
-            temp_offset += 32;
-        }
+	for (i = 0; i < fifo_lines; i++) {
+	    GU2_WAIT_HALF_EMPTY;
+	    WRITE_GPREG_STRING32_SWP(MGP_HST_SOURCE, 8, j, data, temp_offset,
+		temp1);
+	    temp_offset += 32;
+	}
 
-        /* WRITE ALL FULL DWORDS */
+	/* WRITE ALL FULL DWORDS */
 
-        GU2_WAIT_HALF_EMPTY;
-        if (dwords_extra) {
-            WRITE_GPREG_STRING32_SWP(MGP_HST_SOURCE, dwords_extra, i, data,
-                temp_offset, temp1);
-            temp_offset += (dwords_extra << 2);
-        }
+	GU2_WAIT_HALF_EMPTY;
+	if (dwords_extra) {
+	    WRITE_GPREG_STRING32_SWP(MGP_HST_SOURCE, dwords_extra, i, data,
+		temp_offset, temp1);
+	    temp_offset += (dwords_extra << 2);
+	}
 
-        /* WRITE REMAINING BYTES */
+	/* WRITE REMAINING BYTES */
 
-        shift = 0;
-        if (bytes_extra)
-            WRITE_GPREG_STRING8(MGP_HST_SOURCE, bytes_extra, shift, i, data,
-                temp_offset, temp1, temp2);
+	shift = 0;
+	if (bytes_extra)
+	    WRITE_GPREG_STRING8(MGP_HST_SOURCE, bytes_extra, shift, i, data,
+		temp_offset, temp1, temp2);
 
-        offset += pitch;
+	offset += pitch;
     }
 }
 
@@ -260,37 +260,37 @@ GetVideoMemSize(void)
     /* Calculate total memory size for GXm. */
 
     for (i = 0; i < 2; i++) {
-        if (((mcBankCfg >> dimmShift) & 0x7) != 0x7) {
-            switch ((mcBankCfg >> (dimmShift + 4)) & 0x7) {
-            case 0:
-                totalMem += 0x400000;
-                break;
-            case 1:
-                totalMem += 0x800000;
-                break;
-            case 2:
-                totalMem += 0x1000000;
-                break;
-            case 3:
-                totalMem += 0x2000000;
-                break;
-            case 4:
-                totalMem += 0x4000000;
-                break;
-            case 5:
-                totalMem += 0x8000000;
-                break;
-            case 6:
-                totalMem += 0x10000000;
-                break;
-            case 7:
-                totalMem += 0x20000000;
-                break;
-            default:
-                break;
-            }
-        }
-        dimmShift += 16;
+	if (((mcBankCfg >> dimmShift) & 0x7) != 0x7) {
+	    switch ((mcBankCfg >> (dimmShift + 4)) & 0x7) {
+	    case 0:
+		totalMem += 0x400000;
+		break;
+	    case 1:
+		totalMem += 0x800000;
+		break;
+	    case 2:
+		totalMem += 0x1000000;
+		break;
+	    case 3:
+		totalMem += 0x2000000;
+		break;
+	    case 4:
+		totalMem += 0x4000000;
+		break;
+	    case 5:
+		totalMem += 0x8000000;
+		break;
+	    case 6:
+		totalMem += 0x10000000;
+		break;
+	    case 7:
+		totalMem += 0x20000000;
+		break;
+	    default:
+		break;
+	    }
+	}
+	dimmShift += 16;
     }
 
     /* Calculate graphics memory base address */
