@@ -37,11 +37,11 @@
 #include "xf86.h"
 #include "exa.h"
 
-#include "amd.h"
+#include "geode.h"
 #include "cim_defs.h"
 #include "cim_regs.h"
 
-#include "amd_blend.h"
+#include "geode_blend.h"
 
 static const struct exa_format_t {
   int exa;

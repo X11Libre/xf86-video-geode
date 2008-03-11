@@ -49,13 +49,13 @@
 #include "xf86_OSproc.h"
 #include "xf86Pci.h"
 #include "xf86PciInfo.h"
-#include "amd.h"
+#include "geode.h"
 #include "gfx_defs.h"
 #include "gfx_regs.h"
 
 /* Common macros for blend operations are here */
 
-#include "amd_blend.h"
+#include "geode_blend.h"
 
 #undef ulong
 typedef unsigned long ulong;

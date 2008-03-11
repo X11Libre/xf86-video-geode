@@ -11,11 +11,11 @@ suppport dynamic rotation with XRandR, and Xv overlay support.
 
 = Configuration options =
 
-You can specify the AMD driver in the normal fashion:
+You can specify the Geode driver in the normal fashion:
 
 Section "Device"
 	Identifier "AMD Geode"
-	Driver "amd"
+	Driver "geode"
 	Option "blah" "blah"
 	...
 EndSection

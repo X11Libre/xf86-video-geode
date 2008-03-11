@@ -33,17 +33,16 @@
 #include "xf86.h"
 #include "xf86Priv.h"
 #include "xf86DDC.h"
-#include "xf86Module.h"
 #include "mipointer.h"
 #include "windowstr.h"
 #include <X11/extensions/randr.h>
 #include <randrstr.h>
 
-#include "amd.h"
+#include "geode.h"
 
-static int GXRandRGeneration;
+static int LXRandRGeneration;
 
-typedef struct _GXRandRInfo
+typedef struct _LXRandRInfo
 {
     int virtualX;
     int virtualY;
@@ -56,22 +55,21 @@ typedef struct _GXRandRInfo
 } XF86RandRInfoRec, *XF86RandRInfoPtr;
 
 #define AMD_OLDPRIV (GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 4)
-
 #if AMD_OLDPRIV
 
-static int GXRandRIndex;
-#define XF86RANDRINFO(p) ((XF86RandRInfoPtr) (p)->devPrivates[GXRandRIndex].ptr)
+static int LXRandRIndex;
+#define XF86RANDRINFO(p) ((XF86RandRInfoPtr) (p)->devPrivates[LXRandRIndex].ptr)
+
 #else
 
-static DevPrivateKey GXRandRKey;
+static DevPrivateKey LXRandRKey;
 #define XF86RANDRINFO(p) ((XF86RandRInfoPtr) \
-			  dixLookupPrivate(&(p)->devPrivates, GXRandRKey));
-
+			  dixLookupPrivate(&(p)->devPrivates, LXRandRKey));
 
 #endif
 
 static int
-GXRandRModeRefresh(DisplayModePtr mode)
+LXRandRModeRefresh(DisplayModePtr mode)
 {
     if (mode->VRefresh)
 	return (int)(mode->VRefresh + 0.5);
@@ -81,7 +79,7 @@ GXRandRModeRefresh(DisplayModePtr mode)
 }
 
 static Bool
-GXRandRGetInfo(ScreenPtr pScreen, Rotation * rotations)
+LXRandRGetInfo(ScreenPtr pScreen, Rotation * rotations)
 {
     RRScreenSizePtr pSize;
     ScrnInfoPtr pScrni = XF86SCRNINFO(pScreen);
@@ -98,7 +96,7 @@ GXRandRGetInfo(ScreenPtr pScreen, Rotation * rotations)
     }
 
     for (mode = pScrni->modes;; mode = mode->next) {
-	int refresh = GXRandRModeRefresh(mode);
+	int refresh = LXRandRModeRefresh(mode);
 
 	if (pRandr->maxX == 0 || pRandr->maxY == 0) {
 	    if (maxX < mode->HDisplay)
@@ -152,7 +150,7 @@ GXRandRGetInfo(ScreenPtr pScreen, Rotation * rotations)
 }
 
 static Bool
-GXRandRSetMode(ScreenPtr pScreen,
+LXRandRSetMode(ScreenPtr pScreen,
     DisplayModePtr mode, Bool useVirtual, int mmWidth, int mmHeight)
 {
     ScrnInfoPtr pScrni = XF86SCRNINFO(pScreen);
@@ -227,7 +225,7 @@ GXRandRSetMode(ScreenPtr pScreen,
 }
 
 Bool
-GXRandRSetConfig(ScreenPtr pScreen, Rotation rotation,
+LXRandRSetConfig(ScreenPtr pScreen, Rotation rotation,
     int rate, RRScreenSizePtr pSize)
 {
     ScrnInfoPtr pScrni = XF86SCRNINFO(pScreen);
@@ -257,7 +255,7 @@ GXRandRSetConfig(ScreenPtr pScreen, Rotation rotation,
 	}
 	if (mode->HDisplay == pSize->width &&
 	    mode->VDisplay == pSize->height &&
-	    (rate == 0 || GXRandRModeRefresh(mode) == rate))
+	    (rate == 0 || LXRandRModeRefresh(mode) == rate))
 	    break;
 	if (mode->next == pScrni->modes) {
 	    if (pSize->width == pRandr->virtualX &&
@@ -279,7 +277,7 @@ GXRandRSetConfig(ScreenPtr pScreen, Rotation rotation,
 	pRandr->maxY = maxY;
     }
 
-    if (!GXRandRSetMode(pScreen, mode, useVirtual, pSize->mmWidth,
+    if (!LXRandRSetMode(pScreen, mode, useVirtual, pSize->mmWidth,
 	    pSize->mmHeight)) {
 	pRandr->rotation = oldRotation;
 	return FALSE;
@@ -298,27 +296,27 @@ GXRandRSetConfig(ScreenPtr pScreen, Rotation rotation,
 }
 
 Rotation
-GXGetRotation(ScreenPtr pScreen)
+LXGetRotation(ScreenPtr pScreen)
 {
     XF86RandRInfoPtr pRandr = XF86RANDRINFO(pScreen);
 
-    return pRandr->rotation;
+    return pRandr ? pRandr->rotation : RR_Rotate_0;
 }
 
 Bool
-GXRandRInit(ScreenPtr pScreen, int rotation)
+LXRandRInit(ScreenPtr pScreen, int rotation)
 {
     XF86RandRInfoPtr pRandr;
     rrScrPrivPtr rp;
 
-    if (GXRandRGeneration != serverGeneration) {
-	GXRandRGeneration = serverGeneration;
+    if (LXRandRGeneration != serverGeneration) {
+	LXRandRGeneration = serverGeneration;
     }
 
 #if AMD_OLDPRIV
-    GXRandRIndex = AllocateScreenPrivateIndex();
+    LXRandRIndex = AllocateScreenPrivateIndex();
 #else
-    GXRandRKey = &GXRandRKey;
+    LXRandRKey = &LXRandRKey;
 #endif
 
     pRandr = xcalloc(sizeof(XF86RandRInfoRec), 1);
@@ -331,8 +329,8 @@ GXRandRInit(ScreenPtr pScreen, int rotation)
     }
 
     rp = rrGetScrPriv(pScreen);
-    rp->rrGetInfo = GXRandRGetInfo;
-    rp->rrSetConfig = GXRandRSetConfig;
+    rp->rrGetInfo = LXRandRGetInfo;
+    rp->rrSetConfig = LXRandRSetConfig;
 
     pRandr->virtualX = -1;
     pRandr->virtualY = -1;
@@ -345,9 +343,9 @@ GXRandRInit(ScreenPtr pScreen, int rotation)
     pRandr->maxX = pRandr->maxY = 0;
 
 #if AMD_OLDPRIV
-    pScreen->devPrivates[GXRandRIndex].ptr = pRandr;
+    pScreen->devPrivates[LXRandRIndex].ptr = pRandr;
 #else
-    dixSetPrivate(&pScreen->devPrivates, GXRandRKey, pRandr);
+    dixSetPrivate(&pScreen->devPrivates, LXRandRKey, pRandr);
 #endif
     return TRUE;
 }

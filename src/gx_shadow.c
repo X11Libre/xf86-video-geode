@@ -39,7 +39,7 @@
 #include "xf86Resources.h"
 #include "xf86PciInfo.h"
 #include "xf86Pci.h"
-#include "amd.h"
+#include "geode.h"
 #include "shadowfb.h"
 #include "servermd.h"
 

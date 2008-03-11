@@ -31,7 +31,7 @@
 #include "xf86_OSproc.h"
 #include "xf86Pci.h"
 #include "xf86PciInfo.h"
-#include "amd.h"
+#include "geode.h"
 
 /* Forward declarations of the functions */
 static void LXSetCursorColors(ScrnInfoPtr pScrni, int bg, int fg);

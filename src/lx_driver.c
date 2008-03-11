@@ -65,10 +65,10 @@
 #include "randrstr.h"
 #include "cim_defs.h"
 #include "cim_regs.h"
-#include "amd.h"
+#include "geode.h"
 
 /* Bring in VGA functions */
-#include "amd_lx_vga.c"
+#include "lx_vga.c"
 
 /* Chipset types */
 

@@ -33,7 +33,7 @@
 #include <xf86Resources.h>
 #include <compiler.h>
 
-#include "amd.h"
+#include "geode.h"
 #include <unistd.h>
 
 static Bool

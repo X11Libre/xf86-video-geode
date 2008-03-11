@@ -29,7 +29,7 @@
 
 #include "xf86.h"
 #include "shadow.h"
-#include "amd.h"
+#include "geode.h"
 
 static void 
 LXShadowSave(ScreenPtr pScreen, ExaOffscreenArea *area)

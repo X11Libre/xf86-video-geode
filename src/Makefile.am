@@ -34,38 +34,38 @@ AM_CFLAGS = @XORG_CFLAGS@ \
    -DLINUX_2_6 @AMD_CFLAGS@
 
 AM_CCASFLAGS = @XORG_CFLAGS@
-amd_drv_la_LTLIBRARIES = amd_drv.la
-amd_drv_la_LDFLAGS = -module -avoid-version
-amd_drv_ladir = @moduledir@/drivers
+geode_drv_la_LTLIBRARIES = geode_drv.la
+geode_drv_la_LDFLAGS = -module -avoid-version
+geode_drv_ladir = @moduledir@/drivers
 
-amd_drv_la_SOURCES = \
-        amd.h \
-	amd_blend.h \
-        amd_fourcc.h \
+geode_drv_la_SOURCES = \
+        geode.h \
+	geode_blend.h \
+        geode_fourcc.h \
         build_num.h \
         cim_dev.h \
-        amd_driver.c \
-	amd_common.c \
-        amd_dcon.c \
-	amd_msr.c \
-        amd_gx_driver.c\
-        amd_gx_accel.c \
-        amd_gx_cursor.c \
-        amd_gx_video.c \
-        amd_gx_regacc.c \
-        amd_gx_rotate.c \
-        amd_gx_randr.c \
+        geode_driver.c \
+	geode_common.c \
+        geode_dcon.c \
+	geode_msr.c \
+        gx_driver.c\
+        gx_accel.c \
+        gx_cursor.c \
+        gx_video.c \
+        gx_regacc.c \
+        gx_rotate.c \
+        gx_randr.c \
         durango.c \
         panel.c \
-        amd_lx_driver.c \
-        amd_lx_cursor.c \
-        amd_lx_video.c \
-        amd_lx_regacc.c \
-	amd_lx_rotate.c \
-	amd_lx_randr.c \
-	amd_lx_exa.c \
+        lx_driver.c \
+        lx_cursor.c \
+        lx_video.c \
+        lx_regacc.c \
+	lx_rotate.c \
+	lx_randr.c \
+	lx_exa.c \
         cimarron.c \
-	amd_pcirename.h
+	geode_pcirename.h
 
 EXTRA_DIST = \
         cim/cim_defs.h \
@@ -138,8 +138,8 @@ EXTRA_DIST = \
         panel/pnl_init.c \
         panel/readme.txt \
   \
-        amd_gx_vga.c \
-        amd_lx_vga.c
+        gx_vga.c \
+        lx_vga.c
 
 ztv_drv_la_LTLIBRARIES = ztv_drv.la
 ztv_drv_la_LDFLAGS = -module -avoid-version

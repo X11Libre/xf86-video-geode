@@ -28,7 +28,7 @@
 #ifndef _AMD_GEODE_H_
 #define _AMD_GEODE_H_
 
-#include "amd_pcirename.h"
+#include "geode_pcirename.h"
 
 #include "xaa.h"
 #include "exa.h"

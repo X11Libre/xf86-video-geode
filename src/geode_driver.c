@@ -25,10 +25,10 @@
  */
 
 /*
- * File Contents: This is the main module configures the interfacing 
- *                with the X server. The individual modules will be 
- *                loaded based upon the options selected from the 
- *                XF86Config. This file also has modules for finding 
+ * File Contents: This is the main module configures the interfacing
+ *                with the X server. The individual modules will be
+ *                loaded based upon the options selected from the
+ *                XF86Config. This file also has modules for finding
  *                supported modes, turning on the modes based on options.
  *
  * Project:       Amd Xfree Frame buffer device driver.
@@ -48,7 +48,7 @@
 #include "xf86Pci.h"
 #include "xf86cmap.h"
 
-#include "amd.h"
+#include "geode.h"
 #include "build_num.h"
 
 #define RC_MAX_DEPTH 24
@@ -81,7 +81,7 @@
 #define AMD_NAME            "AMD"
 #define AMD_DRIVER_NAME     "amd"
 #define _id(n,m)			n##m
-#define _cat(n,m) 			_id(n,m)
+#define _cat(n,m)			_id(n,m)
 #define AMD_VERSION_CURRENT ((_cat(0x,_MAJOR) << 24) | \
 							(_cat(0x,_MINOR) << 16) | (_cat(0x,_BL) << 8) \
 							| _cat(0x,_BLREV))
@@ -89,18 +89,20 @@
 /* Forward definitions */
 static const OptionInfoRec *AmdAvailableOptions(int chipid, int busid);
 static void AmdIdentify(int);
+
 #ifdef XSERVER_LIBPCIACCESS
 static Bool AmdPciProbe(DriverPtr, int, struct pci_device *, intptr_t);
 #else
 static Bool AmdProbe(DriverPtr, int);
 #endif
 
-
 #ifdef XSERVER_LIBPCIACCESS
 static const struct pci_id_match amdDeviceMatch[] = {
-    { PCI_VENDOR_ID_NS, PCI_CHIP_REDCLOUD, PCI_MATCH_ANY, PCI_MATCH_ANY, 0, 0, 0 },
-    { PCI_VENDOR_ID_AMD, PCI_CHIP_GEODELX, PCI_MATCH_ANY, PCI_MATCH_ANY, 0, 0, 0 },
-    { 0, 0, 0 }
+    {PCI_VENDOR_ID_NS, PCI_CHIP_REDCLOUD, PCI_MATCH_ANY, PCI_MATCH_ANY, 0, 0,
+	    0},
+    {PCI_VENDOR_ID_AMD, PCI_CHIP_GEODELX, PCI_MATCH_ANY, PCI_MATCH_ANY, 0, 0,
+	    0},
+    {0, 0, 0}
 };
 #endif /* XSERVER_LIBPCIACCESS */
 
@@ -200,8 +202,8 @@ OptionInfoRec LX_GeodeOptions[] = {
     {LX_OPTION_NOPANEL, "NoPanel", OPTV_BOOLEAN, {0}, FALSE},
     {LX_OPTION_COLOR_KEY, "ColorKey", OPTV_INTEGER, {0}, FALSE},
     {LX_OPTION_EXA_SCRATCH_BFRSZ, "ExaScratch", OPTV_INTEGER, {0}, FALSE},
-    {LX_OPTION_FBSIZE, "FBSize", OPTV_INTEGER, {0}, FALSE },
-    {LX_OPTION_PANEL_GEOMETRY, "PanelGeometry", OPTV_STRING, {0}, FALSE },
+    {LX_OPTION_FBSIZE, "FBSize", OPTV_INTEGER, {0}, FALSE},
+    {LX_OPTION_PANEL_GEOMETRY, "PanelGeometry", OPTV_STRING, {0}, FALSE},
     {-1, NULL, OPTV_NONE, {0}, FALSE}
 };
 
@@ -224,8 +226,8 @@ OptionInfoRec GX_GeodeOptions[] = {
     {GX_OPTION_COLOR_KEY, "ColorKey", OPTV_INTEGER, {0}, FALSE},
     {GX_OPTION_OSM_IMG_BUFS, "OSMImageBuffers", OPTV_INTEGER, {0}, FALSE},
     {GX_OPTION_OSM_CLR_BUFS, "OSMColorExpBuffers", OPTV_INTEGER, {0}, FALSE},
-    {GX_OPTION_FBSIZE, "FBSize", OPTV_INTEGER, {0}, FALSE },
-    {GX_OPTION_PANEL_GEOMETRY, "PanelGeometry", OPTV_STRING, {0}, FALSE },
+    {GX_OPTION_FBSIZE, "FBSize", OPTV_INTEGER, {0}, FALSE},
+    {GX_OPTION_PANEL_GEOMETRY, "PanelGeometry", OPTV_STRING, {0}, FALSE},
     {-1, NULL, OPTV_NONE, {0}, FALSE}
 };
 #endif
@@ -312,8 +314,8 @@ static XF86ModuleVersionInfo AmdVersionRec = {
     GET_MODULE_MAJOR_VERSION(AMD_VERSION_CURRENT),
     GET_MODULE_MINOR_VERSION(AMD_VERSION_CURRENT),
     (GET_MODULE_PATCHLEVEL(AMD_VERSION_CURRENT) >> 8) * 100 +
-        (GET_MODULE_PATCHLEVEL(AMD_VERSION_CURRENT) & 0xff),
-    ABI_CLASS_VIDEODRV,                /* This is a video driver */
+	(GET_MODULE_PATCHLEVEL(AMD_VERSION_CURRENT) & 0xff),
+    ABI_CLASS_VIDEODRV,		       /* This is a video driver */
     ABI_VIDEODRV_VERSION,
     MOD_CLASS_VIDEODRV,
     {0, 0, 0, 0}
@@ -328,8 +330,8 @@ static XF86ModuleVersionInfo GeodeVersionRec = {
     GET_MODULE_MAJOR_VERSION(AMD_VERSION_CURRENT),
     GET_MODULE_MINOR_VERSION(AMD_VERSION_CURRENT),
     (GET_MODULE_PATCHLEVEL(AMD_VERSION_CURRENT) >> 8) * 100 +
-        (GET_MODULE_PATCHLEVEL(AMD_VERSION_CURRENT) & 0xff),
-    ABI_CLASS_VIDEODRV,                /* This is a video driver */
+	(GET_MODULE_PATCHLEVEL(AMD_VERSION_CURRENT) & 0xff),
+    ABI_CLASS_VIDEODRV,		       /* This is a video driver */
     ABI_VIDEODRV_VERSION,
     MOD_CLASS_VIDEODRV,
     {0, 0, 0, 0}
@@ -338,25 +340,24 @@ static XF86ModuleVersionInfo GeodeVersionRec = {
 static pointer
 GeodeSetup(pointer Module, pointer Options, int *ErrorMajor, int *ErrorMinor)
 {
-	static Bool init = FALSE;
-	int flag = 0;
+    static Bool init = FALSE;
+    int flag = 0;
 
 #ifdef XSERVER_LIBPCIACCESS
-	flag = HaveDriverFuncs;
+    flag = HaveDriverFuncs;
 #endif
-	if (init) {
-		*ErrorMajor = LDR_ONCEONLY;
-		return (pointer) NULL;
-	}
+    if (init) {
+	*ErrorMajor = LDR_ONCEONLY;
+	return (pointer) NULL;
+    }
 
-	init = TRUE;
-	xf86AddDriver(&GEODE, Module, flag);
+    init = TRUE;
+    xf86AddDriver(&GEODE, Module, flag);
 
-	LoaderRefSymLists(amdVgahwSymbols, amdVbeSymbols,
-			  amdFbSymbols, amdXaaSymbols,
-		          amdInt10Symbols, amdRamdacSymbols, NULL);
+    LoaderRefSymLists(amdVgahwSymbols, amdVbeSymbols,
+	amdFbSymbols, amdXaaSymbols, amdInt10Symbols, amdRamdacSymbols, NULL);
 
-	return (pointer) TRUE;
+    return (pointer) TRUE;
 }
 
 static pointer
@@ -365,32 +366,33 @@ AmdSetup(pointer Module, pointer Options, int *ErrorMajor, int *ErrorMinor)
     static Bool Initialised = FALSE;
 
     if (!Initialised) {
-        Initialised = TRUE;
-        xf86AddDriver(&AMD, Module,
+	Initialised = TRUE;
+	xf86AddDriver(&AMD, Module,
 #ifdef XSERVER_LIBPCIACCESS
-                      HaveDriverFuncs
+	    HaveDriverFuncs
 #else
-                      0
+	    0
 #endif
-                      );
+	    );
 
-        /* Tell the loader about symbols from other modules that this
-         * module might refer to.
-         */
-        LoaderRefSymLists(amdVgahwSymbols, amdVbeSymbols,
-            amdFbSymbols, amdXaaSymbols,
-            amdInt10Symbols, amdRamdacSymbols, NULL);
-        return (pointer) TRUE;
+	/* Tell the loader about symbols from other modules that this
+	 * module might refer to.
+	 */
+	LoaderRefSymLists(amdVgahwSymbols, amdVbeSymbols,
+	    amdFbSymbols, amdXaaSymbols,
+	    amdInt10Symbols, amdRamdacSymbols, NULL);
+	return (pointer) TRUE;
     }
 
     /*The return value must be non-NULL on success */
     if (ErrorMajor)
-        *ErrorMajor = LDR_ONCEONLY;
+	*ErrorMajor = LDR_ONCEONLY;
     return NULL;
 }
 
 _X_EXPORT XF86ModuleData amdModuleData = { &AmdVersionRec, AmdSetup, NULL };
-_X_EXPORT XF86ModuleData geodeModuleData = { &GeodeVersionRec, GeodeSetup, NULL };
+_X_EXPORT XF86ModuleData geodeModuleData =
+    { &GeodeVersionRec, GeodeSetup, NULL };
 
 #endif /*End of XFree86Loader */
 
@@ -403,9 +405,9 @@ _X_EXPORT XF86ModuleData geodeModuleData = { &GeodeVersionRec, GeodeSetup, NULL 
  * Parameters.
  *    flags		:	flags may be used in PreInit*
  *
- * Returns		: 	none
+ * Returns		:	none
  *
- * Comments     : 	none
+ * Comments     :	none
  *
 *------------------------------------------------------------------------
 */
@@ -436,11 +438,11 @@ AmdAvailableOptions(int chipid, int busid)
     switch (chipid) {
 #ifdef HAVE_LX
     case PCI_CHIP_GEODELX:
-        return LX_GeodeOptions;
+	return LX_GeodeOptions;
 #endif
 #ifdef HAVE_GX
     case PCI_CHIP_REDCLOUD:
-        return GX_GeodeOptions;
+	return GX_GeodeOptions;
 #endif
     }
     return no_GeodeOptions;
@@ -450,9 +452,7 @@ AmdAvailableOptions(int chipid, int busid)
 
 static Bool
 AmdPciProbe(DriverPtr driver,
-            int entity_num,
-            struct pci_device *device,
-            intptr_t match_data)
+    int entity_num, struct pci_device *device, intptr_t match_data)
 {
     ScrnInfoPtr scrn = NULL;
     int cpu_detected;
@@ -460,34 +460,33 @@ AmdPciProbe(DriverPtr driver,
     ErrorF("AmdPciProbe: Probing for supported devices!\n");
 
     scrn = xf86ConfigPciEntity(scrn, 0, entity_num, GeodePCIchipsets,
-                               NULL, NULL, NULL, NULL, NULL);
+	NULL, NULL, NULL, NULL, NULL);
 
-    if (scrn != NULL)
-    {
-        scrn->driverName = AMD_DRIVER_NAME;
-        scrn->name = AMD_NAME;
-        scrn->Probe = NULL;
+    if (scrn != NULL) {
+	scrn->driverName = AMD_DRIVER_NAME;
+	scrn->name = AMD_NAME;
+	scrn->Probe = NULL;
 
-        switch (device->device_id) {
+	switch (device->device_id) {
 #ifdef HAVE_LX
-        case PCI_CHIP_GEODELX:
-            cpu_detected = LX;
-            LXSetupChipsetFPtr(scrn);
-            break;
+	case PCI_CHIP_GEODELX:
+	    cpu_detected = LX;
+	    LXSetupChipsetFPtr(scrn);
+	    break;
 #endif
 #ifdef HAVE_GX
-        case PCI_CHIP_REDCLOUD:
-            cpu_detected = GX2;
-            GXSetupChipsetFPtr(scrn);
-            break;
+	case PCI_CHIP_REDCLOUD:
+	    cpu_detected = GX2;
+	    GXSetupChipsetFPtr(scrn);
+	    break;
 #endif
-        default:
-            ErrorF("AmdPciProbe: unknown device ID\n");
-            return FALSE;
-        }
+	default:
+	    ErrorF("AmdPciProbe: unknown device ID\n");
+	    return FALSE;
+	}
 
-        DEBUGMSG(1, (0, X_INFO, "AmdPciProbe: CPUDetected %d!\n",
-                     cpu_detected));
+	DEBUGMSG(1, (0, X_INFO, "AmdPciProbe: CPUDetected %d!\n",
+		cpu_detected));
     }
     return scrn != NULL;
 }
@@ -503,7 +502,7 @@ AmdPciProbe(DriverPtr driver,
  * Parameters.
  *     drv	:a pointer to the geode driver
  *     flags    :flags may passed to check the config and probe detect
- * 												
+ * 
  * Returns	:TRUE on success and FALSE on failure.
  *
  * Comments     :This should ne minimal probe and it should under no
@@ -530,82 +529,82 @@ AmdProbe(DriverPtr drv, int flags)
      * * driver, and return if there are none.
      */
     if ((numDevSections = xf86MatchDevice(AMD_NAME, &devSections)) <= 0) {
-        DEBUGMSG(1, (0, X_INFO, "AmdProbe: failed 1!\n"));
-        return FALSE;
+	DEBUGMSG(1, (0, X_INFO, "AmdProbe: failed 1!\n"));
+	return FALSE;
     }
     DEBUGMSG(1, (0, X_INFO, "AmdProbe: Before MatchPciInstances!\n"));
     /* PCI BUS */
     if (xf86GetPciVideoInfo()) {
-        numUsed = xf86MatchPciInstances(AMD_NAME, PCI_VENDOR_ID_NS,
-            GeodeChipsets, GeodePCIchipsets,
-            devSections, numDevSections, drv, &usedChips);
+	numUsed = xf86MatchPciInstances(AMD_NAME, PCI_VENDOR_ID_NS,
+	    GeodeChipsets, GeodePCIchipsets,
+	    devSections, numDevSections, drv, &usedChips);
 
-        if (numUsed <= 0)
-            numUsed = xf86MatchPciInstances(AMD_NAME, PCI_VENDOR_ID_AMD,
-                GeodeChipsets, GeodePCIchipsets,
-                devSections, numDevSections, drv, &usedChips);
+	if (numUsed <= 0)
+	    numUsed = xf86MatchPciInstances(AMD_NAME, PCI_VENDOR_ID_AMD,
+		GeodeChipsets, GeodePCIchipsets,
+		devSections, numDevSections, drv, &usedChips);
 
-        DEBUGMSG(1, (0, X_INFO, "AmdProbe: MatchPCI (%d)!\n", numUsed));
+	DEBUGMSG(1, (0, X_INFO, "AmdProbe: MatchPCI (%d)!\n", numUsed));
 
-        if (numUsed > 0) {
-            if (flags & PROBE_DETECT)
-                foundScreen = TRUE;
-            else {
-                /* Durango only supports one instance, */
-                /* so take the first one */
-                for (i = 0; i < numUsed; i++) {
-                    /* Allocate a ScrnInfoRec  */
-                    ScrnInfoPtr pScrni = xf86AllocateScreen(drv, 0);
+	if (numUsed > 0) {
+	    if (flags & PROBE_DETECT)
+		foundScreen = TRUE;
+	    else {
+		/* Durango only supports one instance, */
+		/* so take the first one */
+		for (i = 0; i < numUsed; i++) {
+		    /* Allocate a ScrnInfoRec  */
+		    ScrnInfoPtr pScrni = xf86AllocateScreen(drv, 0);
 
-                    EntityInfoPtr pEnt = xf86GetEntityInfo(usedChips[i]);
-                    PciChipsets *p_id;
+		    EntityInfoPtr pEnt = xf86GetEntityInfo(usedChips[i]);
+		    PciChipsets *p_id;
 
-                    for (p_id = GeodePCIchipsets; p_id->numChipset != -1;
-                        p_id++) {
-                        if (pEnt->chipset == p_id->numChipset) {
-                            switch (pEnt->chipset) {
+		    for (p_id = GeodePCIchipsets; p_id->numChipset != -1;
+			p_id++) {
+			if (pEnt->chipset == p_id->numChipset) {
+			    switch (pEnt->chipset) {
 #ifdef HAVE_LX
-                            case PCI_CHIP_GEODELX:
-                                CPUDetected = LX;
-                                drvr_setup = &LXSetupChipsetFPtr;
-                                break;
+			    case PCI_CHIP_GEODELX:
+				CPUDetected = LX;
+				drvr_setup = &LXSetupChipsetFPtr;
+				break;
 #endif
 #ifdef HAVE_GX
-                            case PCI_CHIP_REDCLOUD:
-                                CPUDetected = GX2;
-                                drvr_setup = &GXSetupChipsetFPtr;
-                                break;
-#endif
-                            default:
+			    case PCI_CHIP_REDCLOUD:
+				CPUDetected = GX2;
+				drvr_setup = &GXSetupChipsetFPtr;
 				break;
-                            }
-                            break;
-                        }
-                    }
-                    xfree(pEnt);
-                    if (drvr_setup == NULL)
-                    	return FALSE;
+#endif
+			    default:
+				break;
+			    }
+			    break;
+			}
+		    }
+		    xfree(pEnt);
+		    if (drvr_setup == NULL)
+			return FALSE;
 
-                    DEBUGMSG(1, (0, X_INFO, "AmdProbe: CPUDetected %d!\n",
-                            CPUDetected));
+		    DEBUGMSG(1, (0, X_INFO, "AmdProbe: CPUDetected %d!\n",
+			    CPUDetected));
 
-                    pScrni->driverName = AMD_DRIVER_NAME;
-                    pScrni->name = AMD_NAME;
-                    pScrni->Probe = AmdProbe;
-                    drvr_setup(pScrni);
+		    pScrni->driverName = AMD_DRIVER_NAME;
+		    pScrni->name = AMD_NAME;
+		    pScrni->Probe = AmdProbe;
+		    drvr_setup(pScrni);
 
-                    foundScreen = TRUE;
-                    xf86ConfigActivePciEntity(pScrni, usedChips[i],
-                        GeodePCIchipsets, NULL, NULL, NULL, NULL, NULL);
-                }
-            }
-        }
+		    foundScreen = TRUE;
+		    xf86ConfigActivePciEntity(pScrni, usedChips[i],
+			GeodePCIchipsets, NULL, NULL, NULL, NULL, NULL);
+		}
+	    }
+	}
     }
 
     if (usedChips)
-        xfree(usedChips);
+	xfree(usedChips);
     if (devSections)
-        xfree(devSections);
+	xfree(devSections);
     DEBUGMSG(1, (0, X_INFO, "AmdProbe: result (%d)!\n", foundScreen));
     return foundScreen;
 }

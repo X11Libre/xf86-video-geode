@@ -48,13 +48,13 @@
 #include "fb.h"
 #include "randrstr.h"
 
-#include "amd.h"
+#include "geode.h"
 #include "gfx_defs.h"
 #include "gfx_regs.h"
 #include "panel.h"
 
 /* Bring in VGA functions */
-#include "amd_gx_vga.c"
+#include "gx_vga.c"
 
 #define GX_MIN_PITCH 1024
 #define GX_MAX_PITCH 8192

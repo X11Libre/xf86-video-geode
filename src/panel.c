@@ -43,7 +43,7 @@
 
 #include "panel.h"
 #include "gfx_defs.h"
-#include "amd.h"
+#include "geode.h"
 
 #define PLATFORM_DYNAMIC		1       /* runtime selection            */
 #define PLATFORM_DRACO			0       /* Draco + 9210                         */

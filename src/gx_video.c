@@ -52,14 +52,14 @@
 #include "xf86fbman.h"
 #include "regionstr.h"
 
-#include "amd.h"
+#include "geode.h"
 #include "xf86xv.h"
 #include <X11/extensions/Xv.h>
 #include "xaa.h"
 #include "xaalocal.h"
 #include "dixstruct.h"
 #include "fourcc.h"
-#include "amd_fourcc.h"
+#include "geode_fourcc.h"
 
 #define OFF_DELAY 		200    /* milliseconds */
 #define FREE_DELAY 		60000

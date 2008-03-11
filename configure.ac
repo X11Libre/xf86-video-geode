@@ -24,7 +24,7 @@ AC_PREREQ(2.57)
 AC_INIT([xf86-video-amd],
         2.7.7.7,
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg&component=Driver%2FAMD],
-        xf86-video-amd)
+        xf86-video-geode)
 
 AC_CONFIG_SRCDIR([Makefile.am])
 AM_CONFIG_HEADER([config.h])
@@ -120,7 +120,7 @@ fi
 
 AM_CONDITIONAL([I386ARCH], [test $is386 = true])
 
-DRIVER_NAME=amd
+DRIVER_NAME=geode
 AC_SUBST([DRIVER_NAME])
 
 XORG_MANPAGE_SECTIONS
