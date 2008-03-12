@@ -89,20 +89,41 @@
 /* Forward definitions */
 static const OptionInfoRec *AmdAvailableOptions(int chipid, int busid);
 static void AmdIdentify(int);
+#ifdef XSERVER_LIBPCIACCESS
+static Bool AmdPciProbe(DriverPtr, int, struct pci_device *, intptr_t);
+#else
 static Bool AmdProbe(DriverPtr, int);
-static int CPUDetected;
+#endif
+
+
+#ifdef XSERVER_LIBPCIACCESS
+static const struct pci_id_match amdDeviceMatch[] = {
+    { PCI_VENDOR_ID_NS, PCI_CHIP_REDCLOUD, PCI_MATCH_ANY, PCI_MATCH_ANY, 0, 0, 0 },
+    { PCI_VENDOR_ID_AMD, PCI_CHIP_GEODELX, PCI_MATCH_ANY, PCI_MATCH_ANY, 0, 0, 0 },
+    { 0, 0, 0 }
+};
+#endif /* XSERVER_LIBPCIACCESS */
 
 /* driver record contains the functions needed by the server after loading
  * the driver module.
  */
 _X_EXPORT DriverRec AMD = {
     AMD_VERSION_CURRENT,
-    AMD_DRIVER_NAME,
+    "amd",
     AmdIdentify,
+#ifdef XSERVER_LIBPCIACCESS
+    NULL,
+#else
     AmdProbe,
+#endif
     AmdAvailableOptions,
     NULL,
-    0
+    0,
+    NULL,
+#ifdef XSERVER_LIBPCIACCESS
+    amdDeviceMatch,
+    AmdPciProbe
+#endif
 };
 
 /* Advanced Micro Devices Chip Models */
@@ -310,7 +331,14 @@ AmdSetup(pointer Module, pointer Options, int *ErrorMajor, int *ErrorMinor)
 
     if (!Initialised) {
         Initialised = TRUE;
-        xf86AddDriver(&AMD, Module, 0);
+        xf86AddDriver(&AMD, Module,
+#ifdef XSERVER_LIBPCIACCESS
+                      HaveDriverFuncs
+#else
+                      0
+#endif
+                      );
+
         /* Tell the loader about symbols from other modules that this
          * module might refer to.
          */
@@ -379,6 +407,54 @@ AmdAvailableOptions(int chipid, int busid)
     return no_GeodeOptions;
 }
 
+#ifdef XSERVER_LIBPCIACCESS
+
+static Bool
+AmdPciProbe(DriverPtr driver,
+            int entity_num,
+            struct pci_device *device,
+            intptr_t match_data)
+{
+    ScrnInfoPtr scrn = NULL;
+    int cpu_detected;
+
+    ErrorF("AmdPciProbe: Probing for supported devices!\n");
+
+    scrn = xf86ConfigPciEntity(scrn, 0, entity_num, GeodePCIchipsets,
+                               NULL, NULL, NULL, NULL, NULL);
+
+    if (scrn != NULL)
+    {
+        scrn->driverName = AMD_DRIVER_NAME;
+        scrn->name = AMD_NAME;
+        scrn->Probe = NULL;
+
+        switch (device->device_id) {
+#ifdef HAVE_LX
+        case PCI_CHIP_GEODELX:
+            cpu_detected = LX;
+            LXSetupChipsetFPtr(scrn);
+            break;
+#endif
+#ifdef HAVE_GX
+        case PCI_CHIP_REDCLOUD:
+            cpu_detected = GX2;
+            GXSetupChipsetFPtr(scrn);
+            break;
+#endif
+        default:
+            ErrorF("AmdPciProbe: unknown device ID\n");
+            return FALSE;
+        }
+
+        DEBUGMSG(1, (0, X_INFO, "AmdPciProbe: CPUDetected %d!\n",
+                     cpu_detected));
+    }
+    return scrn != NULL;
+}
+
+#else /* XSERVER_LIBPCIACCESS */
+
 /*----------------------------------------------------------------------------
  * AmdProbe.
  *
@@ -419,10 +495,7 @@ AmdProbe(DriverPtr drv, int flags)
     }
     DEBUGMSG(1, (0, X_INFO, "AmdProbe: Before MatchPciInstances!\n"));
     /* PCI BUS */
-#ifndef XSERVER_LIBPCIACCESS
-    if (xf86GetPciVideoInfo()) 
-#endif
-    {
+    if (xf86GetPciVideoInfo()) {
         numUsed = xf86MatchPciInstances(AMD_NAME, PCI_VENDOR_ID_NS,
             GeodeChipsets, GeodePCIchipsets,
             devSections, numDevSections, drv, &usedChips);
@@ -496,3 +569,5 @@ AmdProbe(DriverPtr drv, int flags)
     DEBUGMSG(1, (0, X_INFO, "AmdProbe: result (%d)!\n", foundScreen));
     return foundScreen;
 }
+
+#endif /* else XSERVER_LIBPCIACCESS */
