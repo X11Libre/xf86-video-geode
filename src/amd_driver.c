@@ -126,6 +126,25 @@ _X_EXPORT DriverRec AMD = {
 #endif
 };
 
+_X_EXPORT DriverRec GEODE = {
+    AMD_VERSION_CURRENT,
+    "geode",
+    AmdIdentify,
+#ifdef XSERVER_LIBPCIACCESS
+    NULL,
+#else
+    AmdProbe,
+#endif
+    AmdAvailableOptions,
+    NULL,
+    0,
+    NULL,
+#ifdef XSERVER_LIBPCIACCESS
+    amdDeviceMatch,
+    AmdPciProbe
+#endif
+};
+
 /* Advanced Micro Devices Chip Models */
 typedef struct _DEVICE_MODEL
 {
@@ -300,30 +319,46 @@ static XF86ModuleVersionInfo AmdVersionRec = {
     {0, 0, 0, 0}
 };
 
-/*
- * This data is accessed by the loader.  The name must be the module name
- * followed by "ModuleInit".
- */
-_X_EXPORT XF86ModuleData amdModuleData = { &AmdVersionRec, AmdSetup, NULL };
+static XF86ModuleVersionInfo GeodeVersionRec = {
+    "geode",
+    MODULEVENDORSTRING,
+    MODINFOSTRING1,
+    MODINFOSTRING2,
+    XORG_VERSION_CURRENT,
+    GET_MODULE_MAJOR_VERSION(AMD_VERSION_CURRENT),
+    GET_MODULE_MINOR_VERSION(AMD_VERSION_CURRENT),
+    (GET_MODULE_PATCHLEVEL(AMD_VERSION_CURRENT) >> 8) * 100 +
+        (GET_MODULE_PATCHLEVEL(AMD_VERSION_CURRENT) & 0xff),
+    ABI_CLASS_VIDEODRV,                /* This is a video driver */
+    ABI_VIDEODRV_VERSION,
+    MOD_CLASS_VIDEODRV,
+    {0, 0, 0, 0}
+};
 
-/*-------------------------------------------------------------------------
- * AmdSetup.
- *
- * Description	:This function sets up the driver in X list and load the
- *               module symbols through xf86loader routines..
- *
- * Parameters.
- *    Module	:Pointer to the geode  module
- *    options	:Driver module options.
- *    ErrorMajor:Major no
- *    ErrorMinor:Minor no.
- *
- * Returns		:NULL on success
- *
- * Comments     :Module setup is done by this function
- *
- *-------------------------------------------------------------------------
-*/
+static pointer
+GeodeSetup(pointer Module, pointer Options, int *ErrorMajor, int *ErrorMinor)
+{
+	static Bool init = FALSE;
+	int flag = 0;
+
+#ifdef XSERVER_LIBPCIACCESS
+	flag = HaveDriverFuncs;
+#endif
+	if (init) {
+		*ErrorMajor = LDR_ONCEONLY;
+		return (pointer) NULL;
+	}
+
+	init = TRUE;
+	xf86AddDriver(&GEODE, Module, flag);
+
+	LoaderRefSymLists(amdVgahwSymbols, amdVbeSymbols,
+			  amdFbSymbols, amdXaaSymbols,
+		          amdInt10Symbols, amdRamdacSymbols, NULL);
+
+	return (pointer) TRUE;
+}
+
 static pointer
 AmdSetup(pointer Module, pointer Options, int *ErrorMajor, int *ErrorMinor)
 {
@@ -353,6 +388,10 @@ AmdSetup(pointer Module, pointer Options, int *ErrorMajor, int *ErrorMinor)
         *ErrorMajor = LDR_ONCEONLY;
     return NULL;
 }
+
+_X_EXPORT XF86ModuleData amdModuleData = { &AmdVersionRec, AmdSetup, NULL };
+_X_EXPORT XF86ModuleData geodeModuleData = { &GeodeVersionRec, GeodeSetup, NULL };
+
 #endif /*End of XFree86Loader */
 
 /*-------------------------------------------------------------------------
