@@ -462,9 +462,9 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
   ret = gfx_msr_read(RC_ID_DF, MBD_MSR_CONFIG, &msrValue);
 
   if (!ret) {
-    pGeode->Output = 	
+    pGeode->Output =
       ((msrValue.low & RCDF_CONFIG_FMT_MASK) ==
-       RCDF_CONFIG_FMT_FP) ? OUTPUT_CRT : OUTPUT_PANEL;
+       RCDF_CONFIG_FMT_FP) ? OUTPUT_PANEL : OUTPUT_CRT;
   }
 
   /* Fill in the monitor information */
@@ -807,6 +807,7 @@ GXSetVideoMode(ScrnInfoPtr pScrni, DisplayModePtr pMode)
 {
   GeodeRec *pGeode = GEODEPTR(pScrni);
   int flags = 0;
+  int custom = 0;
 
   pScrni->vtSema = TRUE;
 
@@ -817,14 +818,17 @@ GXSetVideoMode(ScrnInfoPtr pScrni, DisplayModePtr pMode)
   if (pMode->Flags & V_NVSYNC)
     flags |= 2;
 
-  /* XXX Question - why even use set_display_mode at all - shouldn't the
-   * mode timings be the same that we advertise? */
+  /* Check to see if we should use custom or built-in timings */
 
-  /* Only use the panel mode for built in modes */
+  if (pGeode->Panel)
+	custom = (pMode->type & M_T_USERDEF);
+  else
+	custom = !(pMode->type & (M_T_BUILTIN | M_T_DEFAULT));
 
- if ((pMode->type & M_T_BUILTIN) || (pMode->type & M_T_DEFAULT)
-	&& pGeode->Panel) {
+  /* If we're not doing a custom mode, then just set the fixed timings,
+   * otherwise, do the whole shooting match */
 
+  if (!custom) {
     GFX(set_fixed_timings(pGeode->PanelX, pGeode->PanelY,
 			  pMode->CrtcHDisplay, pMode->CrtcVDisplay,
 			  pScrni->bitsPerPixel));
@@ -1430,11 +1434,16 @@ GXValidMode(int scrnIndex, DisplayModePtr pMode, Bool Verbose, int flags)
   ScrnInfoPtr pScrni = xf86Screens[scrnIndex];
   GeodeRec *pGeode = GEODEPTR(pScrni);
   int p, ret;
+  int custom = 0;
 
-  /* Use the durango lookup for builtin or default modes only */
+  if (pGeode->Panel)
+	custom = (pMode->type & M_T_USERDEF);
+  else
+	custom = (pMode->type & (M_T_BUILTIN | M_T_DEFAULT));
 
-  if ((pMode->type & M_T_BUILTIN) || (pMode->type & M_T_DEFAULT)) {
+  /* Use the durango lookup for !custom modes */
 
+  if (!custom) {
     if (pGeode->Panel) {
       if (pMode->CrtcHDisplay > pGeode->PanelX ||
 	  pMode->CrtcVDisplay > pGeode->PanelY ||
@@ -1450,9 +1459,8 @@ GXValidMode(int scrnIndex, DisplayModePtr pMode, Bool Verbose, int flags)
 					pMode->CrtcVDisplay,
 					pScrni->bitsPerPixel, 
 					GeodeGetRefreshRate(pMode));
-    if (ret < 0) {
+    if (ret < 0)
       return MODE_BAD;
-    }
   }
 
   if (pMode->Flags & V_INTERLACE)
