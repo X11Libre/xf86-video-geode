@@ -522,6 +522,7 @@ AmdProbe(DriverPtr drv, int flags)
     int *usedChips = NULL;
     int i;
     void (*drvr_setup) (ScrnInfoPtr pScrni) = NULL;
+    int CPUDetected;
 
     DEBUGMSG(1, (0, X_INFO, "AmdProbe: Probing for supported devices!\n"));
     /*
