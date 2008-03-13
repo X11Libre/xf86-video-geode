@@ -22,7 +22,7 @@
 
 AC_PREREQ(2.57)
 AC_INIT([xf86-video-amd],
-        2.7.7.6,
+        2.7.7.7,
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg&component=Driver%2FAMD],
         xf86-video-amd)
 
