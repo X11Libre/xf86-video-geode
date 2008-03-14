@@ -42,7 +42,6 @@ geode_drv_la_SOURCES = \
         geode.h \
 	geode_blend.h \
         geode_fourcc.h \
-        build_num.h \
         cim_dev.h \
         geode_driver.c \
 	geode_common.c \

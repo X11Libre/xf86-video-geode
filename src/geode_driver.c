@@ -49,7 +49,6 @@
 #include "xf86cmap.h"
 
 #include "geode.h"
-#include "build_num.h"
 
 #define RC_MAX_DEPTH 24
 
@@ -78,13 +77,12 @@
 #endif /* DPMSExtension */
 
 /* A few things all drivers should have */
-#define AMD_NAME            "AMD"
-#define AMD_DRIVER_NAME     "amd"
-#define _id(n,m)			n##m
-#define _cat(n,m)			_id(n,m)
-#define AMD_VERSION_CURRENT ((_cat(0x,_MAJOR) << 24) | \
-							(_cat(0x,_MINOR) << 16) | (_cat(0x,_BL) << 8) \
-							| _cat(0x,_BLREV))
+#define GEODE_NAME        "GEODE"
+#define GEODE_DRIVER_NAME "geode"
+#define GEODE_VERSION       4000
+#define GEODE_VERSION_MAJOR PACKAGE_VERSION_MAJOR
+#define GEODE_VERSION_MINOR PACKAGE_VERSION_MINOR
+#define GEODE_VERSION_PATCH PACKAGE_VERSION_PATCHLEVEL
 
 /* Forward definitions */
 static const OptionInfoRec *AmdAvailableOptions(int chipid, int busid);
@@ -110,7 +108,7 @@ static const struct pci_id_match amdDeviceMatch[] = {
  * the driver module.
  */
 _X_EXPORT DriverRec AMD = {
-    AMD_VERSION_CURRENT,
+    GEODE_VERSION,
     "amd",
     AmdIdentify,
 #ifdef XSERVER_LIBPCIACCESS
@@ -129,7 +127,7 @@ _X_EXPORT DriverRec AMD = {
 };
 
 _X_EXPORT DriverRec GEODE = {
-    AMD_VERSION_CURRENT,
+    GEODE_VERSION,
     "geode",
     AmdIdentify,
 #ifdef XSERVER_LIBPCIACCESS
@@ -311,10 +309,7 @@ static XF86ModuleVersionInfo AmdVersionRec = {
     MODINFOSTRING1,
     MODINFOSTRING2,
     XORG_VERSION_CURRENT,
-    GET_MODULE_MAJOR_VERSION(AMD_VERSION_CURRENT),
-    GET_MODULE_MINOR_VERSION(AMD_VERSION_CURRENT),
-    (GET_MODULE_PATCHLEVEL(AMD_VERSION_CURRENT) >> 8) * 100 +
-	(GET_MODULE_PATCHLEVEL(AMD_VERSION_CURRENT) & 0xff),
+    GEODE_VERSION_MAJOR, GEODE_VERSION_MINOR, GEODE_VERSION_PATCH,
     ABI_CLASS_VIDEODRV,		       /* This is a video driver */
     ABI_VIDEODRV_VERSION,
     MOD_CLASS_VIDEODRV,
@@ -327,10 +322,7 @@ static XF86ModuleVersionInfo GeodeVersionRec = {
     MODINFOSTRING1,
     MODINFOSTRING2,
     XORG_VERSION_CURRENT,
-    GET_MODULE_MAJOR_VERSION(AMD_VERSION_CURRENT),
-    GET_MODULE_MINOR_VERSION(AMD_VERSION_CURRENT),
-    (GET_MODULE_PATCHLEVEL(AMD_VERSION_CURRENT) >> 8) * 100 +
-	(GET_MODULE_PATCHLEVEL(AMD_VERSION_CURRENT) & 0xff),
+    GEODE_VERSION_MAJOR, GEODE_VERSION_MINOR, GEODE_VERSION_PATCH,
     ABI_CLASS_VIDEODRV,		       /* This is a video driver */
     ABI_VIDEODRV_VERSION,
     MOD_CLASS_VIDEODRV,
@@ -414,8 +406,58 @@ _X_EXPORT XF86ModuleData geodeModuleData =
 static void
 AmdIdentify(int flags)
 {
-    xf86PrintChipsets(AMD_NAME, AMD_VERSION " for chipsets ", GeodeChipsets);
+    xf86PrintChipsets(GEODE_NAME, "Driver for AMD Geode Chipsets",
+	GeodeChipsets);
 }
+
+#ifdef XSERVER_LIBPCIACCESS
+
+static Bool
+AmdPciProbe(DriverPtr driver,
+            int entity_num,
+            struct pci_device *device,
+            intptr_t match_data)
+{
+    ScrnInfoPtr scrn = NULL;
+    int cpu_detected;
+
+    ErrorF("AmdPciProbe: Probing for supported devices!\n");
+
+    scrn = xf86ConfigPciEntity(scrn, 0, entity_num, GeodePCIchipsets,
+                               NULL, NULL, NULL, NULL, NULL);
+
+    if (scrn != NULL)
+    {
+        scrn->driverName = GEODE_DRIVER_NAME;
+	scrn->driverVersion = GEODE_VERSION;
+        scrn->name = GEODE_NAME;
+        scrn->Probe = NULL;
+
+        switch (device->device_id) {
+#ifdef HAVE_LX
+        case PCI_CHIP_GEODELX:
+            cpu_detected = LX;
+            LXSetupChipsetFPtr(scrn);
+            break;
+#endif
+#ifdef HAVE_GX
+        case PCI_CHIP_REDCLOUD:
+            cpu_detected = GX2;
+            GXSetupChipsetFPtr(scrn);
+            break;
+#endif
+        default:
+            ErrorF("AmdPciProbe: unknown device ID\n");
+            return FALSE;
+        }
+
+        DEBUGMSG(1, (0, X_INFO, "AmdPciProbe: CPUDetected %d!\n",
+                     cpu_detected));
+    }
+    return scrn != NULL;
+}
+
+#else /* XSERVER_LIBPCIACCESS */
 
 /*----------------------------------------------------------------------------
  * AmdAvailableOptions.
@@ -463,8 +505,9 @@ AmdPciProbe(DriverPtr driver,
 	NULL, NULL, NULL, NULL, NULL);
 
     if (scrn != NULL) {
-	scrn->driverName = AMD_DRIVER_NAME;
-	scrn->name = AMD_NAME;
+	scrn->driverName = GEODE_DRIVER_NAME;
+	scrn->driverVersion = GEODE_VERSION;
+	scrn->name = GEODE_NAME;
 	scrn->Probe = NULL;
 
 	switch (device->device_id) {
@@ -528,19 +571,19 @@ AmdProbe(DriverPtr drv, int flags)
      * * Find the config file Device sections that match this
      * * driver, and return if there are none.
      */
-    if ((numDevSections = xf86MatchDevice(AMD_NAME, &devSections)) <= 0) {
+    if ((numDevSections = xf86MatchDevice(GEODE_NAME, &devSections)) <= 0) {
 	DEBUGMSG(1, (0, X_INFO, "AmdProbe: failed 1!\n"));
 	return FALSE;
     }
     DEBUGMSG(1, (0, X_INFO, "AmdProbe: Before MatchPciInstances!\n"));
     /* PCI BUS */
     if (xf86GetPciVideoInfo()) {
-	numUsed = xf86MatchPciInstances(AMD_NAME, PCI_VENDOR_ID_NS,
+	numUsed = xf86MatchPciInstances(GEODE_NAME, PCI_VENDOR_ID_NS,
 	    GeodeChipsets, GeodePCIchipsets,
 	    devSections, numDevSections, drv, &usedChips);
 
 	if (numUsed <= 0)
-	    numUsed = xf86MatchPciInstances(AMD_NAME, PCI_VENDOR_ID_AMD,
+	    numUsed = xf86MatchPciInstances(GEODE_NAME, PCI_VENDOR_ID_AMD,
 		GeodeChipsets, GeodePCIchipsets,
 		devSections, numDevSections, drv, &usedChips);
 
@@ -588,8 +631,9 @@ AmdProbe(DriverPtr drv, int flags)
 		    DEBUGMSG(1, (0, X_INFO, "AmdProbe: CPUDetected %d!\n",
 			    CPUDetected));
 
-		    pScrni->driverName = AMD_DRIVER_NAME;
-		    pScrni->name = AMD_NAME;
+		    pScrni->driverName = GEODE_DRIVER_NAME;
+		    pScrni->driverVersion = GEODE_VERSION;
+		    pScrni->name = GEODE_NAME;
 		    pScrni->Probe = AmdProbe;
 		    drvr_setup(pScrni);
 
