@@ -96,7 +96,7 @@ static Bool AmdProbe(DriverPtr, int);
 
 #ifdef XSERVER_LIBPCIACCESS
 static const struct pci_id_match amdDeviceMatch[] = {
-    {PCI_VENDOR_ID_NS, PCI_CHIP_REDCLOUD, PCI_MATCH_ANY, PCI_MATCH_ANY, 0, 0,
+    {PCI_VENDOR_ID_NS, PCI_CHIP_GEODEGX, PCI_MATCH_ANY, PCI_MATCH_ANY, 0, 0,
 	0},
     {PCI_VENDOR_ID_AMD, PCI_CHIP_GEODELX, PCI_MATCH_ANY, PCI_MATCH_ANY, 0, 0,
 	0},
@@ -158,7 +158,7 @@ DeviceModel ChipModel[] = {
     {PCI_CHIP_GEODELX, LX},
 #endif
 #ifdef HAVE_GX
-    {PCI_CHIP_REDCLOUD, GX2},
+    {PCI_CHIP_GEODEGX, GX},
 #endif
     {-1, 0}
 };
@@ -166,10 +166,10 @@ DeviceModel ChipModel[] = {
 /* Supported chipsets */
 SymTabRec GeodeChipsets[] = {
 #ifdef HAVE_LX
-    {PCI_CHIP_GEODELX, "GeodeLX"},
+    {PCI_CHIP_GEODELX, "Geode LX"},
 #endif
 #ifdef HAVE_GX
-    {PCI_CHIP_REDCLOUD, "REDCLOUD"},
+    {PCI_CHIP_GEODEGX, "Geode GX"},
 #endif
     {-1, NULL}
 };
@@ -179,13 +179,12 @@ PciChipsets GeodePCIchipsets[] = {
     {PCI_CHIP_GEODELX, PCI_CHIP_GEODELX, RES_SHARED_VGA},
 #endif
 #ifdef HAVE_GX
-    {PCI_CHIP_REDCLOUD, PCI_CHIP_REDCLOUD, RES_SHARED_VGA},
+    {PCI_CHIP_GEODEGX, PCI_CHIP_GEODEGX, RES_SHARED_VGA},
 #endif
     {-1, -1, RES_UNDEFINED},
 };
 
 #ifdef HAVE_LX
-void LXSetupChipsetFPtr(ScrnInfoPtr pScrni);
 
 OptionInfoRec LX_GeodeOptions[] = {
     {LX_OPTION_SW_CURSOR, "SWcursor", OPTV_BOOLEAN, {0}, FALSE},
@@ -208,7 +207,6 @@ OptionInfoRec LX_GeodeOptions[] = {
 #endif
 
 #ifdef HAVE_GX
-void GXSetupChipsetFPtr(ScrnInfoPtr pScrni);
 
 OptionInfoRec GX_GeodeOptions[] = {
     {GX_OPTION_SW_CURSOR, "SWcursor", OPTV_BOOLEAN, {0}, FALSE},
@@ -410,55 +408,6 @@ AmdIdentify(int flags)
 	GeodeChipsets);
 }
 
-#ifdef XSERVER_LIBPCIACCESS
-
-static Bool
-AmdPciProbe(DriverPtr driver,
-            int entity_num,
-            struct pci_device *device,
-            intptr_t match_data)
-{
-    ScrnInfoPtr scrn = NULL;
-    int cpu_detected;
-
-    ErrorF("AmdPciProbe: Probing for supported devices!\n");
-
-    scrn = xf86ConfigPciEntity(scrn, 0, entity_num, GeodePCIchipsets,
-                               NULL, NULL, NULL, NULL, NULL);
-
-    if (scrn != NULL)
-    {
-        scrn->driverName = GEODE_DRIVER_NAME;
-	scrn->driverVersion = GEODE_VERSION;
-        scrn->name = GEODE_NAME;
-        scrn->Probe = NULL;
-
-        switch (device->device_id) {
-#ifdef HAVE_LX
-        case PCI_CHIP_GEODELX:
-            cpu_detected = LX;
-            LXSetupChipsetFPtr(scrn);
-            break;
-#endif
-#ifdef HAVE_GX
-        case PCI_CHIP_REDCLOUD:
-            cpu_detected = GX2;
-            GXSetupChipsetFPtr(scrn);
-            break;
-#endif
-        default:
-            ErrorF("AmdPciProbe: unknown device ID\n");
-            return FALSE;
-        }
-
-        DEBUGMSG(1, (0, X_INFO, "AmdPciProbe: CPUDetected %d!\n",
-                     cpu_detected));
-    }
-    return scrn != NULL;
-}
-
-#else /* XSERVER_LIBPCIACCESS */
-
 /*----------------------------------------------------------------------------
  * AmdAvailableOptions.
  *
@@ -483,7 +432,7 @@ AmdAvailableOptions(int chipid, int busid)
 	return LX_GeodeOptions;
 #endif
 #ifdef HAVE_GX
-    case PCI_CHIP_REDCLOUD:
+    case PCI_CHIP_GEODEGX:
 	return GX_GeodeOptions;
 #endif
     }
@@ -518,8 +467,8 @@ AmdPciProbe(DriverPtr driver,
 	    break;
 #endif
 #ifdef HAVE_GX
-	case PCI_CHIP_REDCLOUD:
-	    cpu_detected = GX2;
+	case PCI_CHIP_GEODEGX:
+	    cpu_detected = GX;
 	    GXSetupChipsetFPtr(scrn);
 	    break;
 #endif
@@ -613,8 +562,8 @@ AmdProbe(DriverPtr drv, int flags)
 				break;
 #endif
 #ifdef HAVE_GX
-			    case PCI_CHIP_REDCLOUD:
-				CPUDetected = GX2;
+			    case PCI_CHIP_GEODEGX:
+				CPUDetected = GX;
 				drvr_setup = &GXSetupChipsetFPtr;
 				break;
 #endif

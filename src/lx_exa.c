@@ -251,7 +251,7 @@ static unsigned int
 lx_get_source_color(PixmapPtr pSrc, int srcFormat, int dstFormat)
 {
     CARD32 in, out;
-    CARD16 red, green, blue, alpha;
+    CARD16 red = 0, green = 0, blue = 0, alpha = 0;
 
     /* Stall to avoid a race with the upload function */
     /* for 1.4 and newer, the problem will be resolved within
@@ -561,7 +561,6 @@ lx_prepare_composite(int op, PicturePtr pSrc, PicturePtr pMsk,
     exaScratch.bufferOffset = pGeode->exaBfrOffset;
 
     if (pMsk && op != PictOpClear) {
-	unsigned int srcColor;
 	struct blend_ops_t *opPtr = &lx_alpha_ops[op * 2];
 	int direction = (opPtr->channel == CIMGP_CHANNEL_A_SOURCE) ? 0 : 1;
 
@@ -881,9 +880,6 @@ static void
 lx_do_composite_mask(PixmapPtr pxDst, unsigned long dstOffset,
     unsigned int maskOffset, int width, int height)
 {
-    GeodeRec *pGeode = GEODEPTR_FROM_PIXMAP(pxDst);
-    unsigned char *data = pGeode->FBBase + maskOffset;
-
     struct blend_ops_t *opPtr = &lx_alpha_ops[exaScratch.op * 2];
 
     gp_declare_blt(0);

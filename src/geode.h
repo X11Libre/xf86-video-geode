@@ -24,8 +24,8 @@
   * software without specific prior written permission.
   */
 
-#ifndef _AMD_GEODE_H_
-#define _AMD_GEODE_H_
+#ifndef _GEODE_H_
+#define _GEODE_H_
 
 #include "geode_pcirename.h"
 
@@ -36,6 +36,7 @@
 #include "vgaHW.h"
 #include "xf86int10.h"
 #include <X11/extensions/randr.h>
+#include "randrstr.h"
 
 #include "xf86xv.h"
 
@@ -53,13 +54,9 @@
 #define INT10_SUPPORT 1
 
 /* Existing Processor Models */
-#define GX1 0x1
-#define GX2 0x10
-#define GX2_CRT 0x11
-#define GX2_TFT 0x12
-#define LX 0x20
-#define LX_CRT 0x21
-#define LX_TFT 0x22
+#define GX1     0x01
+#define GX      0x10
+#define LX      0x20
 
 #define PCI_VENDOR_ID_CYRIX  0x1078
 #define PCI_VENDOR_ID_NS     0x100B
@@ -68,9 +65,10 @@
 #define PCI_CHIP_5530     0x0104
 #define PCI_CHIP_SC1200   0x0504
 #define PCI_CHIP_SC1400   0x0104
-#define PCI_CHIP_REDCLOUD 0x0030
+#define PCI_CHIP_GEODEGX  0x0030
 #define PCI_CHIP_GEODELX  0x2081
-#define GFX_CPU_GEODELX 4
+
+#define GFX_CPU_GEODELX   4
 
 #ifdef HAVE_GX
 #define GX_FILL_RECT_SUPPORT 1
@@ -456,11 +454,11 @@ GX_GeodeOpts;
 #define DCON_DEFAULT_BPP     16
 #define DCON_DEFAULT_REFRESH 50
 
-/* amd_dcon.c */
+/* geode_dcon.c */
 extern Bool dcon_init(ScrnInfoPtr pScrni);
 extern int DCONDPMSSet(ScrnInfoPtr pScrni, int mode, int flags);
 
-/* amd_common.c */
+/* geode_common.c */
 
 void geode_memory_to_screen_blt(unsigned long, unsigned long,
     unsigned long, unsigned long, long, long, int);
@@ -468,7 +466,7 @@ int GeodeGetRefreshRate(DisplayModePtr);
 void GeodeCopyGreyscale(unsigned char *, unsigned char *, int, int, int, int);
 int GeodeGetSizeFromFB(unsigned int *);
 
-/* amd_gx_video.c */
+/* gx_video.c */
 
 int
 GeodeQueryImageAttributes(ScrnInfoPtr, int id, unsigned short *w,
@@ -476,7 +474,7 @@ GeodeQueryImageAttributes(ScrnInfoPtr, int id, unsigned short *w,
 
 Bool RegionsEqual(RegionPtr A, RegionPtr B);
 
-/* amd_gx_driver.c */
+/* gx_driver.c */
 
 void GeodeProbeDDC(ScrnInfoPtr pScrni, int index);
 xf86MonPtr GeodeDoDDC(ScrnInfoPtr pScrni, int index);
@@ -484,49 +482,56 @@ int GeodeGetFPGeometry(const char *str, int *width, int *height);
 void GeodePointerMoved(int index, int x, int y);
 void GeodeFreeScreen(int scrnIndex, int flags);
 int GeodeCalculatePitchBytes(unsigned int width, unsigned int bpp);
+void GXSetupChipsetFPtr(ScrnInfoPtr pScrn);
 
-/* amd_msr.c */
+/* geode_msr.c */
 int GeodeReadMSR(unsigned long addr, unsigned long *lo, unsigned long *hi);
 int GeodeWriteMSR(unsigned long addr, unsigned long lo, unsigned long hi);
 
-/* amd_gx_cursor.c */
+/* gx_cursor.c */
 Bool GXHWCursorInit(ScreenPtr pScrn);
 void GXLoadCursorImage(ScrnInfoPtr pScrni, unsigned char *src);
 void GXHideCursor(ScrnInfoPtr pScrni);
 void GXShowCursor(ScrnInfoPtr pScrni);
 
-/* amd_gx_randr.c */
+/* gx_randr.c */
 Rotation GXGetRotation(ScreenPtr pScreen);
 Bool GXRandRInit(ScreenPtr pScreen, int rotation);
+Bool GXRandRSetConfig(ScreenPtr pScreen, Rotation rotation, int rate, RRScreenSizePtr pSize);
 
-/* amd_gx_rotate.c */
+/* gx_rotate.c */
 Bool GXRotate(ScrnInfoPtr pScrni, DisplayModePtr mode);
 
-/* amd_gx_accel.c */
+/* gx_accel.c */
 Bool GXAccelInit(ScreenPtr pScrn);
+void GXAccelSync(ScrnInfoPtr pScrni);
 
-/* amd_gx_video.c */
+/* gx_video.c */
 void GXInitVideo(ScreenPtr pScrn);
 
-/* amd_lx_cursor.c */
+/* lx_driver.c */
+void LXSetupChipsetFPtr(ScrnInfoPtr pScrn);
+
+/* lx_cursor.c */
 Bool LXHWCursorInit(ScreenPtr pScrn);
 void LXLoadCursorImage(ScrnInfoPtr pScrni, unsigned char *src);
 void LXHideCursor(ScrnInfoPtr pScrni);
 void LXShowCursor(ScrnInfoPtr pScrni);
 
-/* amd_lx_randr.c */
+/* lx_randr.c */
 Rotation LXGetRotation(ScreenPtr pScreen);
 Bool LXRandRInit(ScreenPtr pScreen, int rotation);
+Bool LXRandRSetConfig(ScreenPtr pScreen, Rotation rotation, int rate, RRScreenSizePtr pSize);
 
-/* amd_lx_rotate.c */
+/* lx_rotate.c */
 Bool LXSetRotatePitch(ScrnInfoPtr pScrni);
 Bool LXRotate(ScrnInfoPtr pScrni, DisplayModePtr mode);
 Bool LXAllocShadow(ScrnInfoPtr pScrni);
 
-/* amd_lx_exa.c */
+/* lx_exa.c */
 Bool LXExaInit(ScreenPtr pScreen);
 
-/* amd_lx_video.c */
+/* lx_video.c */
 void LXInitVideo(ScreenPtr pScrn);
 
-#endif /* _AMD_GEODE_H_ */
+#endif

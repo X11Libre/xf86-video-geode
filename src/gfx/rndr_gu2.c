@@ -96,6 +96,9 @@ unsigned short gu2_bm_throttle = 0;
 unsigned short gu2_vm_throttle = 0;
 int gu2_current_line = 0;
 
+/* Kill a warning */
+void gfx_reset_pitch(unsigned short pitch);
+
 /*---------------------------------------------------------------------------
  * GFX_RESET_PITCH (PRIVATE ROUTINE - NOT PART OF API)
  *

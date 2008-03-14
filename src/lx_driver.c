@@ -634,7 +634,7 @@ LXPreInit(ScrnInfoPtr pScrni, int flags)
 	&pGeode->tryHWCursor);
 
     if (!xf86GetOptValInteger(GeodeOptions, LX_OPTION_FBSIZE,
-	    &(pGeode->FBAvail)))
+	    (int *) &(pGeode->FBAvail)))
 	pGeode->FBAvail = 0;
 
     /* For compatability - allow SWCursor too */
@@ -664,7 +664,7 @@ LXPreInit(ScrnInfoPtr pScrni, int flags)
     }
 
     xf86GetOptValInteger(GeodeOptions, LX_OPTION_EXA_SCRATCH_BFRSZ,
-	&(pGeode->exaBfrSz));
+	(int *) &(pGeode->exaBfrSz));
 
     if (pGeode->exaBfrSz <= 0)
 	pGeode->exaBfrSz = 0;
@@ -1194,8 +1194,6 @@ LXLoadPalette(ScrnInfoPtr pScrni,
 static void
 LXDPMSSet(ScrnInfoPtr pScrni, int mode, int flags)
 {
-    GeodeRec *pGeode = GEODEPTR(pScrni);
-
     if (!pScrni->vtSema)
 	return;
 

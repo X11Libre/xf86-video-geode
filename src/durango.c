@@ -79,8 +79,7 @@
 
 #define FB4MB		       1       /* Set to use 4Mb vid ram for Pyramid */
 
-#define GFX_NO_IO_IN_WAIT_MACROS    1  /* Set to remove I/O accesses in GP
-				        * bit testing */
+#define GFX_NO_IO_IN_WAIT_MACROS    1  /* Set to remove I/O accesses in GP */
 #define GFX_READ_ROUTINES  1
 
 #include "gfx_rtns.h"
@@ -106,6 +105,15 @@ unsigned char *gfx_phys_vipptr = (unsigned char *)0x40015000;
 #define OUTB(port,data) outb(port, data)
 #define OUTW(port,data) outw(port, data)
 #define OUTD(port,data) outl(port, data)
+
+/* Squash warnings */
+unsigned char gfx_inb(unsigned short);
+unsigned short gfx_inw(unsigned short);
+unsigned long gfx_ind(unsigned short);
+
+void gfx_outb(unsigned short, unsigned char);
+void gfx_outw(unsigned short, unsigned short);
+void gfx_outd(unsigned short, unsigned long);
 
 inline unsigned char
 gfx_inb(unsigned short port)

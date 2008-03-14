@@ -61,10 +61,10 @@ LXUpdateFunc(ScreenPtr pScreen, shadowBufPtr pBuf)
 
     int nbox = REGION_NUM_RECTS(damage);
     BoxPtr pbox = REGION_RECTS(damage);
-    int x, y, w, h, degrees;
+    int x, y, w, h, degrees = 0;
     FbStride shaStride;
     FbBits *shaBits;
-    int shaBpp, dx, dy, dw, dh;
+    int shaBpp, dx = 0, dy = 0, dw, dh;
     int shaXoff, shaYoff;
     unsigned int srcOffset, dstOffset;
     PixmapPtr pShadow = pBuf->pPixmap;
