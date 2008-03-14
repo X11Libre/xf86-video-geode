@@ -539,7 +539,6 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
 
     if (xf86ReturnOptValBool(GeodeOptions, GX_OPTION_NOACCEL, FALSE))
 	pGeode->NoAccel = TRUE;
->>>>>>> patched
 
     pGeode->rotation = RR_Rotate_0;
 
