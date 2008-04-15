@@ -436,8 +436,7 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
     useVGA = GXCheckVGA(pScrni);
 
     if (flags & PROBE_DETECT) {
-	if (useVGA)
-	    GeodeProbeDDC(pScrni, pEnt->index);
+	GeodeProbeDDC(pScrni, pEnt->index);
 	return TRUE;
     }
 
@@ -664,10 +663,7 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
     GeodeClockRange->interlaceAllowed = TRUE;
     GeodeClockRange->doubleScanAllowed = FALSE;
 
-    if (pGeode->useVGA)
-	pScrni->monitor->DDC = GeodeDoDDC(pScrni, pGeode->pEnt->index);
-    else
-	pScrni->monitor->DDC = NULL;
+    pScrni->monitor->DDC = GeodeDoDDC(pScrni, pGeode->pEnt->index);
 
     /* I'm still not 100% sure this uses the right values */
 
@@ -1538,37 +1534,6 @@ GeodePointerMoved(int index, int x, int y)
     }
 
     (*pGeode->PointerMoved) (index, newX, newY);
-}
-
-void
-GeodeProbeDDC(ScrnInfoPtr pScrni, int index)
-{
-    vbeInfoPtr pVbe;
-
-    if (xf86LoadSubModule(pScrni, "vbe")) {
-	pVbe = VBEInit(NULL, index);
-	ConfiguredMonitor = vbeDoEDID(pVbe, NULL);
-	vbeFree(pVbe);
-    }
-}
-
-xf86MonPtr
-GeodeDoDDC(ScrnInfoPtr pScrni, int index)
-{
-    vbeInfoPtr pVbe;
-    xf86MonPtr info = NULL;
-
-    if (xf86LoadSubModule(pScrni, "vbe") && (pVbe = VBEInit(NULL, index))) {
-	xf86LoaderReqSymLists(amdVbeSymbols, NULL);
-	info = vbeDoEDID(pVbe, NULL);
-	xf86PrintEDID(info);
-	xf86SetDDCproperties(pScrni, info);
-	vbeFree(pVbe);
-    } else
-	xf86DrvMsg(pScrni->scrnIndex, X_INFO,
-	    "We cannot do DDC without VBE.\n");
-
-    return info;
 }
 
 int

@@ -519,7 +519,6 @@ LXPreInit(ScrnInfoPtr pScrni, int flags)
     rgb defaultWeight = { 0, 0, 0 };
     int modecnt;
     char *s, *panelgeo = NULL;
-    Bool useVGA;
 
     if (pScrni->numEntities != 1)
 	return FALSE;
@@ -529,12 +528,8 @@ LXPreInit(ScrnInfoPtr pScrni, int flags)
     if (pEnt->resources)
 	return FALSE;
 
-    useVGA = LXCheckVGA(pScrni);
-
     if (flags & PROBE_DETECT) {
-	if (useVGA)
-	    GeodeProbeDDC(pScrni, pEnt->index);
-
+	GeodeProbeDDC(pScrni, pEnt->index);
 	return TRUE;
     }
 
@@ -543,7 +538,7 @@ LXPreInit(ScrnInfoPtr pScrni, int flags)
     if (pGeode == NULL)
 	return FALSE;
 
-    pGeode->useVGA = useVGA;
+    pGeode->useVGA = LXCheckVGA(pScrni);
     pGeode->VGAActive = FALSE;
     pGeode->pEnt = pEnt;
 
@@ -769,7 +764,7 @@ LXPreInit(ScrnInfoPtr pScrni, int flags)
     GeodeClockRange->interlaceAllowed = TRUE;
     GeodeClockRange->doubleScanAllowed = FALSE;
 
-    if (pGeode->useVGA && (pGeode->Output & OUTPUT_CRT))
+    if (pGeode->Output & OUTPUT_CRT)
 	pScrni->monitor->DDC = GeodeDoDDC(pScrni, pGeode->pEnt->index);
     else
 	pScrni->monitor->DDC = NULL;

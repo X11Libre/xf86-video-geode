@@ -46,6 +46,7 @@ geode_drv_la_SOURCES = \
         geode_driver.c \
 	geode_common.c \
         geode_dcon.c \
+	geode_ddc.c \
 	geode_msr.c \
         gx_driver.c\
         gx_accel.c \
