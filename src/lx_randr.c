@@ -246,7 +246,7 @@ LXRandRSetConfig(ScreenPtr pScreen, Rotation rotation,
 	pRandr->virtualY = pScrni->virtualY;
     }
 
-    miPointerGetPosition(inputInfo.pointer, &px, &py);
+    miPointerPosition(&px, &py);
 
     for (mode = pScrni->modes;; mode = mode->next) {
 	if (pRandr->maxX == 0 || pRandr->maxY == 0) {
@@ -285,13 +285,13 @@ LXRandRSetConfig(ScreenPtr pScreen, Rotation rotation,
 	return FALSE;
     }
 
-    if (pScreen == miPointerGetScreen(inputInfo.pointer)) {
+    if (pScreen == miPointerCurrentScreen()) {
 	px = (px >= pScreen->width ? (pScreen->width - 1) : px);
 	py = (py >= pScreen->height ? (pScreen->height - 1) : py);
 
 	xf86SetViewport(pScreen, px, py);
 
-	(*pScreen->SetCursorPosition) (inputInfo.pointer, pScreen, px, py, FALSE);
+	(*pScreen->SetCursorPosition) (pScreen, px, py, FALSE);
     }
 
     return TRUE;
