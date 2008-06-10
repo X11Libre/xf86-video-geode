@@ -234,6 +234,7 @@ VESARec;
 #define OUTPUT_CRT   0x02
 #define OUTPUT_TV    0x04
 #define OUTPUT_VOP   0x08
+#define OUTPUT_DCON  0x10
 
 typedef struct _geodeRec
 {

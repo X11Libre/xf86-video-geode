@@ -35,11 +35,56 @@
 
 #include "geode.h"
 #include <unistd.h>
+#include <fcntl.h>
+
+#define DCON_SLEEP_FILE "/sys/devices/platform/dcon/sleep"
 
 static Bool
 dcon_present(void)
 {
-    return access("/sys/devices/platform/dcon", F_OK) == 0;
+    static int _dval = -1;
+
+    if (_dval == -1)
+	_dval = (access("/sys/devices/platform/dcon", F_OK) == 0);
+
+    return (Bool) _dval;
+}
+
+int
+DCONDPMSSet(ScrnInfoPtr pScrni, int mode, int flags)
+{
+    static int failed = -1;
+    int fd;
+    char value[1];
+
+    if (failed == -1)
+	failed = !dcon_present();
+
+    if (failed)
+	return 0;
+
+    fd = open(DCON_SLEEP_FILE, O_WRONLY);
+
+    if (fd < 0) {
+	failed = 1;
+	return 0;
+    }
+
+    switch (mode) {
+    case DPMSModeOn:
+	value[0] = '0';
+	break;
+    case DPMSModeStandby:
+    case DPMSModeSuspend:
+    case DPMSModeOff:
+	value[0] = '1';
+	break;
+    }
+
+    write(fd, value, sizeof(value));
+    close(fd);
+
+    return 1;
 }
 
 Bool

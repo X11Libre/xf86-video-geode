@@ -525,7 +525,7 @@ LXPreInit(ScrnInfoPtr pScrni, int flags)
     OptionInfoRec *GeodeOptions = &LX_GeodeOptions[0];
     rgb defaultWeight = { 0, 0, 0 };
     int modecnt;
-    char *s, *panelgeo = NULL;
+    char *s;
 
     if (pScrni->numEntities != 1)
 	return FALSE;
@@ -636,7 +636,7 @@ LXPreInit(ScrnInfoPtr pScrni, int flags)
 	&pGeode->tryHWCursor);
 
     if (!xf86GetOptValInteger(GeodeOptions, LX_OPTION_FBSIZE,
-	    (int *) &(pGeode->FBAvail)))
+	    (int *)&(pGeode->FBAvail)))
 	pGeode->FBAvail = 0;
 
     /* For compatability - allow SWCursor too */
@@ -666,7 +666,7 @@ LXPreInit(ScrnInfoPtr pScrni, int flags)
     }
 
     xf86GetOptValInteger(GeodeOptions, LX_OPTION_EXA_SCRATCH_BFRSZ,
-	(int *) &(pGeode->exaBfrSz));
+	(int *)&(pGeode->exaBfrSz));
 
     if (pGeode->exaBfrSz <= 0)
 	pGeode->exaBfrSz = 0;
@@ -676,23 +676,23 @@ LXPreInit(ScrnInfoPtr pScrni, int flags)
 	    pGeode->Output &= ~OUTPUT_PANEL;
     }
 
-    panelgeo = xf86GetOptValString(GeodeOptions, LX_OPTION_PANEL_GEOMETRY);
-
-    /* Get the panel information - if it is specified on the command line,
-     * then go with that - otherwise try to determine it by probing the
-     * BIOS - the BIOS may tell us that the panel doesn't exist, so the
-     * value of the output bitmask may change
+    /* Panel detection code -
+     * 1.  See if an OLPC DCON is attached - we can make some assumptions
+     * about the panel if so.
+     * 2.  Use override options specified in the config
+     * 3.  "Autodetect" the panel through VSA
      */
 
     if (dcon_init(pScrni)) {
-	pGeode->Output = OUTPUT_PANEL;
+	pGeode->Output = OUTPUT_PANEL | OUTPUT_DCON;
     } else if (pGeode->Output & OUTPUT_PANEL) {
+	char *panelgeo =
+	    xf86GetOptValString(GeodeOptions, LX_OPTION_PANEL_GEOMETRY);
+
 	if (panelgeo != NULL)
 	    GeodeGetFPGeometry(panelgeo, &pGeode->PanelX, &pGeode->PanelY);
 	else {
-	    Bool ret = lx_get_panel(&pGeode->PanelX, &pGeode->PanelY);
-
-	    if (ret == FALSE)
+	    if (!lx_get_panel(&pGeode->PanelX, &pGeode->PanelY))
 		pGeode->Output &= ~OUTPUT_PANEL;
 	}
     }
@@ -703,6 +703,9 @@ LXPreInit(ScrnInfoPtr pScrni, int flags)
 
     xf86DrvMsg(pScrni->scrnIndex, X_INFO, " PANEL: %s\n",
 	pGeode->Output & OUTPUT_PANEL ? "YES" : "NO");
+
+    xf86DrvMsg(pScrni->scrnIndex, X_INFO, " DCON: %s\n",
+	pGeode->Output & OUTPUT_DCON ? "YES" : "NO");
 
     xf86DrvMsg(pScrni->scrnIndex, X_INFO, " VGA: %s\n",
 	pGeode->useVGA ? "YES" : "NO");
@@ -1204,8 +1207,15 @@ LXLoadPalette(ScrnInfoPtr pScrni,
 static void
 LXDPMSSet(ScrnInfoPtr pScrni, int mode, int flags)
 {
+    GeodeRec *pGeode = GEODEPTR(pScrni);
+
     if (!pScrni->vtSema)
 	return;
+
+    if (pGeode->Output & OUTPUT_DCON) {
+	if (DCONDPMSSet(pScrni, mode, flags))
+	    return;
+    }
 
     switch (mode) {
     case DPMSModeOn:
