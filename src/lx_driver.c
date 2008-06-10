@@ -418,6 +418,13 @@ map_pci_mem(ScrnInfoPtr pScrni, int vram,
 	return NULL;
     return ptr;
 }
+
+static inline int
+unmap_pci_mem(ScrnInfoPtr pScrni, struct pci_device *dev, void *ptr, int size)
+{
+       return pci_device_unmap_range(dev, ptr, size);
+}
+
 #endif
 
 static Bool
@@ -848,15 +855,23 @@ static Bool
 LXUnmapMem(ScrnInfoPtr pScrni)
 {
     GeodeRec *pGeode = GEODEPTR(pScrni);
+    pciVideoPtr pci = xf86GetPciInfoForEntity(pGeode->pEnt->index);
 
+#ifndef XSERVER_LIBPCIACCESS
     xf86UnMapVidMem(pScrni->scrnIndex, (pointer) cim_gp_ptr, LX_GP_REG_SIZE);
     xf86UnMapVidMem(pScrni->scrnIndex, (pointer) cim_vg_ptr, LX_VG_REG_SIZE);
     xf86UnMapVidMem(pScrni->scrnIndex, (pointer) cim_vid_ptr,
 	LX_VID_REG_SIZE);
     xf86UnMapVidMem(pScrni->scrnIndex, (pointer) cim_vip_ptr,
 	LX_VIP_REG_SIZE);
+#else
+    unmap_pci_mem(pScrni, pci, cim_gp_ptr, LX_GP_REG_SIZE);
+    unmap_pci_mem(pScrni, pci, cim_vg_ptr, LX_VG_REG_SIZE);
+    unmap_pci_mem(pScrni, pci, cim_vid_ptr, LX_VID_REG_SIZE);
+    unmap_pci_mem(pScrni, pci, cim_vip_ptr, LX_VIP_REG_SIZE);
+    unmap_pci_mem(pScrni, pci, cim_fb_ptr, pGeode->FBAvail + CIM_CMD_BFR_SZ);
+#endif
 
-    xf86UnMapVidMem(pScrni->scrnIndex, cim_fb_ptr, pGeode->FBAvail);
     xf86UnMapVidMem(pScrni->scrnIndex, XpressROMPtr, 0x10000);
 
     return TRUE;
