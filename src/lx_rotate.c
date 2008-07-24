@@ -71,6 +71,12 @@ LXUpdateFunc(ScreenPtr pScreen, shadowBufPtr pBuf)
     ScrnInfoPtr pScrni = xf86Screens[pScreen->myNum];
     GeodeRec *pGeode = GEODEPTR(pScrni);
 
+    /* shaBits isn't reliable here, because we are outside of
+     * the EXA access boundaries - we'll just use the offset from
+     * the pixmap and hope for the best  - we stil use fbGetDrawable
+     * for the other variables
+     */
+
     fbGetDrawable(&pShadow->drawable, shaBits, shaStride, shaBpp, shaXoff,
 	shaYoff);
 
@@ -105,8 +111,7 @@ LXUpdateFunc(ScreenPtr pScreen, shadowBufPtr pBuf)
 	w = (pbox->x2 - pbox->x1);
 	h = pbox->y2 - pbox->y1;
 
-	srcOffset =
-	    ((unsigned long)shaBits) - ((unsigned long)pGeode->FBBase);
+	srcOffset = pGeode->shadowArea->offset;
 	srcOffset += (y * pGeode->Pitch) + (x * (shaBpp >> 3));
 
 	switch (pGeode->rotation) {
