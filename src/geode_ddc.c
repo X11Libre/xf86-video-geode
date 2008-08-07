@@ -56,6 +56,7 @@
 #define DDC_CLK_LOW      (DDC_SCL_PIN << 16)
 
 #define CS5536_ISA_DEVICE 0x20901022
+#define CS5535_ISA_DEVICE 0x002b100b
 
 static unsigned short
 geode_gpio_iobase(void)
@@ -76,8 +77,12 @@ geode_gpio_iobase(void)
 
     Tag = pciFindFirst(CS5536_ISA_DEVICE, 0xFFFFFFFF);
 
-    if (Tag == PCI_NOT_FOUND)
-	return 0;
+    if (Tag == PCI_NOT_FOUND) {
+        Tag = pciFindFirst(CS5535_ISA_DEVICE, 0xFFFFFFFF);
+
+        if (Tag == PCI_NOT_FOUND)
+	    return 0;
+    }
 
     /* The GPIO I/O address is in resource 1 */
     return (unsigned short)(pciReadLong(Tag, 0x14) & ~1);
