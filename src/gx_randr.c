@@ -209,7 +209,7 @@ GXRandRSetMode(ScreenPtr pScreen,
      * Get the new Screen pixmap ptr as SwitchMode might have called
      * ModifyPixmapHeader and xf86EnableDisableFBAccess will put it back...
      * Unfortunately.
-
+     
      */
 
     pspix = (*pScreen->GetScreenPixmap) (pScreen);
@@ -306,11 +306,9 @@ GXRandRSetConfig(ScreenPtr pScreen, Rotation rotation,
 /* FIXME: we don't have a new video ABI yet */
 	(*pScreen->SetCursorPosition) (
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) == 3
-                                        inputInfo.pointer,
+	    inputInfo.pointer,
 #endif
-                                        pScreen,
-                                        px, py,
-                                        FALSE);
+	    pScreen, px, py, FALSE);
     }
 
     return TRUE;

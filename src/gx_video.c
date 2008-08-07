@@ -406,7 +406,7 @@ GXSetupImageVideo(ScreenPtr pScrn)
     adapt->QueryImageAttributes = GeodeQueryImageAttributes;
 
     pPriv->filter = 0;
-    pPriv->colorKey = pGeode->videoKey;
+    pPriv->colorKey = 0;
     pPriv->colorKeyMode = 0;
     pPriv->videoStatus = 0;
 #if DBUF
@@ -809,7 +809,7 @@ GXSetVideoPosition(int x, int y, int width, int height,
 
     /* Take care of panning when panel is present */
 
-    startAddress = gfx_get_display_offset() - pGeode->FBOffset;
+    startAddress = gfx_get_display_offset();
     DeltaY = startAddress / pGeode->Pitch;
     DeltaX = startAddress & (pGeode->Pitch - 1);
     DeltaX /= (pScrni->bitsPerPixel >> 3);

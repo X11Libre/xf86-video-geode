@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007 Advanced Micro Devices, Inc.
+ * Copyright (c) 2007-2008 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -285,6 +285,7 @@ lx_prepare_solid(PixmapPtr pxMap, int alu, Pixel planemask, Pixel fg)
     exaScratch.op = op;
 
     gp_set_solid_source(fg);
+
     gp_set_strides(pitch, pitch);
     gp_write_parameters();
     return TRUE;

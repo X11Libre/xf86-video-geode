@@ -51,7 +51,7 @@ dcon_present(void)
 }
 
 int
-DCONDPMSSet(ScrnInfoPtr pScrni, int mode, int flags)
+DCONDPMSSet(ScrnInfoPtr pScrni, int mode)
 {
     static int failed = -1;
     int fd;
@@ -97,14 +97,25 @@ dcon_init(ScrnInfoPtr pScrni)
 	return FALSE;
     }
 
+    pGeode->panelMode = xnfcalloc(1, sizeof(DisplayModeRec));
+    if (pGeode->panelMode == NULL)
+	return FALSE;
+
+    /* Set up the panel mode structure automagically */
+
+    pGeode->panelMode->type = M_T_DRIVER;
+    pGeode->panelMode->Clock = 57275;
+    pGeode->panelMode->HDisplay = 1200;
+    pGeode->panelMode->HSyncStart = 1208;
+    pGeode->panelMode->HSyncEnd = 1216;
+    pGeode->panelMode->HTotal = 1240;
+    pGeode->panelMode->VDisplay = 900;
+    pGeode->panelMode->VSyncStart = 905;
+    pGeode->panelMode->VSyncEnd = 908;
+    pGeode->panelMode->VTotal = 912;
+
     /* TODO: Print board revision once sysfs exports it. */
     xf86DrvMsg(pScrni->scrnIndex, X_DEFAULT, "DCON detected.\n");
 
-    /* Panel size setup */
-    pGeode->PanelX = DCON_DEFAULT_XRES;
-    pGeode->PanelY = DCON_DEFAULT_YRES;
-
-    /* FIXME:  Mode setup should go here */
-    /* FIXME:  Controller setup should go here */
     return TRUE;
 }

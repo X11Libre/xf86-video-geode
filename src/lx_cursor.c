@@ -1,4 +1,4 @@
-/* Copyright (c) 2003-2007 Advanced Micro Devices, Inc.
+/* Copyright (c) 2003-2008 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -28,112 +28,16 @@
 #endif
 
 #include "xf86.h"
-#include "xf86_OSproc.h"
-#include "xf86Pci.h"
-#include "xf86PciInfo.h"
+#include "xf86Crtc.h"
 #include "geode.h"
 
-/* Forward declarations of the functions */
-static void LXSetCursorColors(ScrnInfoPtr pScrni, int bg, int fg);
-static void LXSetCursorPosition(ScrnInfoPtr pScrni, int x, int y);
-static Bool LXUseHWCursor(ScreenPtr pScrn, CursorPtr pCurs);
-extern void LXSetVideoPosition(int x, int y, int width, int height,
-    short src_w, short src_h, short drw_w,
-    short drw_h, int id, int offset, ScrnInfoPtr pScrn);
-
 Bool
-LXHWCursorInit(ScreenPtr pScrn)
+LXCursorInit(ScreenPtr pScrn)
 {
-    ScrnInfoPtr pScrni = xf86Screens[pScrn->myNum];
-    GeodeRec *pGeode = GEODEPTR(pScrni);
-    xf86CursorInfoPtr infoPtr;
-
-    infoPtr = xf86CreateCursorInfoRec();
-    if (!infoPtr)
-	return FALSE;
-    /* the geode structure is intiallized with the cursor infoRec */
-    pGeode->CursorInfo = infoPtr;
-    infoPtr->MaxWidth = 32;
-    infoPtr->MaxHeight = 32;
-    /* seeting up the cursor flags */
-    infoPtr->Flags = HARDWARE_CURSOR_BIT_ORDER_MSBFIRST |
+    return xf86_cursors_init(pScrn, 32, 32,
+	HARDWARE_CURSOR_BIT_ORDER_MSBFIRST |
 	HARDWARE_CURSOR_TRUECOLOR_AT_8BPP |
-	HARDWARE_CURSOR_SOURCE_MASK_NOT_INTERLEAVED;
-
-    infoPtr->SetCursorColors = LXSetCursorColors;
-    infoPtr->SetCursorPosition = LXSetCursorPosition;
-    infoPtr->LoadCursorImage = LXLoadCursorImage;
-    infoPtr->HideCursor = LXHideCursor;
-    infoPtr->ShowCursor = LXShowCursor;
-    infoPtr->UseHWCursor = LXUseHWCursor;
-
-    return (xf86InitCursor(pScrn, infoPtr));
-}
-
-static void
-LXSetCursorColors(ScrnInfoPtr pScrni, int bg, int fg)
-{
-    vg_set_mono_cursor_colors(bg, fg);
-}
-
-static void
-LXSetCursorPosition(ScrnInfoPtr pScrni, int x, int y)
-{
-    GeodeRec *pGeode = GEODEPTR(pScrni);
-    int savex, savey;
-    int newX, newY;
-    int hsx, hsy;
-
-    /* Adjust xf86HWCursor messing about */
-
-    savex = x + pScrni->frameX0;
-    savey = y + pScrni->frameY0;
-
-    switch (pGeode->rotation) {
-    default:
-	ErrorF("%s:%d invalid rotation %d\n", __func__, __LINE__,
-	    pGeode->rotation);
-    case RR_Rotate_0:
-	newX = savex;
-	newY = savey;
-	hsx = 31;
-	hsy = 31;
-	break;
-
-    case RR_Rotate_270:
-	newX = savey;
-	newY = pScrni->pScreen->width - savex;
-	hsx = 31;
-	hsy = 0;
-	break;
-
-    case RR_Rotate_180:
-	newX = pScrni->pScreen->width - savex;
-	newY = pScrni->pScreen->height - savey;
-	hsx = 0;
-	hsy = 0;
-	break;
-
-    case RR_Rotate_90:
-	newX = pScrni->pScreen->height - savey;
-	newY = savex;
-	hsx = 0;
-	hsy = 31;
-	break;
-    }
-
-    newX -= pScrni->frameX0;
-    newY -= pScrni->frameY0;
-
-    {
-	VG_PANNING_COORDINATES panning;
-
-	vg_set_cursor_position(newX + hsx, newY + hsy, &panning);
-    }
-
-    vg_set_cursor_enable(1);
-
-    /* FIXME:  Adjust for video panning? */
+	HARDWARE_CURSOR_SOURCE_MASK_NOT_INTERLEAVED);
 }
 
 void
@@ -196,25 +100,4 @@ LXLoadCursorImage(ScrnInfoPtr pScrni, unsigned char *src)
 
     vg_set_mono_cursor_shape32(pGeode->CursorStartOffset, &andMask[0],
 	&xorMask[0], 31, 31);
-}
-
-void
-LXHideCursor(ScrnInfoPtr pScrni)
-{
-    vg_set_cursor_enable(0);
-}
-
-void
-LXShowCursor(ScrnInfoPtr pScrni)
-{
-    vg_set_cursor_enable(1);
-}
-
-static Bool
-LXUseHWCursor(ScreenPtr pScrn, CursorPtr pCurs)
-{
-    ScrnInfoPtr pScrni = XF86SCRNINFO(pScrn);
-    GeodeRec *pGeode = GEODEPTR(pScrni);
-
-    return pGeode->HWCursor;
 }
