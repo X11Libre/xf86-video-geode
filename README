@@ -1,5 +1,5 @@
-AMD Geode GX and LX X.Org graphics Driver
-========================================
+AMD Geode GX and LX graphics driver for X.Org
+=============================================
 Last updated:  2008-08-13
 
 = Introduction =
@@ -10,6 +10,15 @@ and the LX driver supports EXA (including compositing).  Both drivers
 support dynamic rotation with XRandR, and Xv overlay support.
 
 http://wiki.x.org/wiki/AMDGeodeDriver
+
+= Roadmap =
+
+Support for X servers older than 1.4 is expected to be dropped in the
+near future.  If your distribution still hasn't upgraded, please urge 
+them to get around it soon.
+
+Support for old GX1 Geodes by Cyrix and NSC will be reintroduced soon,
+at which point xf86-video-cyrix and xf86-video-nsc will be retired.
 
 = Dependencies =
 
