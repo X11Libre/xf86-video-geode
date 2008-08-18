@@ -37,6 +37,20 @@
    provides a semi-robust mechanism for doing that.
 */
 
+/* Return the number of free bytes */
+
+unsigned int
+GeodeOffscreenFreeSize(GeodeRec * pGeode)
+{
+    GeodeMemPtr ptr = pGeode->offscreenList;
+
+    if (ptr == NULL)
+	return pGeode->offscreenSize;
+
+    for (; ptr->next; ptr = ptr->next) ;
+    return pGeode->offscreenSize - (ptr->offset + ptr->size);
+}
+
 void
 GeodeFreeOffscreen(GeodeRec * pGeode, GeodeMemPtr ptr)
 {
@@ -152,6 +166,8 @@ GeodeAllocOffscreen(GeodeRec * pGeode, int size, int align)
    the usual suspects that need offscreen memory
 */
 
+#define MAX(a,b) ((a) > (b) ? (a) : (b))
+
 void
 LXInitOffscreen(ScrnInfoPtr pScrni)
 {
@@ -162,7 +178,8 @@ LXInitOffscreen(ScrnInfoPtr pScrni)
     /* The scratch buffer is always used */
     fbavail = pGeode->FBAvail - GP3_SCRATCH_BUFFER_SIZE;
 
-    pGeode->displaySize = pScrni->virtualY * pGeode->Pitch;
+    pGeode->displaySize = MAX(pScrni->virtualX, pScrni->virtualY)
+	* pGeode->Pitch;
 
     pGeode->offscreenStart = pGeode->displaySize;
     pGeode->offscreenSize = fbavail - pGeode->displaySize;
@@ -171,7 +188,8 @@ LXInitOffscreen(ScrnInfoPtr pScrni)
     if (pGeode->tryCompression) {
 	int size = pScrni->virtualY * LX_CB_PITCH;
 
-	ptr = GeodeAllocOffscreen(pGeode, size, 4);
+	/* The compression buffer needs to be 16 byte aligned */
+	ptr = GeodeAllocOffscreen(pGeode, size, 16);
 
 	if (ptr != NULL) {
 	    pGeode->CBData.compression_offset = ptr->offset;
@@ -232,11 +250,31 @@ LXInitOffscreen(ScrnInfoPtr pScrni)
 	    ptr = GeodeAllocRemainder(pGeode);
 	}
 
-	if (ptr) {
+	if (ptr != NULL) {
 	    pGeode->pExa->offScreenBase = ptr->offset;
 	    pGeode->pExa->memorySize = ptr->offset + ptr->size;
 	}
     }
+
+    /* Show the memory map for diagnostic purposes */
+
+    xf86DrvMsg(pScrni->scrnIndex, X_INFO, "LX video memory:\n");
+    xf86DrvMsg(pScrni->scrnIndex, X_INFO, " Display: 0x%x bytes\n",
+	pGeode->displaySize);
+
+    if (pGeode->Compression)
+	xf86DrvMsg(pScrni->scrnIndex, X_INFO, " Compression: 0x%x bytes\n",
+	    pScrni->virtualY * LX_CB_PITCH);
+
+    if (pGeode->HWCursor)
+	xf86DrvMsg(pScrni->scrnIndex, X_INFO, " Cursor: 0x400 bytes\n");
+
+    if (pGeode->pExa->offScreenBase)
+	xf86DrvMsg(pScrni->scrnIndex, X_INFO, " EXA: 0x%x bytes\n",
+	    pGeode->pExa->memorySize - pGeode->pExa->offScreenBase);
+
+    xf86DrvMsg(pScrni->scrnIndex, X_INFO, " FREE: 0x%x bytes\n",
+	GeodeOffscreenFreeSize(pGeode));
 }
 
 /* Called as we go down, so blitz everybody */

@@ -453,6 +453,7 @@ GeodeMemPtr GeodeAllocOffscreen(GeodeRec * pGeode, int size, int align);
 void GeodeFreeOffscreen(GeodeRec * pGeode, GeodeMemPtr ptr);
 void LXInitOffscreen(ScrnInfoPtr pScrni);
 void GeodeCloseOffscreen(ScrnInfoPtr pScrni);
+unsigned int GeodeOffscreenFreeSize(GeodeRec * pGeode);
 
 /* lx_cursor.c */
 Bool LXCursorInit(ScreenPtr pScrn);

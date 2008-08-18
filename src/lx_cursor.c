@@ -35,69 +35,50 @@ Bool
 LXCursorInit(ScreenPtr pScrn)
 {
     return xf86_cursors_init(pScrn, 32, 32,
-	HARDWARE_CURSOR_BIT_ORDER_MSBFIRST |
 	HARDWARE_CURSOR_TRUECOLOR_AT_8BPP |
-	HARDWARE_CURSOR_SOURCE_MASK_NOT_INTERLEAVED);
+	HARDWARE_CURSOR_INVERT_MASK |
+	HARDWARE_CURSOR_AND_SOURCE_WITH_MASK |
+	HARDWARE_CURSOR_SOURCE_MASK_INTERLEAVE_32);
+}
+
+static int
+_getrow(char *src, int stride, int x, int y)
+{
+    x = ((x & ~31) << 1) | (x & 31);
+    src += y * stride;
+    return (src[x >> 3] >> (x & 7)) & 1;
+}
+
+static int
+_getmask(char *src, int stride, int x, int y)
+{
+    x = ((x & ~31) << 1) | (1 << 5) | (x & 31);
+    src += y * stride;
+    return (src[x >> 3] >> (x & 7)) & 1;
 }
 
 void
 LXLoadCursorImage(ScrnInfoPtr pScrni, unsigned char *src)
 {
-    int i, n, x, y, newX, newY;
-    unsigned long andMask[32], xorMask[32];
     GeodeRec *pGeode = GEODEPTR(pScrni);
-    unsigned long mskb, rowb;
-    unsigned char *rowp = &src[0];
-    unsigned char *mskp = &src[128];
+    unsigned long andMask[32], xorMask[32];
+    unsigned char *ptr = src;
+    int y, x;
+
+    for (y = 0; y < 32; y++) {
+	andMask[y] = (src) ? 0 : ~0;
+	xorMask[y] = 0;
+    }
 
     if (src != NULL) {
-	mskb = rowb = 0;
-	for (y = 32; --y >= 0;)
-	    andMask[y] = xorMask[y] = 0;
-	for (y = 0; y < 32; ++y) {
-	    for (x = 0; x < 32; ++x) {
-		if ((i = x & 7) == 0) {
-		    rowb = (*rowp & *mskp);
-		    mskb = ~(*mskp);
-		    ++rowp;
-		    ++mskp;
-		}
-
-		switch (pGeode->rotation) {
-		default:
-		    ErrorF("%s:%d invalid rotation %d\n", __func__, __LINE__,
-			pGeode->rotation);
-		case RR_Rotate_0:
-		    newX = x;
-		    newY = y;
-		    break;
-		case RR_Rotate_270:
-		    newX = y;
-		    newY = 31 - x;
-		    break;
-		case RR_Rotate_180:
-		    newX = 31 - x;
-		    newY = 31 - y;
-		    break;
-		case RR_Rotate_90:
-		    newX = 31 - y;
-		    newY = x;
-		    break;
-		}
-
-		i = 7 - i;
-		n = 31 - newX;
-		andMask[newY] |= (((mskb >> i) & 1) << n);
-		xorMask[newY] |= (((rowb >> i) & 1) << n);
+	for (y = 0; y < 32; y++) {
+	    for (x = 0; x < 32; x++) {
+		xorMask[y] |= _getrow(src, 8, x, y) << (31 - x);
+		andMask[y] |= _getmask(src, 8, x, y) << (31 - x);
 	    }
-	}
-    } else {
-	for (y = 32; --y >= 0;) {
-	    andMask[y] = ~0;
-	    xorMask[y] = 0;
 	}
     }
 
     vg_set_mono_cursor_shape32(pGeode->CursorStartOffset, &andMask[0],
-	&xorMask[0], 31, 31);
+	&xorMask[0], 32, 32);
 }

@@ -808,19 +808,6 @@ LXLoadPalette(ScrnInfoPtr pScrni,
 }
 
 static Bool
-LXCreateScreenResources(ScreenPtr pScreen)
-{
-    ScrnInfoPtr pScrni = xf86Screens[pScreen->myNum];
-    GeodeRec *pGeode = GEODEPTR(pScrni);
-
-    pScreen->CreateScreenResources = pGeode->CreateScreenResources;
-    if (!(*pScreen->CreateScreenResources) (pScreen))
-	return FALSE;
-
-    return TRUE;
-}
-
-static Bool
 LXScreenInit(int scrnIndex, ScreenPtr pScrn, int argc, char **argv)
 {
     ScrnInfoPtr pScrni = xf86Screens[scrnIndex];
@@ -968,12 +955,15 @@ LXScreenInit(int scrnIndex, ScreenPtr pScrn, int argc, char **argv)
 
     pGeode->PointerMoved = pScrni->PointerMoved;
     pScrni->PointerMoved = GeodePointerMoved;
-    pGeode->CreateScreenResources = pScrn->CreateScreenResources;
-    pScrn->CreateScreenResources = LXCreateScreenResources;
 
     pGeode->CloseScreen = pScrn->CloseScreen;
     pScrn->CloseScreen = LXCloseScreen;
     pScrn->SaveScreen = LXSaveScreen;
+
+    if (!xf86CrtcScreenInit(pScrn)) {
+	xf86DrvMsg(scrnIndex, X_ERROR, "CRTCScreenInit failed.\n");
+	return FALSE;
+    }
 
     if (serverGeneration == 1)
 	xf86ShowUnusedOptions(pScrni->scrnIndex, pScrni->options);

@@ -279,10 +279,16 @@ lx_crtc_mode_set(xf86CrtcPtr crtc, DisplayModePtr mode,
     vg_set_display_pitch(pGeode->Pitch);
     gp_set_bpp(pScrni->bitsPerPixel);
 
+    /* Set the acceleration offset if we are drawing to a shadow */
+    if (crtc->rotatedData != NULL)
+	vg_set_display_offset((unsigned int)((char *)crtc->rotatedData -
+		(char *)pGeode->FBBase));
+    else
+	vg_set_display_offset(0);
+
     /* FIXME: Whats up with X and Y?  Does that come into play
      * here? */
 
-    vg_set_display_offset(0);
     df_configure_video_source(&vs_odd, &vs_even);
 
     vg_wait_vertical_blank();
@@ -358,7 +364,11 @@ lx_crtc_shadow_allocate(xf86CrtcPtr crtc, int width, int height)
 
     if (lx_crtc->rotate_mem == NULL) {
 	xf86DrvMsg(pScrni->scrnIndex, X_ERROR,
-	    "Couldn't allocate shadow memory for rotated CRTC\n");
+	    "Couldn't allocate the shadow memory for rotation\n");
+	xf86DrvMsg(pScrni->scrnIndex, X_ERROR,
+	    " You need 0x%x bytes, but only 0x%x bytes are available\n",
+	    size, GeodeOffscreenFreeSize(pGeode));
+
 	return NULL;
     }
 
@@ -370,16 +380,15 @@ static PixmapPtr
 lx_crtc_shadow_create(xf86CrtcPtr crtc, void *data, int width, int height)
 {
     ScrnInfoPtr pScrni = crtc->scrn;
+    GeodeRec *pGeode = GEODEPTR(pScrni);
     PixmapPtr rpixmap;
-    unsigned int rpitch;
 
     if (!data)
 	data = lx_crtc_shadow_allocate(crtc, width, height);
 
-    rpitch = pScrni->displayWidth * (pScrni->bitsPerPixel / 8);
-
     rpixmap = GetScratchPixmapHeader(pScrni->pScreen,
-	width, height, pScrni->depth, pScrni->bitsPerPixel, rpitch, data);
+	width, height, pScrni->depth, pScrni->bitsPerPixel, pGeode->Pitch,
+	data);
 
     if (rpixmap == NULL) {
 	xf86DrvMsg(pScrni->scrnIndex, X_ERROR,
@@ -443,9 +452,7 @@ lx_crtc_hide_cursor(xf86CrtcPtr crtc)
 static void
 lx_crtc_load_cursor_image(xf86CrtcPtr crtc, unsigned char *src)
 {
-    ScrnInfoPtr pScrni = crtc->scrn;
-
-    LXLoadCursorImage(pScrni, src);
+    LXLoadCursorImage(crtc->scrn, src);
 }
 
 static const xf86CrtcFuncsRec lx_crtc_funcs = {
@@ -476,7 +483,7 @@ LXSetupCrtc(ScrnInfoPtr pScrni)
     crtc = xf86CrtcCreate(pScrni, &lx_crtc_funcs);
 
     if (crtc == NULL) {
-	ErrorF("ERROR - xf86CrtcCreate() fail %x\n", crtc);
+	ErrorF("ERROR - failed to create a CRTC\n");
 	return;
     }
 

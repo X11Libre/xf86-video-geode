@@ -91,6 +91,7 @@ LXGetLegacyPanelMode(void)
 
 	if (ret < 7)
 	    return &lx_panel_modes[ret];
+
     }
 
     return NULL;
@@ -134,6 +135,8 @@ LXGetManualPanelMode(char *modestr)
     mode->VSyncStart = vsstart;
     mode->VSyncEnd = vsend;
     mode->VTotal = vtotal;
+
+    mode->prev = mode->next = NULL;
 
     return mode;
 }

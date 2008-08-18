@@ -870,7 +870,7 @@ LXFreeSurface(XF86SurfacePtr surface)
 	LXStopSurface(surface);
 
     if (pPriv->vidmem) {
-	GeodeFreeOffscren(pGeode, pPriv->vidmem);
+	GeodeFreeOffscreen(pGeode, pPriv->vidmem);
 	pPriv->vidmem = NULL;
     }
 

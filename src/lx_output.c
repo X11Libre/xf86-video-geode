@@ -213,8 +213,7 @@ lx_output_get_modes(xf86OutputPtr output)
 	xf86OutputSetEDID(output, mon);
 	modes = xf86OutputGetEDIDModes(output);
     } else {
-	modes = pGeode->panelMode;
-	modes->next = NULL;
+	modes = xf86DuplicateMode(pGeode->panelMode);
     }
 
     return modes;
@@ -251,13 +250,12 @@ LXSetupOutput(ScrnInfoPtr pScrni)
     xf86OutputPtr output;
     LXOutputPrivatePtr lxpriv;
 
-    output = xf86OutputCreate(pScrni, &lx_output_funcs, "Default");
+    output = xf86OutputCreate(pScrni, &lx_output_funcs, "default");
 
     lxpriv = xnfcalloc(1, sizeof(LXOutputPrivateRec));
 
     if (!lxpriv) {
 	xf86OutputDestroy(output);
-	ErrorF("ERROR - Unable to create the output\n");
 	return;
     }
 
