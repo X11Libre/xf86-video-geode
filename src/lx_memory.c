@@ -271,7 +271,8 @@ LXInitOffscreen(ScrnInfoPtr pScrni)
 
     if (pGeode->pExa->offScreenBase)
 	xf86DrvMsg(pScrni->scrnIndex, X_INFO, " EXA: 0x%x bytes\n",
-	    pGeode->pExa->memorySize - pGeode->pExa->offScreenBase);
+	    (unsigned int)(pGeode->pExa->memorySize -
+		pGeode->pExa->offScreenBase));
 
     xf86DrvMsg(pScrni->scrnIndex, X_INFO, " FREE: 0x%x bytes\n",
 	GeodeOffscreenFreeSize(pGeode));

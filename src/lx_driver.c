@@ -37,6 +37,7 @@
 #include "xf86.h"
 #include "xf86_OSproc.h"
 #include "xf86Resources.h"
+#include "xf86i2c.h"
 #include "xf86Crtc.h"
 #include "xf86cmap.h"
 #include "compiler.h"
@@ -598,7 +599,6 @@ static Bool
 LXUnmapMem(ScrnInfoPtr pScrni)
 {
     GeodeRec *pGeode = GEODEPTR(pScrni);
-    pciVideoPtr pci = xf86GetPciInfoForEntity(pGeode->pEnt->index);
 
 #ifndef XSERVER_LIBPCIACCESS
     xf86UnMapVidMem(pScrni->scrnIndex, (pointer) cim_gp_ptr, LX_GP_REG_SIZE);
@@ -608,6 +608,8 @@ LXUnmapMem(ScrnInfoPtr pScrni)
     xf86UnMapVidMem(pScrni->scrnIndex, (pointer) cim_vip_ptr,
 	LX_VIP_REG_SIZE);
 #else
+    pciVideoPtr pci = xf86GetPciInfoForEntity(pGeode->pEnt->index);
+
     unmap_pci_mem(pScrni, pci, cim_gp_ptr, LX_GP_REG_SIZE);
     unmap_pci_mem(pScrni, pci, cim_vg_ptr, LX_VG_REG_SIZE);
     unmap_pci_mem(pScrni, pci, cim_vid_ptr, LX_VID_REG_SIZE);

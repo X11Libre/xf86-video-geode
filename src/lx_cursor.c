@@ -28,6 +28,7 @@
 #endif
 
 #include "xf86.h"
+#include "xf86i2c.h"
 #include "xf86Crtc.h"
 #include "geode.h"
 
@@ -42,7 +43,7 @@ LXCursorInit(ScreenPtr pScrn)
 }
 
 static int
-_getrow(char *src, int stride, int x, int y)
+_getrow(unsigned char *src, int stride, int x, int y)
 {
     x = ((x & ~31) << 1) | (x & 31);
     src += y * stride;
@@ -50,7 +51,7 @@ _getrow(char *src, int stride, int x, int y)
 }
 
 static int
-_getmask(char *src, int stride, int x, int y)
+_getmask(unsigned char *src, int stride, int x, int y)
 {
     x = ((x & ~31) << 1) | (1 << 5) | (x & 31);
     src += y * stride;
@@ -62,7 +63,6 @@ LXLoadCursorImage(ScrnInfoPtr pScrni, unsigned char *src)
 {
     GeodeRec *pGeode = GEODEPTR(pScrni);
     unsigned long andMask[32], xorMask[32];
-    unsigned char *ptr = src;
     int y, x;
 
     for (y = 0; y < 32; y++) {
