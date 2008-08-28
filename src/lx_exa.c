@@ -919,7 +919,8 @@ transformPoint(PictTransform * t, xPointFixed * point)
     v.vector[1] = point->y;
     v.vector[2] = xFixed1;
 
-    PictureTransformPoint(t, &v);
+    if (t != NULL)
+	PictureTransformPoint(t, &v);
 
     point->x = v.vector[0];
     point->y = v.vector[1];
