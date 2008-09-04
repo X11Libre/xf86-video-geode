@@ -113,6 +113,9 @@ dcon_init(ScrnInfoPtr pScrni)
     pGeode->panelMode->VSyncStart = 905;
     pGeode->panelMode->VSyncEnd = 908;
     pGeode->panelMode->VTotal = 912;
+    pGeode->panelMode->Flags = V_NHSYNC | V_NVSYNC;
+
+    xf86SetModeDefaultName(pGeode->panelMode);
 
     /* TODO: Print board revision once sysfs exports it. */
     xf86DrvMsg(pScrni->scrnIndex, X_DEFAULT, "DCON detected.\n");

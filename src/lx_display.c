@@ -81,6 +81,8 @@ lx_disable_dac_power(ScrnInfoPtr pScrni, int option)
 static void
 lx_set_panel_mode(VG_DISPLAY_MODE * mode, DisplayModePtr pMode)
 {
+    int hsync, vsync;
+
     mode->mode_width = mode->panel_width = pMode->HDisplay;
     mode->mode_height = mode->panel_height = pMode->VDisplay;
 
@@ -106,11 +108,22 @@ lx_set_panel_mode(VG_DISPLAY_MODE * mode, DisplayModePtr pMode)
     mode->vtotal_even = pMode->VTotal;
 
     mode->frequency = (int)((pMode->Clock / 1000.0) * 0x10000);
+
+    /* In panel mode, Cimarron purposely swizzles these,
+     * so we swizzle them first  */
+
+    hsync = (pMode->Flags & V_NHSYNC) ? 0 : 1;
+    vsync = (pMode->Flags & V_NVSYNC) ? 0 : 1;
+
+    mode->flags |= (hsync) ? VG_MODEFLAG_NEG_HSYNC : 0;
+    mode->flags |= (vsync) ? VG_MODEFLAG_NEG_VSYNC : 0;
 }
 
 static void
 lx_set_crt_mode(VG_DISPLAY_MODE * mode, DisplayModePtr pMode)
 {
+    int hsync, vsync;
+
     mode->mode_width = mode->panel_width = pMode->HDisplay;
     mode->mode_height = mode->panel_height = pMode->VDisplay;
 
@@ -136,6 +149,12 @@ lx_set_crt_mode(VG_DISPLAY_MODE * mode, DisplayModePtr pMode)
     mode->vtotal_even = pMode->CrtcVTotal;
 
     mode->frequency = (int)((pMode->Clock / 1000.0) * 0x10000);
+
+    hsync = (pMode->Flags & V_NHSYNC) ? 1 : 0;
+    vsync = (pMode->Flags & V_NVSYNC) ? 1 : 0;
+
+    mode->flags |= (hsync) ? VG_MODEFLAG_NEG_HSYNC : 0;
+    mode->flags |= (vsync) ? VG_MODEFLAG_NEG_VSYNC : 0;
 }
 
 static int
@@ -143,26 +162,9 @@ lx_set_mode(ScrnInfoPtr pScrni, DisplayModePtr pMode, int bpp)
 {
     GeodeRec *pGeode = GEODEPTR(pScrni);
     VG_DISPLAY_MODE mode;
-    int hsync, vsync;
     int ret;
 
     memset(&mode, 0, sizeof(mode));
-
-    /* Cimarron purposely swaps the sync when panels are enabled -this is
-     * presumably to allow for "default" panels which are normally active
-     * low, so we need to swizzle the flags
-     */
-
-    hsync = (pMode->Flags & V_NHSYNC) ? 1 : 0;
-    vsync = (pMode->Flags & V_NVSYNC) ? 1 : 0;
-
-    if (pGeode->Output & OUTPUT_PANEL) {
-	hsync = !vsync;
-	vsync = !vsync;
-    }
-
-    mode.flags |= (hsync) ? VG_MODEFLAG_NEG_HSYNC : 0;
-    mode.flags |= (vsync) ? VG_MODEFLAG_NEG_VSYNC : 0;
 
     mode.flags |= pGeode->Output & OUTPUT_CRT ? VG_MODEFLAG_CRT_AND_FP : 0;
 
@@ -190,10 +192,8 @@ lx_crtc_dpms(xf86CrtcPtr crtc, int mode)
     ScrnInfoPtr pScrni = crtc->scrn;
     GeodeRec *pGeode = GEODEPTR(pScrni);
 
-    if (pGeode->Output & OUTPUT_DCON) {
-	if (DCONDPMSSet(pScrni, mode))
-	    return;
-    }
+    if (pGeode->Output & OUTPUT_DCON)
+	DCONDPMSSet(pScrni, mode);
 
     switch (mode) {
     case DPMSModeOn:
