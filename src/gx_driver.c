@@ -68,6 +68,9 @@
 #define GX_GP_REG_SIZE  0x4000
 #define GX_VID_REG_SIZE 0x4000
 
+#define DEFAULT_IMG_LINE_BUFS 20
+#define DEFAULT_CLR_LINE_BUFS 20
+
 extern OptionInfoRec GX_GeodeOptions[];
 
 extern const char *amdVgahwSymbols[];
@@ -200,12 +203,11 @@ GXAllocateMemory(ScreenPtr pScrn, ScrnInfoPtr pScrni, int rotate)
     }
 
     if (pGeode->tryHWCursor) {
-	pGeode->CursorSize = 1024;
 
-	if (pGeode->CursorSize <= fbavail) {
+	if (fbavail >= 1024) {
 	    pGeode->CursorStartOffset = fboffset;
-	    fboffset += pGeode->CursorSize;
-	    fbavail -= pGeode->CursorSize;
+	    fboffset += 1024;
+	    fbavail -= 1024;
 	    pGeode->HWCursor = TRUE;
 	} else {
 	    xf86DrvMsg(pScrni->scrnIndex, X_ERROR,
@@ -652,9 +654,6 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
     else
 	pScrni->videoRam = pGeode->pEnt->device->videoRam;
 
-    pGeode->maxWidth = GX_MAX_WIDTH;
-    pGeode->maxHeight = GX_MAX_HEIGHT;
-
     GeodeClockRange = (ClockRangePtr) xnfcalloc(sizeof(ClockRange), 1);
     GeodeClockRange->next = NULL;
     GeodeClockRange->minClock = 25175;
@@ -789,9 +788,7 @@ GXAdjustFrame(int scrnIndex, int x, int y, int flags)
     GeodeRec *pGeode = GEODEPTR(pScrni);
     unsigned long offset;
 
-    offset =
-	pGeode->FBOffset + y * pGeode->Pitch +
-	x * (pScrni->bitsPerPixel >> 3);
+    offset = y * pGeode->Pitch + x * (pScrni->bitsPerPixel >> 3);
 
     gfx_set_display_offset(offset);
 }
@@ -1269,8 +1266,8 @@ GXScreenInit(int scrnIndex, ScreenPtr pScrn, int argc, char **argv)
 		pExa->pixmapOffsetAlign = 32;
 		pExa->pixmapPitchAlign = 32;
 		pExa->flags = EXA_OFFSCREEN_PIXMAPS;
-		pExa->maxX = pGeode->maxWidth - 1;
-		pExa->maxY = pGeode->maxHeight - 1;
+		pExa->maxX = GX_MAX_WIDTH - 1;
+		pExa->maxY = GX_MAX_HEIGHT - 1;
 	    }
 	} else {
 	    pGeode->AccelImageWriteBuffers =

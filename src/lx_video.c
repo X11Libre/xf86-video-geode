@@ -1,4 +1,4 @@
-/* Copyright (c) 2007 Advanced Micro Devices, Inc.
+/* Copyright (c) 2007-2008 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -100,8 +100,7 @@ static XF86ImageRec Images[] = {
 
 typedef struct
 {
-    void *area;
-    int offset;
+    GeodeMemPtr vidmem;
     RegionRec clip;
     CARD32 filter;
     CARD32 colorKey;
@@ -128,38 +127,6 @@ LXCopyFromSys(GeodeRec * pGeode, unsigned char *src, unsigned int dst,
     gp_set_solid_pattern(0);
 
     gp_color_bitmap_to_screen_blt(dst, 0, w, h, src, srcPitch);
-}
-
-static void
-LXVideoSave(ScreenPtr pScreen, ExaOffscreenArea * area)
-{
-    ScrnInfoPtr pScrni = xf86Screens[pScreen->myNum];
-
-    GeodePortPrivRec *pPriv = GET_PORT_PRIVATE(pScrni);
-
-    if (area == pPriv->area)
-	pPriv->area = NULL;
-
-    LXStopVideo(pScrni, (void *)pPriv, TRUE);
-}
-
-static unsigned int
-LXAllocateVidMem(ScrnInfoPtr pScrni, void **memp, int size)
-{
-    ExaOffscreenArea *area = *memp;
-
-    if (area != NULL) {
-	if (area->size >= size)
-	    return area->offset;
-
-	exaOffscreenFree(pScrni->pScreen, area);
-    }
-
-    area = exaOffscreenAlloc(pScrni->pScreen, size, 16, TRUE,
-	LXVideoSave, NULL);
-
-    *memp = area;
-    return (area == NULL) ? 0 : area->offset;
 }
 
 static void
@@ -252,10 +219,10 @@ LXCopyPlanar(ScrnInfoPtr pScrni, int id, unsigned char *buf,
     size = YDstPitch * height;
     size += UVDstPitch * height;
 
-    pPriv->offset = LXAllocateVidMem(pScrni, &pPriv->area, size);
+    pPriv->vidmem = GeodeAllocOffscreen(pGeode, size, 4);
 
-    if (pPriv->offset == 0) {
-	ErrorF("Error allocating an offscreen region.\n");
+    if (pPriv->vidmem == NULL) {
+	ErrorF("Could not allocate memory for the video\n");
 	return FALSE;
     }
 
@@ -282,19 +249,21 @@ LXCopyPlanar(ScrnInfoPtr pScrni, int id, unsigned char *buf,
 
     /* Copy Y */
 
-    LXCopyFromSys(pGeode, buf + YSrcOffset, pPriv->offset + YDstOffset,
-	YDstPitch, YSrcPitch, lines, pixels);
+    LXCopyFromSys(pGeode, buf + YSrcOffset,
+	pPriv->vidmem->offset + YDstOffset, YDstPitch, YSrcPitch, lines,
+	pixels);
 
     /* Copy U + V at the same time */
 
-    LXCopyFromSys(pGeode, buf + USrcOffset, pPriv->offset + UDstOffset,
-	UVDstPitch, UVSrcPitch, lines, pixels >> 1);
+    LXCopyFromSys(pGeode, buf + USrcOffset,
+	pPriv->vidmem->offset + UDstOffset, UVDstPitch, UVSrcPitch, lines,
+	pixels >> 1);
 
-    videoScratch.dstOffset = pPriv->offset + YDstOffset;
+    videoScratch.dstOffset = pPriv->vidmem->offset + YDstOffset;
     videoScratch.dstPitch = YDstPitch;
     videoScratch.UVPitch = UVDstPitch;
-    videoScratch.UDstOffset = pPriv->offset + UDstOffset;
-    videoScratch.VDstOffset = pPriv->offset + VDstOffset;
+    videoScratch.UDstOffset = pPriv->vidmem->offset + UDstOffset;
+    videoScratch.VDstOffset = pPriv->vidmem->offset + VDstOffset;
 
     return TRUE;
 }
@@ -315,9 +284,9 @@ LXCopyPacked(ScrnInfoPtr pScrni, int id, unsigned char *buf,
 
     lines = ((dstPitch * height) + pGeode->Pitch - 1) / pGeode->Pitch;
 
-    pPriv->offset = LXAllocateVidMem(pScrni, &pPriv->area, height * dstPitch);
+    pPriv->vidmem = GeodeAllocOffscreen(pGeode, lines, 4);
 
-    if (pPriv->offset == 0) {
+    if (pPriv->vidmem == NULL) {
 	ErrorF("Error while allocating an offscreen region.\n");
 	return FALSE;
     }
@@ -335,7 +304,7 @@ LXCopyPacked(ScrnInfoPtr pScrni, int id, unsigned char *buf,
     srcOffset = (top * srcPitch) + left;
 
     /* Calculate the destination offset */
-    dstOffset = pPriv->offset + (top * dstPitch) + left;
+    dstOffset = pPriv->vidmem->offset + (top * dstPitch) + left;
 
     /* Make the copy happen */
 
@@ -542,7 +511,6 @@ LXPutImage(ScrnInfoPtr pScrni,
     }
 
     pPriv->videoStatus = CLIENT_VIDEO_ON;
-    pGeode->OverlayON = TRUE;
 
     return Success;
 }
@@ -622,15 +590,14 @@ LXStopVideo(ScrnInfoPtr pScrni, pointer data, Bool exit)
 	    WRITE_VID32(DF_VID_MISC, val | DF_GAMMA_BYPASS_BOTH);
 	}
 
-	if (pPriv->area) {
-	    exaOffscreenFree(pScrni->pScreen, pPriv->area);
-	    pPriv->area = NULL;
+	if (pPriv->vidmem) {
+	    GeodeFreeOffscreen(pGeode, pPriv->vidmem);
+	    pPriv->vidmem = NULL;
 	}
 
 	pPriv->videoStatus = 0;
 
 	/* Eh? */
-	pGeode->OverlayON = FALSE;
     } else if (pPriv->videoStatus & CLIENT_VIDEO_ON) {
 	pPriv->videoStatus |= OFF_TIMER;
 	pPriv->offTime = currentTime.milliseconds + OFF_DELAY;
@@ -684,9 +651,10 @@ LXVidBlockHandler(int i, pointer blockData, pointer pTimeout,
 	    }
 	} else {
 	    if (pPriv->freeTime < now) {
-		if (pPriv->area) {
-		    exaOffscreenFree(pScrni->pScreen, pPriv->area);
-		    pPriv->area = NULL;
+
+		if (pPriv->vidmem) {
+		    GeodeFreeOffscreen(pGeode, pPriv->vidmem);
+		    pPriv->vidmem = NULL;
 		}
 
 		pPriv->videoStatus = 0;
@@ -741,7 +709,7 @@ LXSetupImageVideo(ScreenPtr pScrn)
     adapt->QueryImageAttributes = GeodeQueryImageAttributes;
 
     pPriv->filter = 0;
-    pPriv->colorKey = pGeode->videoKey;
+    pPriv->colorKey = 0;
     pPriv->colorKeyMode = 0;
     pPriv->videoStatus = 0;
     pPriv->pwidth = 0;
@@ -767,8 +735,7 @@ LXSetupImageVideo(ScreenPtr pScrn)
 
 struct OffscreenPrivRec
 {
-    void *area;
-    int offset;
+    GeodeMemPtr vidmem;
     Bool isOn;
 };
 
@@ -825,9 +792,8 @@ LXAllocateSurface(ScrnInfoPtr pScrni, int id, unsigned short w,
     unsigned short h, XF86SurfacePtr surface)
 {
     GeodeRec *pGeode = GEODEPTR(pScrni);
-    void *area = NULL;
     int pitch, lines;
-    unsigned offset;
+    GeodeMemPtr vidmem;
     struct OffscreenPrivRec *pPriv;
 
     if (w > 1024 || h > 1024)
@@ -839,9 +805,9 @@ LXAllocateSurface(ScrnInfoPtr pScrni, int id, unsigned short w,
     pitch = ((w << 1) + 15) & ~15;
     lines = ((pitch * h) + (pGeode->Pitch - 1)) / pGeode->Pitch;
 
-    offset = LXAllocateVidMem(pScrni, &area, lines);
+    vidmem = GeodeAllocOffscreen(pGeode, lines, 4);
 
-    if (offset == 0) {
+    if (vidmem == NULL) {
 	ErrorF("Error while allocating an offscreen region.\n");
 	return BadAlloc;
     }
@@ -857,15 +823,14 @@ LXAllocateSurface(ScrnInfoPtr pScrni, int id, unsigned short w,
 
     if (pPriv && surface->pitches && surface->offsets) {
 
-	pPriv->area = area;
-	pPriv->offset = offset;
+	pPriv->vidmem = vidmem;
 
 	pPriv->isOn = FALSE;
 
 	surface->pScrn = pScrni;
 	surface->id = id;
 	surface->pitches[0] = pitch;
-	surface->offsets[0] = offset;
+	surface->offsets[0] = vidmem->offset;
 	surface->devPrivate.ptr = (pointer) pPriv;
 
 	return Success;
@@ -877,8 +842,8 @@ LXAllocateSurface(ScrnInfoPtr pScrni, int id, unsigned short w,
     if (surface->pitches)
 	xfree(surface->pitches);
 
-    if (area)
-	exaOffscreenFree(pScrni->pScreen, area);
+    if (vidmem)
+	GeodeFreeOffscreen(pGeode, vidmem);
 
     return BadAlloc;
 }
@@ -899,13 +864,14 @@ LXFreeSurface(XF86SurfacePtr surface)
     struct OffscreenPrivRec *pPriv = (struct OffscreenPrivRec *)
 	surface->devPrivate.ptr;
     ScrnInfoPtr pScrni = surface->pScrn;
+    GeodeRec *pGeode = GEODEPTR(pScrni);
 
     if (pPriv->isOn)
 	LXStopSurface(surface);
 
-    if (pPriv->area) {
-	exaOffscreenFree(pScrni->pScreen, pPriv->area);
-	pPriv->area = NULL;
+    if (pPriv->vidmem) {
+	GeodeFreeOffscreen(pGeode, pPriv->vidmem);
+	pPriv->vidmem = NULL;
     }
 
     xfree(surface->pitches);
