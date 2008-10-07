@@ -205,7 +205,9 @@ LXInitOffscreen(ScrnInfoPtr pScrni)
     }
 
     if (pGeode->tryHWCursor) {
-	ptr = GeodeAllocOffscreen(pGeode, 1024, 4);
+	ptr = GeodeAllocOffscreen(pGeode,
+		LX_CURSOR_MAX_WIDTH * 4 * LX_CURSOR_MAX_HEIGHT, 4);
+
 	if (ptr != NULL) {
 	    pGeode->CursorStartOffset = ptr->offset;
 	    pGeode->HWCursor = TRUE;

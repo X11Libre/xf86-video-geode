@@ -425,15 +425,6 @@ static void
 lx_crtc_set_cursor_position(xf86CrtcPtr crtc, int x, int y)
 {
     VG_PANNING_COORDINATES panning;
-
-    /* FIXME: Do I need to worry about rotation adjustment here? */
-
-    switch (crtc->rotation) {
-    case RR_Rotate_0:
-	x += 31;
-	y += 31;
-    }
-
     vg_set_cursor_position(x, y, &panning);
 }
 
@@ -450,9 +441,9 @@ lx_crtc_hide_cursor(xf86CrtcPtr crtc)
 }
 
 static void
-lx_crtc_load_cursor_image(xf86CrtcPtr crtc, unsigned char *src)
+lx_crtc_load_cursor_argb(xf86CrtcPtr crtc, CARD32 *image)
 {
-    LXLoadCursorImage(crtc->scrn, src);
+    LXLoadARGBCursorImage(crtc->scrn, (unsigned char *) image);
 }
 
 static const xf86CrtcFuncsRec lx_crtc_funcs = {
@@ -471,7 +462,7 @@ static const xf86CrtcFuncsRec lx_crtc_funcs = {
     .set_cursor_position = lx_crtc_set_cursor_position,
     .show_cursor = lx_crtc_show_cursor,
     .hide_cursor = lx_crtc_hide_cursor,
-    .load_cursor_image = lx_crtc_load_cursor_image,
+    .load_cursor_argb = lx_crtc_load_cursor_argb,
 };
 
 void

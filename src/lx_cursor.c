@@ -35,50 +35,21 @@
 Bool
 LXCursorInit(ScreenPtr pScrn)
 {
-    return xf86_cursors_init(pScrn, 32, 32,
+    return xf86_cursors_init(pScrn,
+        LX_CURSOR_MAX_WIDTH, LX_CURSOR_MAX_HEIGHT,
 	HARDWARE_CURSOR_TRUECOLOR_AT_8BPP |
 	HARDWARE_CURSOR_INVERT_MASK |
 	HARDWARE_CURSOR_AND_SOURCE_WITH_MASK |
-	HARDWARE_CURSOR_SOURCE_MASK_INTERLEAVE_32);
-}
-
-static int
-_getrow(unsigned char *src, int stride, int x, int y)
-{
-    x = ((x & ~31) << 1) | (x & 31);
-    src += y * stride;
-    return (src[x >> 3] >> (x & 7)) & 1;
-}
-
-static int
-_getmask(unsigned char *src, int stride, int x, int y)
-{
-    x = ((x & ~31) << 1) | (1 << 5) | (x & 31);
-    src += y * stride;
-    return (src[x >> 3] >> (x & 7)) & 1;
+	HARDWARE_CURSOR_SOURCE_MASK_INTERLEAVE_32 |
+	HARDWARE_CURSOR_ARGB);
 }
 
 void
-LXLoadCursorImage(ScrnInfoPtr pScrni, unsigned char *src)
+LXLoadARGBCursorImage(ScrnInfoPtr pScrni, unsigned char *src)
 {
     GeodeRec *pGeode = GEODEPTR(pScrni);
-    unsigned long andMask[32], xorMask[32];
-    int y, x;
-
-    for (y = 0; y < 32; y++) {
-	andMask[y] = (src) ? 0 : ~0;
-	xorMask[y] = 0;
-    }
-
-    if (src != NULL) {
-	for (y = 0; y < 32; y++) {
-	    for (x = 0; x < 32; x++) {
-		xorMask[y] |= _getrow(src, 8, x, y) << (31 - x);
-		andMask[y] |= _getmask(src, 8, x, y) << (31 - x);
-	    }
-	}
-    }
-
-    vg_set_mono_cursor_shape32(pGeode->CursorStartOffset, &andMask[0],
-	&xorMask[0], 32, 32);
+    vg_set_color_cursor_shape(pGeode->CursorStartOffset, src,
+				  LX_CURSOR_MAX_WIDTH, LX_CURSOR_MAX_HEIGHT,
+				  LX_CURSOR_MAX_WIDTH * 4, 0, 0);
 }
+

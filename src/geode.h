@@ -92,6 +92,9 @@
 
 #define DEFAULT_EXA_SCRATCH_BFRSZ 0x40000
 
+#define LX_CURSOR_MAX_WIDTH  32
+#define LX_CURSOR_MAX_HEIGHT 64
+
 /* FIXME: Get rid of this from GX */
 
 #define DEBUGMSG(cond, drv_msg)
@@ -426,7 +429,7 @@ void LXSetupChipsetFPtr(ScrnInfoPtr pScrn);
 
 /* lx_cursor.c */
 Bool LXHWCursorInit(ScreenPtr pScrn);
-void LXLoadCursorImage(ScrnInfoPtr pScrni, unsigned char *src);
+void LXLoadARGBCursorImage(ScrnInfoPtr pScrni, unsigned char *src);
 void LXHideCursor(ScrnInfoPtr pScrni);
 void LXShowCursor(ScrnInfoPtr pScrni);
 
