@@ -526,6 +526,18 @@ LXPreInit(ScrnInfoPtr pScrni, int flags)
 	pGeode->FBAvail = pScrni->videoRam << 10;
     }
 
+    /* If we have <= 16Mb of memory then compression is going
+       to hurt - so warn and disable */
+
+    if (pGeode->tryCompression &&
+	pGeode->FBAvail <= 0x1000000) {
+    	xf86DrvMsg(pScrni->scrnIndex, X_INFO,
+	"%x bytes of video memory is less then optimal\n", pGeode->FBAvail);
+    	xf86DrvMsg(pScrni->scrnIndex, X_INFO,
+	"when compression is on. Disabling compression.\n");
+	pGeode->tryCompression = FALSE;
+    }
+
     /* Carve out some memory for the command buffer */
 
     pGeode->CmdBfrSize = CIM_CMD_BFR_SZ;
@@ -598,8 +610,6 @@ LXRestore(ScrnInfoPtr pScrni)
 static Bool
 LXUnmapMem(ScrnInfoPtr pScrni)
 {
-    GeodeRec *pGeode = GEODEPTR(pScrni);
-
 #ifndef XSERVER_LIBPCIACCESS
     xf86UnMapVidMem(pScrni->scrnIndex, (pointer) cim_gp_ptr, LX_GP_REG_SIZE);
     xf86UnMapVidMem(pScrni->scrnIndex, (pointer) cim_vg_ptr, LX_VG_REG_SIZE);

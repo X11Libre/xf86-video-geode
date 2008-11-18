@@ -189,6 +189,24 @@ struct
 /* Copy planar YUV data */
 
 static Bool
+LXAllocMem(GeodeRec *pGeode, GeodePortPrivRec *pPriv, int size)
+{
+    if (!pPriv->vidmem || pPriv->vidmem->size < size) { 
+	if (pPriv->vidmem) 
+		GeodeFreeOffscreen(pGeode, pPriv->vidmem);
+
+    	pPriv->vidmem = GeodeAllocOffscreen(pGeode, size, 4);
+
+    	if (pPriv->vidmem == NULL) {
+		ErrorF("Could not allocate memory for the video\n");
+		return FALSE;
+    	}
+    }
+
+    return TRUE;
+}	
+
+static Bool
 LXCopyPlanar(ScrnInfoPtr pScrni, int id, unsigned char *buf,
     short x1, short y1, short x2, short y2,
     int width, int height, pointer data)
@@ -219,12 +237,8 @@ LXCopyPlanar(ScrnInfoPtr pScrni, int id, unsigned char *buf,
     size = YDstPitch * height;
     size += UVDstPitch * height;
 
-    pPriv->vidmem = GeodeAllocOffscreen(pGeode, size, 4);
-
-    if (pPriv->vidmem == NULL) {
-	ErrorF("Could not allocate memory for the video\n");
+    if (LXAllocMem(pGeode, pPriv, size) == FALSE)
 	return FALSE;
-    }
 
     /* The top of the source region we want to copy */
     top = y1 & ~1;
@@ -284,12 +298,8 @@ LXCopyPacked(ScrnInfoPtr pScrni, int id, unsigned char *buf,
 
     lines = ((dstPitch * height) + pGeode->Pitch - 1) / pGeode->Pitch;
 
-    pPriv->vidmem = GeodeAllocOffscreen(pGeode, lines, 4);
-
-    if (pPriv->vidmem == NULL) {
-	ErrorF("Error while allocating an offscreen region.\n");
+    if (LXAllocMem(pGeode, pPriv, lines) == FALSE)
 	return FALSE;
-    }
 
     /* The top of the source region we want to copy */
     top = y1;
@@ -485,14 +495,14 @@ LXPutImage(ScrnInfoPtr pScrni,
 
     if (id == FOURCC_YV12 || id == FOURCC_I420)
 	ret = LXCopyPlanar(pScrni, id, buf, x1, y1, x2, y2, width,
-	                   height, data);
+			height, data);
     else
 	ret = LXCopyPacked(pScrni, id, buf, x1, y1, x2, y2, width,
-			   height, data);
+			height, data);
 
     if (ret == FALSE)
 	return BadAlloc;
-
+	
     if (!RegionsEqual(&pPriv->clip, clipBoxes) ||
 	(drawW != pPriv->pwidth || drawH != pPriv->pheight)) {
 	REGION_COPY(pScrni->pScreen, &pPriv->clip, clipBoxes);
@@ -705,6 +715,7 @@ LXSetupImageVideo(ScreenPtr pScrn)
     /* Use the common function */
     adapt->QueryImageAttributes = GeodeQueryImageAttributes;
 
+    pPriv->vidmem = NULL;
     pPriv->filter = 0;
     pPriv->colorKey = 0;
     pPriv->colorKeyMode = 0;

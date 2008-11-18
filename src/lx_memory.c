@@ -48,7 +48,8 @@ GeodeOffscreenFreeSize(GeodeRec * pGeode)
 	return pGeode->offscreenSize;
 
     for (; ptr->next; ptr = ptr->next) ;
-    return pGeode->offscreenSize - (ptr->offset + ptr->size);
+    return (pGeode->offscreenStart + pGeode->offscreenSize)
+	    - (ptr->offset + ptr->size);
 }
 
 void
@@ -235,16 +236,28 @@ LXInitOffscreen(ScrnInfoPtr pScrni)
 	pGeode->pExa->offScreenBase = 0;
 	pGeode->pExa->memorySize = 0;
 
-	/* In a break from the previous behavior, we will
-	 * allocate 3 screens worth of offscreen memory.
-	 * (that means, 3 * y * (x * bpp) - not the compressed
-	 * pitch if it is enabled). */
+	/* This might cause complaints - in order to avoid using
+           xorg.conf as much as possible, we make assumptions about
+           what a "default" memory map would look like.  After
+           discussion, we agreed that the default driver should assume
+           the user will want to use rotation and video overlays, and
+	   EXA will get whatever is leftover. 
+        */
 
-	/* FIXME:  Make this configurable */
+	/* Get the amount of offscreen memory still left */
+	size = GeodeOffscreenFreeSize(pGeode);
 
-	size = 3 * (pScrni->virtualY *
-	    ((pScrni->virtualX + 3) & ~3) * (pScrni->bitsPerPixel >> 3));
+	/* Deduct the maxmimum size of a video overlay */
+	size -= 0x200000;	
+	
+	/* Deduct the probable size of a shadow buffer */
+	size -= pScrni->virtualX *
+	(pScrni->virtualY * (pScrni->bitsPerPixel >> 3));
 
+	/* Align the size to a K boundary */	
+	size &= ~1023;
+
+	/* Allocate the EXA offscreen space */
 	ptr = GeodeAllocOffscreen(pGeode, size, 4);
 
 	if (ptr == NULL) {
