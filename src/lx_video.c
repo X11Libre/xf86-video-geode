@@ -450,6 +450,7 @@ LXPutImage(ScrnInfoPtr pScrni,
     GeodePortPrivRec *pPriv = (GeodePortPrivRec *) data;
     INT32 x1, x2, y1, y2;
     BoxRec dstBox;
+    Bool ret;
 
     if (pGeode->rotation != RR_Rotate_0)
 	return Success;
@@ -482,19 +483,15 @@ LXPutImage(ScrnInfoPtr pScrni,
     dstBox.y1 -= pScrni->frameY0;
     dstBox.y2 -= pScrni->frameY0;
 
-    switch (id) {
-    case FOURCC_YV12:
-    case FOURCC_I420:
-	LXCopyPlanar(pScrni, id, buf, x1, y1, x2, y2, width, height, data);
-	break;
+    if (id == FOURCC_YV12 || id == FOURCC_I420)
+	ret = LXCopyPlanar(pScrni, id, buf, x1, y1, x2, y2, width,
+	                   height, data);
+    else
+	ret = LXCopyPacked(pScrni, id, buf, x1, y1, x2, y2, width,
+			   height, data);
 
-    case FOURCC_UYVY:
-    case FOURCC_YUY2:
-    case FOURCC_Y800:
-    case FOURCC_RGB565:
-	LXCopyPacked(pScrni, id, buf, x1, y1, x2, y2, width, height, data);
-	break;
-    }
+    if (ret == FALSE)
+	return BadAlloc;
 
     if (!RegionsEqual(&pPriv->clip, clipBoxes) ||
 	(drawW != pPriv->pwidth || drawH != pPriv->pheight)) {

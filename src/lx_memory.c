@@ -136,7 +136,7 @@ GeodeAllocOffscreen(GeodeRec * pGeode, int size, int align)
 	unsigned int gap;
 
 	if (ptr->next == NULL)
-	    gap = pGeode->offscreenSize;
+	    gap = pGeode->offscreenSize + pGeode->offscreenStart;
 
 	else
 	    gap = ptr->next->offset;
