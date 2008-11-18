@@ -96,7 +96,9 @@ GeodeAllocRemainder(GeodeRec * pGeode)
 
     nptr = xcalloc(1, sizeof(*nptr));
     nptr->offset = ptr->offset + ptr->size;
-    nptr->size = pGeode->offscreenSize - nptr->offset;
+    nptr->size = pGeode->offscreenSize -
+	(nptr->offset - pGeode->offscreenStart);
+
     nptr->next = ptr->next;
     nptr->prev = ptr;
     ptr->next = nptr;
