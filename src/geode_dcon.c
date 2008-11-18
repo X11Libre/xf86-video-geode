@@ -103,7 +103,7 @@ dcon_init(ScrnInfoPtr pScrni)
 
     /* Set up the panel mode structure automagically */
 
-    pGeode->panelMode->type = M_T_DRIVER;
+    pGeode->panelMode->type = M_T_DRIVER|M_T_PREFERRED;
     pGeode->panelMode->Clock = 57275;
     pGeode->panelMode->HDisplay = 1200;
     pGeode->panelMode->HSyncStart = 1208;
