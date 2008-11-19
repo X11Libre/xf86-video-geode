@@ -618,6 +618,7 @@ LXUnmapMem(ScrnInfoPtr pScrni)
     xf86UnMapVidMem(pScrni->scrnIndex, (pointer) cim_vip_ptr,
 	LX_VIP_REG_SIZE);
 #else
+    GeodeRec *pGeode = GEODEPTR(pScrni);
     pciVideoPtr pci = xf86GetPciInfoForEntity(pGeode->pEnt->index);
 
     unmap_pci_mem(pScrni, pci, cim_gp_ptr, LX_GP_REG_SIZE);
