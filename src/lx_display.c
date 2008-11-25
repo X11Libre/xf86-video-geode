@@ -182,6 +182,9 @@ lx_set_mode(ScrnInfoPtr pScrni, DisplayModePtr pMode, int bpp)
     mode.src_width = pMode->HDisplay;
     mode.src_height = pMode->VDisplay;
 
+    /* Set the filter coefficients to the default values */
+    vg_set_scaler_filter_coefficients(NULL, NULL);
+
     ret = vg_set_custom_mode(&mode, bpp);
     return (ret == CIM_STATUS_OK) ? 0 : -1;
 }
