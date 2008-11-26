@@ -92,7 +92,7 @@
 
 #define DEFAULT_EXA_SCRATCH_BFRSZ 0x40000
 
-#define LX_CURSOR_MAX_WIDTH  32
+#define LX_CURSOR_MAX_WIDTH  48
 #define LX_CURSOR_MAX_HEIGHT 64
 
 /* FIXME: Get rid of this from GX */

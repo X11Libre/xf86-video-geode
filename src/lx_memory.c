@@ -284,7 +284,8 @@ LXInitOffscreen(ScrnInfoPtr pScrni)
 	    pScrni->virtualY * LX_CB_PITCH);
 
     if (pGeode->HWCursor)
-	xf86DrvMsg(pScrni->scrnIndex, X_INFO, " Cursor: 0x400 bytes\n");
+	xf86DrvMsg(pScrni->scrnIndex, X_INFO, " Cursor: 0x%x bytes\n",
+	    LX_CURSOR_MAX_WIDTH * 4 * LX_CURSOR_MAX_HEIGHT);
 
     if (pGeode->pExa->offScreenBase)
 	xf86DrvMsg(pScrni->scrnIndex, X_INFO, " EXA: 0x%x bytes\n",
