@@ -249,6 +249,7 @@ LXSetupOutput(ScrnInfoPtr pScrni)
 {
     xf86OutputPtr output;
     LXOutputPrivatePtr lxpriv;
+    GeodePtr pGeode = GEODEPTR(pScrni);
 
     output = xf86OutputCreate(pScrni, &lx_output_funcs, "default");
 
@@ -266,6 +267,16 @@ LXSetupOutput(ScrnInfoPtr pScrni)
     /* Set up the DDC bus */
 
     GeodeI2CInit(pScrni, &lxpriv->pDDCBus, "CS5536 DDC");
+
+    if (pScrni->monitor->widthmm && pScrni->monitor->heightmm) {
+	/* prioritize the admin's screen size */
+	output->mm_width = pScrni->monitor->widthmm;
+	output->mm_height = pScrni->monitor->heightmm;
+    } else if (pGeode->mm_width && pGeode->mm_height) {
+	/* if we have a panel that we're certain of the size of, set it */
+	output->mm_width = pScrni->monitor->widthmm = pGeode->mm_width;
+	output->mm_height = pScrni->monitor->heightmm = pGeode->mm_height;
+    }
 
     /* We only have one CRTC, and this output is tied to it */
     output->possible_crtcs = 1;

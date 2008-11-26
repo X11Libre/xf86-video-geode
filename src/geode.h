@@ -196,6 +196,8 @@ typedef struct _geodeRec
     Bool tryCompression;
     Bool tryHWCursor;
 
+    int mm_width, mm_height;           /* physical display size */
+
     unsigned long CursorStartOffset;
 
     int Pitch;			       /* display FB pitch */

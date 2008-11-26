@@ -92,6 +92,9 @@ dcon_init(ScrnInfoPtr pScrni)
 {
     GeodeRec *pGeode = GEODEPTR(pScrni);
 
+    pGeode->mm_width = 0;
+    pGeode->mm_height = 0;
+
     if (!dcon_present()) {
 	xf86DrvMsg(pScrni->scrnIndex, X_DEFAULT, "No DCON is present\n");
 	return FALSE;
@@ -114,6 +117,9 @@ dcon_init(ScrnInfoPtr pScrni)
     pGeode->panelMode->VSyncEnd = 908;
     pGeode->panelMode->VTotal = 912;
     pGeode->panelMode->Flags = V_NHSYNC | V_NVSYNC;
+
+    pGeode->mm_width = 152;
+    pGeode->mm_height = 114;
 
     xf86SetModeDefaultName(pGeode->panelMode);
 
