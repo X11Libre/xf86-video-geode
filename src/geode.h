@@ -413,8 +413,8 @@ void GXShowCursor(ScrnInfoPtr pScrni);
 /* gx_randr.c */
 Rotation GXGetRotation(ScreenPtr pScreen);
 Bool GXRandRInit(ScreenPtr pScreen, int rotation);
-Bool GXRandRSetConfig(ScreenPtr pScreen, Rotation rotation, int rate,
-    RRScreenSizePtr pSize);
+extern _X_EXPORT Bool GXRandRSetConfig(ScreenPtr pScreen, Rotation rotation,
+				       int rate, RRScreenSizePtr pSize);
 
 /* gx_rotate.c */
 Bool GXRotate(ScrnInfoPtr pScrni, DisplayModePtr mode);
