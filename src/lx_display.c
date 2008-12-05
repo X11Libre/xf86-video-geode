@@ -315,8 +315,11 @@ lx_crtc_commit(xf86CrtcPtr crtc)
     }
 
     /* Load the cursor */
-    if (crtc->scrn->pScreen != NULL)
+    if (crtc->scrn->pScreen != NULL) {
 	xf86_reload_cursors(crtc->scrn->pScreen);
+	crtc->funcs->hide_cursor(crtc);
+	crtc->cursor_shown = FALSE;
+    }
 
     /* Renable the video */
 
