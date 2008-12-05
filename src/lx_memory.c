@@ -209,7 +209,7 @@ LXInitOffscreen(ScrnInfoPtr pScrni)
 
     if (pGeode->tryHWCursor) {
 	ptr = GeodeAllocOffscreen(pGeode,
-		LX_CURSOR_MAX_WIDTH * 4 * LX_CURSOR_MAX_HEIGHT, 4);
+		LX_CURSOR_HW_WIDTH * 4 * LX_CURSOR_HW_HEIGHT, 4);
 
 	if (ptr != NULL) {
 	    pGeode->CursorStartOffset = ptr->offset;
@@ -285,7 +285,7 @@ LXInitOffscreen(ScrnInfoPtr pScrni)
 
     if (pGeode->HWCursor)
 	xf86DrvMsg(pScrni->scrnIndex, X_INFO, " Cursor: 0x%x bytes\n",
-	    LX_CURSOR_MAX_WIDTH * 4 * LX_CURSOR_MAX_HEIGHT);
+	    LX_CURSOR_HW_WIDTH * 4 * LX_CURSOR_HW_HEIGHT);
 
     if (pGeode->pExa->offScreenBase)
 	xf86DrvMsg(pScrni->scrnIndex, X_INFO, " EXA: 0x%x bytes\n",

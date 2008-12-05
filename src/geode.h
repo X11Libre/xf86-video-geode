@@ -92,8 +92,14 @@
 
 #define DEFAULT_EXA_SCRATCH_BFRSZ 0x40000
 
-#define LX_CURSOR_MAX_WIDTH  48
-#define LX_CURSOR_MAX_HEIGHT 64
+/* the LX hardware (and Cimarron) require a cursor memory size of 48x64.. */
+#define LX_CURSOR_HW_WIDTH 48
+#define LX_CURSOR_HW_HEIGHT 64
+
+/* ...but xorg requires the cursor width to be a multiple of 32.  This is
+the size of the *actual* cursor. */
+#define LX_CURSOR_MAX_WIDTH 32
+#define LX_CURSOR_MAX_HEIGHT 32
 
 /* FIXME: Get rid of this from GX */
 
