@@ -564,7 +564,11 @@ lx_check_composite(int op, PicturePtr pSrc, PicturePtr pMsk, PicturePtr pDst)
 	return FALSE;
     }
 
-    /* Keep an eye out for rotation transforms - those we can
+    /* We don't support any mask transforms */
+    if (pMsk->transform)
+	return FALSE;
+
+    /* Keep an eye out for source rotation transforms - those we can
      * do something about */
 
     exaScratch.rotate = RR_Rotate_0;
