@@ -565,7 +565,7 @@ lx_check_composite(int op, PicturePtr pSrc, PicturePtr pMsk, PicturePtr pDst)
     }
 
     /* We don't support any mask transforms */
-    if (pMsk->transform)
+    if (pMsk && pMsk->transform)
 	return FALSE;
 
     /* Keep an eye out for source rotation transforms - those we can
