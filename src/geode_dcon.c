@@ -45,7 +45,7 @@ dcon_present(void)
     static int _dval = -1;
 
     if (_dval == -1)
-	_dval = (access("/sys/devices/platform/dcon", F_OK) == 0);
+	_dval = (access("/sys/class/power_supply/olpc-ac", F_OK) == 0);
 
     return (Bool) _dval;
 }
