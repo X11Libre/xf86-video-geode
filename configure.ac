@@ -102,7 +102,7 @@ if test "x$XSERVER_LIBPCIACCESS" = xyes; then
 fi
 
 # Required by exa.h
-AMD_CFLAGS="$AMD_CFLAGS -DEXA_DRIVER_KNOWN_MAJOR=3"
+AC_DEFINE(EXA_DRIVER_KNOWN_MAJOR, 3, [Major version of EXA we can handle])
 
 AC_SUBST([XORG_CFLAGS])
 AC_SUBST([moduledir])
