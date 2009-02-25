@@ -28,6 +28,7 @@
 #define _GEODE_H_
 
 #include "geode_pcirename.h"
+#include "config.h"
 
 #include "xaa.h"
 #include "exa.h"
