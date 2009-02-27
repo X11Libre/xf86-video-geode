@@ -101,9 +101,6 @@ if test "x$XSERVER_LIBPCIACCESS" = xyes; then
     XORG_CFLAGS="$XORG_CFLAGS $PCIACCESS_CFLAGS"
 fi
 
-# Required by exa.h
-AC_DEFINE(EXA_DRIVER_KNOWN_MAJOR, 3, [Major version of EXA we can handle])
-
 AC_SUBST([XORG_CFLAGS])
 AC_SUBST([moduledir])
 AC_SUBST([AMD_CFLAGS])
