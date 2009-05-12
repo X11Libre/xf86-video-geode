@@ -842,7 +842,7 @@ LXScreenInit(int scrnIndex, ScreenPtr pScrn, int argc, char **argv)
 
     if (!pGeode->NoAccel) {
 
-	pGeode->pExa = xnfcalloc(sizeof(ExaDriverRec), 1);
+	pGeode->pExa = exaDriverAlloc();
 
 	if (pGeode->pExa) {
 

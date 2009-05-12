@@ -1250,7 +1250,7 @@ GXScreenInit(int scrnIndex, ScreenPtr pScrn, int argc, char **argv)
 
 	if (pGeode->useEXA) {
 
-	    if (!(pGeode->pExa = xnfcalloc(sizeof(ExaDriverRec), 1))) {
+	    if (!(pGeode->pExa = exaDriverAlloc())) {
 		xf86DrvMsg(scrnIndex, X_ERROR,
 		    "Couldn't allocate the EXA structure.\n");
 		pGeode->NoAccel = TRUE;
