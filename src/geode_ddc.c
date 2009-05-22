@@ -72,6 +72,9 @@ geode_gpio_iobase(void)
     if (pci == NULL)
 	return 0;
 
+    if (pci_device_probe(pci) != 0)
+        return 0;
+
     /* The GPIO I/O address is in resource 1 */
     return (unsigned short)pci->regions[1].base_addr;
 #else
