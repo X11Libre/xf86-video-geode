@@ -58,18 +58,13 @@ typedef struct _GXRandRInfo
 
 #define AMD_OLDPRIV (GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 4)
 
-#if AMD_OLDPRIV
-
 static int GXRandRIndex;
 
+#if AMD_OLDPRIV
 #define XF86RANDRINFO(p) ((XF86RandRInfoPtr) (p)->devPrivates[GXRandRIndex].ptr)
 #else
-
-static DevPrivateKey GXRandRKey;
-
 #define XF86RANDRINFO(p) ((XF86RandRInfoPtr) \
-			  dixLookupPrivate(&(p)->devPrivates, GXRandRKey));
-
+			  dixLookupPrivate(&(p)->devPrivates, GXRandRIndex));
 #endif
 
 static int
@@ -334,8 +329,6 @@ GXRandRInit(ScreenPtr pScreen, int rotation)
     }
 #if AMD_OLDPRIV
     GXRandRIndex = AllocateScreenPrivateIndex();
-#else
-    GXRandRKey = &GXRandRKey;
 #endif
 
     pRandr = xcalloc(sizeof(XF86RandRInfoRec), 1);
@@ -364,7 +357,7 @@ GXRandRInit(ScreenPtr pScreen, int rotation)
 #if AMD_OLDPRIV
     pScreen->devPrivates[GXRandRIndex].ptr = pRandr;
 #else
-    dixSetPrivate(&pScreen->devPrivates, GXRandRKey, pRandr);
+    dixSetPrivate(&pScreen->devPrivates, &GXRandRIndex, pRandr);
 #endif
     return TRUE;
 }
