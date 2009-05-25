@@ -36,10 +36,10 @@ Patches accomplishing the same trick for the Geode driver are welcome.
 
 Q: Why doesn't this GEODE driver work at WXGA (wide screen) resolutions?
 
-A: Make sure that you disabled TFT Panel support in your BIOS, otherwise, 
-   available resolutions will be restricted to "safe" traditional VGA modes.
-   The GEODE offers a choice between between CRT-only, CRT+TFT, TFT-only as
-   output device. Selecting CRT-only removes the restriction to safe modes.
+A: Make sure that TFT Panel support is disabled in the BIOS settings, 
+   otherwise resolutions will be restricted to traditional VGA modes. 
+   The GEODE offers a choice between CRT-only, CRT+TFT, TFT-only for
+   output device and selecting CRT-only removes the VGA restriction.
 
 = Configuration options =
 
