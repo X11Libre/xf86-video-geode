@@ -69,11 +69,6 @@
 
 extern OptionInfoRec LX_GeodeOptions[];
 
-extern const char *amdVgahwSymbols[];
-extern const char *amdInt10Symbols[];
-extern const char *amdFbSymbols[];
-extern const char *amdExaSymbols[];
-
 unsigned char *XpressROMPtr;
 
 static Bool
@@ -482,14 +477,10 @@ LXPreInit(ScrnInfoPtr pScrni, int flags)
     /* Set up VGA */
 
     if (pGeode->useVGA) {
-	xf86LoaderReqSymLists(amdVgahwSymbols, NULL);
-
 	VESARec *pVesa;
 
 	if (!xf86LoadSubModule(pScrni, "int10"))
 	    return FALSE;
-
-	xf86LoaderReqSymLists(amdInt10Symbols, NULL);
 
 	pVesa = pGeode->vesa;
 
@@ -575,13 +566,9 @@ LXPreInit(ScrnInfoPtr pScrni, int flags)
 	return FALSE;
     }
 
-    xf86LoaderReqSymLists(amdFbSymbols, NULL);
-
     if (!pGeode->NoAccel) {
 	if (!xf86LoadSubModule(pScrni, "exa"))
 	    return FALSE;
-
-	xf86LoaderReqSymLists(&amdExaSymbols[0], NULL);
     }
 
     if (xf86RegisterResources(pGeode->pEnt->index, NULL, ResExclusive)) {

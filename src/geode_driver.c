@@ -229,69 +229,6 @@ OptionInfoRec no_GeodeOptions[] = {
     {-1, NULL, OPTV_NONE, {0}, FALSE}
 };
 
-/* List of symbols from other modules that this module references.The purpose
-* is that to avoid unresolved symbol warnings
-*/
-const char *amdVgahwSymbols[] = {
-    "vgaHWGetHWRec",
-    "vgaHWUnlock",
-    "vgaHWInit",
-    "vgaHWSave",
-    "vgaHWRestore",
-    "vgaHWProtect",
-    "vgaHWGetIOBase",
-    "vgaHWMapMem",
-    "vgaHWLock",
-    "vgaHWFreeHWRec",
-    "vgaHWSaveScreen",
-    NULL
-};
-
-const char *amdVbeSymbols[] = {
-    "VBEInit",
-    "vbeDoEDID",
-    "vbeFree",
-    NULL
-};
-
-const char *amdInt10Symbols[] = {
-    "xf86ExecX86int10",
-    "xf86InitInt10",
-    "xf86Int10AllocPages",
-    "xf86Int10Addr",
-    NULL
-};
-
-const char *amdFbSymbols[] = {
-    "fbScreenInit",
-    "fbPictureInit",
-    NULL
-};
-
-const char *amdXaaSymbols[] = {
-    "XAADestroyInfoRec",
-    "XAACreateInfoRec",
-    "XAAInit",
-    "XAAScreenIndex",
-    NULL
-};
-
-const char *amdExaSymbols[] = {
-    "exaGetVersion",
-    "exaDriverInit",
-    "exaDriverFini",
-    "exaOffscreenAlloc",
-    "exaOffscreenFree",
-    NULL
-};
-
-const char *amdRamdacSymbols[] = {
-    "xf86InitCursor",
-    "xf86CreateCursorInfoRec",
-    "xf86DestroyCursorInfoRec",
-    NULL
-};
-
 #ifdef XFree86LOADER
 
 /* Module loader interface */
@@ -341,9 +278,6 @@ GeodeSetup(pointer Module, pointer Options, int *ErrorMajor, int *ErrorMinor)
     init = TRUE;
     xf86AddDriver(&GEODE, Module, flag);
 
-    LoaderRefSymLists(amdVgahwSymbols, amdVbeSymbols,
-	amdFbSymbols, amdXaaSymbols, amdInt10Symbols, amdRamdacSymbols, NULL);
-
     return (pointer) TRUE;
 }
 
@@ -362,12 +296,6 @@ AmdSetup(pointer Module, pointer Options, int *ErrorMajor, int *ErrorMinor)
 #endif
 	    );
 
-	/* Tell the loader about symbols from other modules that this
-	 * module might refer to.
-	 */
-	LoaderRefSymLists(amdVgahwSymbols, amdVbeSymbols,
-	    amdFbSymbols, amdXaaSymbols,
-	    amdInt10Symbols, amdRamdacSymbols, NULL);
 	return (pointer) TRUE;
     }
 

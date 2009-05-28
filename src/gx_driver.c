@@ -73,14 +73,6 @@
 
 extern OptionInfoRec GX_GeodeOptions[];
 
-extern const char *amdVgahwSymbols[];
-extern const char *amdVbeSymbols[];
-extern const char *amdInt10Symbols[];
-extern const char *amdFbSymbols[];
-extern const char *amdXaaSymbols[];
-extern const char *amdExaSymbols[];
-extern const char *amdRamdacSymbols[];
-
 unsigned char *XpressROMPtr;
 
 static inline void
@@ -622,7 +614,6 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
 
 	if (!xf86LoadSubModule(pScrni, "int10"))
 	    return FALSE;
-	xf86LoaderReqSymLists(amdInt10Symbols, NULL);
 
 	pVesa = pGeode->vesa;
 
@@ -699,26 +690,18 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
 	return FALSE;
     }
 
-    xf86LoaderReqSymLists(amdFbSymbols, NULL);
-
     if (pGeode->NoAccel == FALSE) {
 	const char *module = (pGeode->useEXA) ? "exa" : "xaa";
-	const char **symbols = (pGeode->useEXA) ?
-	    &amdExaSymbols[0] : &amdXaaSymbols[0];
 
 	if (!xf86LoadSubModule(pScrni, module)) {
 	    return FALSE;
 	}
-
-	xf86LoaderReqSymLists(symbols, NULL);
     }
 
     if (pGeode->tryHWCursor == TRUE) {
 	if (!xf86LoadSubModule(pScrni, "ramdac")) {
 	    return FALSE;
 	}
-
-	xf86LoaderReqSymLists(amdRamdacSymbols, NULL);
     }
 
     if (xf86RegisterResources(pGeode->pEnt->index, NULL, ResExclusive)) {
