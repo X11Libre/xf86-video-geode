@@ -36,6 +36,7 @@
 #include "xf86Module.h"
 #include "mipointer.h"
 #include "windowstr.h"
+#include "inputstr.h"
 #include <X11/extensions/randr.h>
 #include <randrstr.h>
 
