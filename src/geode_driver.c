@@ -476,11 +476,12 @@ AmdProbe(DriverPtr drv, int flags)
 		/* so take the first one */
 		for (i = 0; i < numUsed; i++) {
 		    /* Allocate a ScrnInfoRec  */
-		    ScrnInfoPtr pScrni = xf86AllocateScreen(drv, 0);
-
+		    ScrnInfoPtr pScrni = NULL;
 		    EntityInfoPtr pEnt = xf86GetEntityInfo(usedChips[i]);
 		    PciChipsets *p_id;
 
+		    pScrni = xf86ConfigPciEntity(pScrni, 0, usedChips[i],
+						 GeodePCIchipsets, NULL, NULL, NULL, NULL, NULL);
 		    for (p_id = GeodePCIchipsets; p_id->numChipset != -1;
 			p_id++) {
 			if (pEnt->chipset == p_id->numChipset) {
@@ -517,8 +518,7 @@ AmdProbe(DriverPtr drv, int flags)
 		    drvr_setup(pScrni);
 
 		    foundScreen = TRUE;
-		    xf86ConfigActivePciEntity(pScrni, usedChips[i],
-			GeodePCIchipsets, NULL, NULL, NULL, NULL, NULL);
+
 		}
 	    }
 	}
