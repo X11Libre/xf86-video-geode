@@ -43,7 +43,6 @@
 #include "xf86.h"
 #include <X11/extensions/Xv.h>
 #include "xf86_OSproc.h"
-#include "xf86Resources.h"
 #include "compiler.h"
 #include "xf86xv.h"
 #include "fourcc.h"

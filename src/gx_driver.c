@@ -35,7 +35,9 @@
 
 #include "xf86.h"
 #include "xf86_OSproc.h"
+#ifndef XSERVER_LIBPCIACCESS
 #include "xf86Resources.h"
+#endif
 #include "xf86cmap.h"
 #include "compiler.h"
 #include "mipointer.h"
@@ -419,8 +421,10 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
 	return FALSE;
 
     pEnt = xf86GetEntityInfo(pScrni->entityList[0]);
+#ifndef XSERVER_LIBPCIACCESS
     if (pEnt->resources)
 	return FALSE;
+#endif
 
     pGeode = pScrni->driverPrivate = xnfcalloc(sizeof(GeodeRec), 1);
 
@@ -704,12 +708,13 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
 	}
     }
 
+#ifndef XSERVER_LIBPCIACCESS
     if (xf86RegisterResources(pGeode->pEnt->index, NULL, ResExclusive)) {
 	xf86DrvMsg(pScrni->scrnIndex, X_ERROR,
 	    "Couldn't register the resources.\n");
 	return FALSE;
     }
-
+#endif
     return TRUE;
 }
 
