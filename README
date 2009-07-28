@@ -41,6 +41,16 @@ A: Make sure that TFT Panel support is disabled in the BIOS settings,
    The GEODE offers a choice between CRT-only, CRT+TFT, TFT-only for
    output device and selecting CRT-only removes the VGA restriction.
 
+Q: How do I produce useful information whenever submiting a bug report?
+
+A: See http://www.x.org/wiki/Development/Documentation/ServerDebugging
+
+Q: What is the preferred method for submitting patches to this driver?
+
+A: See http://www.x.org/wiki/Development/Documentation/SubmittingPatches
+   and submit the patches as attachments to the Geode X.org mailing list
+   or to the X.org Bugzilla against component "Driver/geode".
+
 = Configuration options =
 
 You can specify the Geode driver in the normal fashion:
