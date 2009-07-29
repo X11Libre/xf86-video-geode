@@ -44,6 +44,20 @@ A: Make sure that TFT Panel support is disabled in the BIOS settings,
 Q: How do I produce useful information whenever submiting a bug report?
 
 A: See http://www.x.org/wiki/Development/Documentation/ServerDebugging
+   and follow the instructions.
+
+Q: How do I test development snapshots from the upstream GIT repository?
+
+A: Run the following commands from a command line interpreter shell...
+   1. git clone git://anongit.freedesktop.org/git/xorg/driver/xf86-video-geode 
+   2. Debian/Ubuntu:  apt-get install autoconf automake libtool
+                      apt-get install build-dep xserver-xorg-video-geode
+     Fedora/Red Hat:  yum install autoconf automake libtool
+                      yum-builddep xorg-x11-drv-geode
+   3. cd xf86-video-geode
+   4. ./autogen.sh
+   5. make distcheck
+   ...then install the driver manually.
 
 Q: What is the preferred method for submitting patches to this driver?
 
