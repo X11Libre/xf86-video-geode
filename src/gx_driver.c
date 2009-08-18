@@ -511,7 +511,7 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
     pGeode->tryCompression = TRUE;
 
     pGeode->NoAccel = FALSE;
-    pGeode->useEXA = FALSE;
+    pGeode->useEXA = TRUE;
 
     pGeode->Panel = (pGeode->Output & OUTPUT_PANEL) ? TRUE : FALSE;
 
