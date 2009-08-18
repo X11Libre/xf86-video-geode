@@ -511,7 +511,7 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
     pGeode->tryCompression = TRUE;
 
     pGeode->NoAccel = FALSE;
-    pGeode->useEXA = TRUE;
+    pGeode->useEXA = FALSE;
 
     pGeode->Panel = (pGeode->Output & OUTPUT_PANEL) ? TRUE : FALSE;
 
@@ -582,7 +582,7 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
 	    pGeode->useEXA = FALSE;
 	else if (xf86NameCmp(s, "EXA"))
 	    xf86DrvMsg(pScrni->scrnIndex, X_ERROR,
-		"Unknown accleration method %s.  Defaulting to EXA.\n", s);
+		"Unknown accleration method %s.  Defaulting to XAA.\n", s);
     }
 
     xf86DrvMsg(pScrni->scrnIndex, X_INFO,

@@ -90,7 +90,7 @@ The following options may be added to the section:
 SWCursor: Enable software cursors (essentially disabling HW cursor support)
 NoCompression: Disable video bandwidth compression
 NoAccel: Disable hardware assisted acceleration
-AccelMethod: "EXA" (default) or "XAA"
+AccelMethod: "XAA" (default) or "EXA"
 Rotate: Select a orientation to start with - LEFT, INVERT, CCW
 NoPanel: Disable panel support
 OSMImageBuffers: Set the number of image buffers (XAA only)
