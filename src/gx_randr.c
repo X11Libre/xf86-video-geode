@@ -64,7 +64,7 @@ static int GXRandRIndex;
 #define XF86RANDRINFO(p) ((XF86RandRInfoPtr) (p)->devPrivates[GXRandRIndex].ptr)
 #else
 #define XF86RANDRINFO(p) ((XF86RandRInfoPtr) \
-			  dixLookupPrivate(&(p)->devPrivates, GXRandRIndex));
+			  dixLookupPrivate(&(p)->devPrivates, &GXRandRIndex));
 #endif
 
 static int
