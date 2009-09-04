@@ -108,7 +108,7 @@ lx_output_set_property(xf86OutputPtr output, Atom property,
 
 	    if (!ret) {
 		xf86DrvMsg(pScrni->scrnIndex, X_ERROR,
-		    "Failed to set mode after propery change!\n");
+		    "Failed to set mode after property change!\n");
 
 		pGeode->Scale = scale;
 		return FALSE;
