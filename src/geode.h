@@ -60,7 +60,7 @@
 #define LX      0x20
 
 #define PCI_VENDOR_ID_CYRIX  0x1078
-#define PCI_VENDOR_ID_NS     0x100B
+#define PCI_VENDOR_ID_NS     0x100b
 #define PCI_VENDOR_ID_AMD    0x1022
 
 #define PCI_CHIP_5530     0x0104
