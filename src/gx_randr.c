@@ -56,15 +56,17 @@ typedef struct _GXRandRInfo
     Rotation supported_rotations;      /* driver supported */
 } XF86RandRInfoRec, *XF86RandRInfoPtr;
 
-#define AMD_OLDPRIV (GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 4)
-
 static int GXRandRIndex;
 
-#if AMD_OLDPRIV
-#define XF86RANDRINFO(p) ((XF86RandRInfoPtr) (p)->devPrivates[GXRandRIndex].ptr)
+#define OLD_VIDEODRV_INTERFACE (GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 4)
+
+#if OLD_VIDEODRV_INTERFACE
+#define XF86RANDRINFO(p)   ((XF86RandRInfoPtr) (p)->devPrivates[GXRandRIndex].ptr)
+#define XF86RANDRSET(p, v) (p)->devPrivates[GXRandRIndex].ptr = v
 #else
-#define XF86RANDRINFO(p) ((XF86RandRInfoPtr) \
-			  dixLookupPrivate(&(p)->devPrivates, &GXRandRIndex));
+#define XF86RANDRINFO(p) ((XF86RandRInfoPtr)						\
+			  dixLookupPrivate(&(p)->devPrivates, &GXRandRIndex))
+#define XF86RANDRSET(p, v) dixSetPrivate(&(p)->devPrivates, &GXRandRIndex, v)
 #endif
 
 static int
@@ -327,7 +329,7 @@ GXRandRInit(ScreenPtr pScreen, int rotation)
     if (GXRandRGeneration != serverGeneration) {
 	GXRandRGeneration = serverGeneration;
     }
-#if AMD_OLDPRIV
+#if OLD_VIDEODRV_INTERFACE
     GXRandRIndex = AllocateScreenPrivateIndex();
 #endif
 
@@ -354,10 +356,7 @@ GXRandRInit(ScreenPtr pScreen, int rotation)
     pRandr->supported_rotations = rotation;
     pRandr->maxX = pRandr->maxY = 0;
 
-#if AMD_OLDPRIV
-    pScreen->devPrivates[GXRandRIndex].ptr = pRandr;
-#else
-    dixSetPrivate(&pScreen->devPrivates, &GXRandRIndex, pRandr);
-#endif
+    XF86RANDRSET(pScreen, pRandr);
+
     return TRUE;
 }
