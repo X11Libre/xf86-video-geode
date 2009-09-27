@@ -163,13 +163,6 @@ lx_output_mode_valid(xf86OutputPtr output, DisplayModePtr pMode)
 	    return MODE_BAD;
     }
 
-    if (gfx_is_display_mode_supported(pMode->HDisplay,
-                                      pMode->VDisplay,
-                                      pScrni->bitsPerPixel,
-                                      GeodeGetRefreshRate(pMode)) < 0) {
-        return MODE_BAD;
-    }
-
     return MODE_OK;
 }
 
