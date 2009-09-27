@@ -21,7 +21,7 @@
 AUTOMAKE_OPTIONS = foreign
 SUBDIRS = src
 
-EXTRA_DIST = autogen.sh ChangeLog
+EXTRA_DIST = ChangeLog
 
 MAINTAINERCLEANFILES = ChangeLog
 
