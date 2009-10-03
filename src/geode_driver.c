@@ -429,7 +429,7 @@ AmdPciProbe(DriverPtr driver,
  *
  * Returns	:TRUE on success and FALSE on failure.
  *
- * Comments     :This should ne minimal probe and it should under no
+ * Comments     :This should be minimal probe and it should under no
  *               circumstances change the state of the hardware.Don't do
  *               any intiallizations other than the required
  *               ScreenInforec.
