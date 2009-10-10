@@ -1376,7 +1376,7 @@ static const PLL_FREQUENCY CimarronPLLFrequencies[] = {
     {0x00002130, (320L << 16) | ((2070L * 65536L) / 10000L)}
     ,                                  /* 320.207, - 3,20, 1 */
     {0x00006310, (341L << 16) | ((3490L * 65536L) / 10000L)}
-    /* 341.349, - 7,50, 1 */
+                                       /* 341.349, - 7,50, 1 */
 };
 
 #define NUM_CIMARRON_PLL_FREQUENCIES sizeof(CimarronPLLFrequencies) / \
