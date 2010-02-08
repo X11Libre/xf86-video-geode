@@ -65,12 +65,6 @@
 #include "vgaHW.h"
 #include "vbe.h"
 
-/* Check for some extensions */
-#ifdef XFreeXDGA
-#define _XF86_DGA_SERVER_
-#include <X11/extensions/xf86dgastr.h>
-#endif /* XFreeXDGA */
-
 #ifdef DPMSExtension
 #include "globals.h"
 #include "opaque.h"
