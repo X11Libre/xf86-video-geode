@@ -1,4 +1,7 @@
 Copyright (C) 2003-2008 Advanced Micro Devices, Inc.
+  Neither the name of the Advanced Micro Devices, Inc. nor the names of its
+  contributors may be used to endorse or promote products derived from this
+  software without specific prior written permission.
 Copyright (C) 2007 George Sapountzis
 Copyright (C) 2002 David Dawes
 Copyright (C) 2001 VA Linux Systems Inc., Fremont, California.
@@ -20,7 +23,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS 
 IN THE SOFTWARE.
-
-Neither the name of the Advanced Micro Devices, Inc. nor the names of its
-contributors may be used to endorse or promote products derived from this
-software without specific prior written permission.
