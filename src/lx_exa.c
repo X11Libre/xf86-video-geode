@@ -536,11 +536,14 @@ static Bool
 lx_check_composite(int op, PicturePtr pSrc, PicturePtr pMsk, PicturePtr pDst)
 {
     GeodeRec *pGeode = GEODEPTR_FROM_PICTURE(pDst);
+    const struct exa_format_t *srcFmt, *dstFmt;
 
     /* Check that the operation is supported */
 
     if (op > PictOpAdd)
 	return FALSE;
+
+    /* We need the off-screen buffer to do the multipass work */
 
     if (usesPasses(op)) {
 	if (pGeode->exaBfrOffset == 0 || !pMsk)
@@ -583,20 +586,22 @@ lx_check_composite(int op, PicturePtr pSrc, PicturePtr pMsk, PicturePtr pDst)
 	return FALSE;
 
     if (pMsk && op != PictOpClear) {
+	struct blend_ops_t *opPtr = &lx_alpha_ops[op * 2];
+	int direction = (opPtr->channel == CIMGP_CHANNEL_A_SOURCE) ? 0 : 1;
+
+	/* Direction 0 indicates src->dst, 1 indiates dst->src */
+	if (((direction == 0) && (pSrc->pDrawable->bitsPerPixel < 16)) ||
+	    ((direction == 1) && (pDst->pDrawable->bitsPerPixel < 16))) {
+	    ErrorF("Can't do mask blending with less then 16bpp\n");
+	    return FALSE;
+	}
 	/* We can only do masks with a 8bpp or a 4bpp mask */
 	if (pMsk->format != PICT_a8 && pMsk->format != PICT_a4)
 	    return FALSE;
+	/* The pSrc should be 1x1 pixel if the pMsk is not zero */
+	if (pSrc->pDrawable->width != 1 || pSrc->pDrawable->height != 1)
+	    return FALSE;
     }
-
-    return TRUE;
-}
-
-static Bool
-lx_prepare_composite(int op, PicturePtr pSrc, PicturePtr pMsk,
-    PicturePtr pDst, PixmapPtr pxSrc, PixmapPtr pxMsk, PixmapPtr pxDst)
-{
-    GeodeRec *pGeode = GEODEPTR_FROM_PIXMAP(pxDst);
-    const struct exa_format_t *srcFmt, *dstFmt;
 
     /* Get the formats for the source and destination */
 
@@ -631,6 +636,20 @@ lx_prepare_composite(int op, PicturePtr pSrc, PicturePtr pMsk,
 	ErrorF("EXA: Can't rotate and convert formats at the same time\n");
 	return FALSE;
     }
+    return TRUE;
+}
+
+static Bool
+lx_prepare_composite(int op, PicturePtr pSrc, PicturePtr pMsk,
+    PicturePtr pDst, PixmapPtr pxSrc, PixmapPtr pxMsk, PixmapPtr pxDst)
+{
+    GeodeRec *pGeode = GEODEPTR_FROM_PIXMAP(pxDst);
+    const struct exa_format_t *srcFmt, *dstFmt;
+
+    /* Get the formats for the source and destination */
+
+    srcFmt = lx_get_format(pSrc);
+    dstFmt = lx_get_format(pDst);
 
     /* Set up the scratch buffer with the information we need */
 
@@ -644,14 +663,6 @@ lx_prepare_composite(int op, PicturePtr pSrc, PicturePtr pMsk,
 	struct blend_ops_t *opPtr = &lx_alpha_ops[op * 2];
 	int direction = (opPtr->channel == CIMGP_CHANNEL_A_SOURCE) ? 0 : 1;
 
-	/* Direction 0 indicates src->dst, 1 indiates dst->src */
-
-	if (((direction == 0) && (pxSrc->drawable.bitsPerPixel < 16)) ||
-	    ((direction == 1) && (pxDst->drawable.bitsPerPixel < 16))) {
-	    ErrorF("Can't do mask blending with less then 16bpp\n");
-	    return FALSE;
-	}
-
 	/* Get the source color */
 
 	if (direction == 0)
@@ -660,11 +671,6 @@ lx_prepare_composite(int op, PicturePtr pSrc, PicturePtr pMsk,
 	else
 	    exaScratch.srcColor = lx_get_source_color(pxDst, pDst->format,
 		pSrc->format);
-
-	/* FIXME:  What to do here? */
-
-	if (pSrc->pDrawable->width != 1 || pSrc->pDrawable->height != 1)
-	    return FALSE;
 
 	/* Save off the info we need (reuse the source values to save space) */
 
