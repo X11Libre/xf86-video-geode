@@ -571,6 +571,10 @@ lx_check_composite(int op, PicturePtr pSrc, PicturePtr pMsk, PicturePtr pDst)
     if (pMsk && pMsk->transform)
 	return FALSE;
 
+    /* XXX - don't know if we can do any hwaccel on solid fills or gradient types */
+    if (pSrc->pSourcePict || (pMsk && pMsk->pSourcePict))
+	return FALSE;
+
     /* Keep an eye out for source rotation transforms - those we can
      * do something about */
 
