@@ -55,7 +55,11 @@ typedef struct _GXRandRInfo
     Rotation supported_rotations;      /* driver supported */
 } XF86RandRInfoRec, *XF86RandRInfoPtr;
 
+#if HAS_DEVPRIVATEKEYREC
+static DevPrivateKeyRec GXRandRIndex;
+#else
 static int GXRandRIndex;
+#endif
 
 #define OLD_VIDEODRV_INTERFACE (GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 4)
 
@@ -330,6 +334,10 @@ GXRandRInit(ScreenPtr pScreen, int rotation)
     }
 #if OLD_VIDEODRV_INTERFACE
     GXRandRIndex = AllocateScreenPrivateIndex();
+#endif
+#if HAS_DIXREGISTERPRIVATEKEY
+    if (!dixRegisterPrivateKey(&GXRandRIndex, PRIVATE_SCREEN, 0))
+	return FALSE;
 #endif
 
     pRandr = xcalloc(sizeof(XF86RandRInfoRec), 1);
