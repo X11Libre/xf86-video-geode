@@ -164,7 +164,11 @@ GXRandRSetMode(ScreenPtr pScreen,
     int oldHeight = pScreen->height;
     int oldmmWidth = pScreen->mmWidth;
     int oldmmHeight = pScreen->mmHeight;
+#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 8
     WindowPtr pRoot = WindowTable[pScreen->myNum];
+#else
+    WindowPtr pRoot = pScreen->root;
+#endif
     DisplayModePtr currentMode = NULL;
     Bool ret = TRUE;
     PixmapPtr pspix = NULL;
