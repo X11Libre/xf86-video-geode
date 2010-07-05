@@ -1009,13 +1009,33 @@ lx_do_composite(PixmapPtr pxDst, int srcX, int srcY, int maskX,
 	srcPoint.y = F(0);
     }
 
+    /* Get the source point offset position */
+
     srcOffset = GetSrcOffset(I(srcPoint.x), I(srcPoint.y));
 
-    if (exaScratch.srcWidth < opWidth)
-	opWidth = exaScratch.srcWidth;
+    /* When mask exists, exaScratch.srcWidth and exaScratch.srcHeight are
+     * the source width and source height; Otherwise, they are mask width
+     * and mask height */
+    /* exaScratch.repeat is the source repeat attribute */
+    /* If type is COMP_TYPE_MASK, maskX and maskY are not zero, we should
+     * subtract them to do the operation in the correct region */
 
-    if (exaScratch.srcHeight < opHeight)
-	opHeight = exaScratch.srcHeight;
+    /* FIXME:  Please add the code to handle the condition when the maskX
+     * and maskY coordinate are negative or greater than
+     * exaScratch.srcWidth and exaScratch.srcHeight */
+
+
+    if (exaScratch.type == COMP_TYPE_MASK) {
+	if ((exaScratch.srcWidth - maskX) < opWidth)
+	    opWidth = exaScratch.srcWidth - maskX;
+	if ((exaScratch.srcHeight - maskY) < opHeight)
+	    opHeight = exaScratch.srcHeight - maskY;
+    } else {
+	if (exaScratch.srcWidth < opWidth)
+	    opWidth = exaScratch.srcWidth;
+	if (exaScratch.srcHeight < opHeight)
+	    opHeight = exaScratch.srcHeight;
+    }
 
     while (1) {
 
@@ -1067,10 +1087,21 @@ lx_do_composite(PixmapPtr pxDst, int srcX, int srcY, int maskX,
 		break;
 	}
 
-	opWidth = ((dstX + width) - opX) > exaScratch.srcWidth ?
-	    exaScratch.srcWidth : (dstX + width) - opX;
-	opHeight = ((dstY + height) - opY) > exaScratch.srcHeight ?
-	    exaScratch.srcHeight : (dstY + height) - opY;
+	/* FIXME:  Please add the code to handle the condition when the maskX
+	 * and maskY coordinate are negative or greater than
+	 * exaScratch.srcWidth and exaScratch.srcHeight */
+
+	if (exaScratch.type == COMP_TYPE_MASK) {
+	    opWidth = ((dstX + width) - opX) > (exaScratch.srcWidth - maskX)
+		? (exaScratch.srcWidth - maskX) : (dstX + width) - opX;
+	    opHeight = ((dstY + height) - opY) > (exaScratch.srcHeight - maskY)
+		? (exaScratch.srcHeight - maskY) : (dstY + height) - opY;
+	} else {
+	    opWidth = ((dstX + width) - opX) > exaScratch.srcWidth ?
+		exaScratch.srcWidth : (dstX + width) - opX;
+	    opHeight = ((dstY + height) - opY) > exaScratch.srcHeight ?
+		exaScratch.srcHeight : (dstY + height) - opY;
+	}
     }
 }
 
