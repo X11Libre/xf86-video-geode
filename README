@@ -68,9 +68,10 @@ because it utilizes the new common DDC probing libraries from X.Org.
 
 Q: Why doesn't screen rotation work?
 
-A: Make sure that at least 32MB of memory is reserved for video operation
-   (check the BIOS settings), otherwise rotation will fail and display an
-   "Out of memory" error message in the X.org log.
+A: Make sure that a sufficient amount of video RAM is reserved in the BIOS,
+   otherwise rotation will fail and this error message appear in Xorg.log:
+      Couldn't allocate the shadow memory for rotation
+      You need XX bytes, but only YY bytes are available
 
 Q: Why doesn't this GEODE driver work at WXGA (wide screen) resolutions?
 
