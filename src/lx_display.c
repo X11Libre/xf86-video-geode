@@ -339,8 +339,16 @@ lx_crtc_gamma_set(xf86CrtcPtr crtc, CARD16 * red, CARD16 * green,
 
     assert(size == 256);
 
+    /* We need the Gamma Correction for video - fading operation,
+     * the values address should be plused for every cycle.
+     * Special for Screensaver Operation.
+     */
+
     for (i = 0; i < 256; i++) {
-	unsigned int val = (*red << 8) | *green | (*blue >> 8);
+        (*red) &= 0xff00;
+        (*green) &= 0xff00;
+        (*blue) &= 0xff00;
+        unsigned int val = (*(red++) << 8) | *(green++) | (*(blue++) >> 8);
 
 	df_set_video_palette_entry(i, val);
     }
