@@ -605,6 +605,12 @@ lx_check_composite(int op, PicturePtr pSrc, PicturePtr pMsk, PicturePtr pDst)
 	/* The pSrc should be 1x1 pixel if the pMsk is not zero */
 	if (pSrc->pDrawable->width != 1 || pSrc->pDrawable->height != 1)
 	    return FALSE;
+	/* FIXME: In lx_prepare_composite, there are no variables to record the
+	 * one pixel source's width and height when the mask is not zero.
+	 * That will lead to bigger region to render instead of one pixel in lx
+	 * _do_composite, so we should fallback currently to avoid this */
+	if (!pSrc->repeat)
+	    return FALSE;
     }
 
     /* Get the formats for the source and destination */
