@@ -88,6 +88,7 @@ static struct
     unsigned int srcColor;
     int op;
     int repeat;
+    int maskrepeat;
     unsigned int fourBpp;
     unsigned int bufferOffset;
     struct exa_format_t *srcFormat;
@@ -685,6 +686,7 @@ lx_prepare_composite(int op, PicturePtr pSrc, PicturePtr pMsk,
 	/* Save off the info we need (reuse the source values to save space) */
 
 	exaScratch.type = COMP_TYPE_MASK;
+	exaScratch.maskrepeat = pMsk->repeat;
 
 	exaScratch.srcOffset = exaGetPixmapOffset(pxMsk);
 	exaScratch.srcPitch = exaGetPixmapPitch(pxMsk);
@@ -955,6 +957,10 @@ lx_do_composite(PixmapPtr pxDst, int srcX, int srcY, int maskX,
 
     unsigned int dstOffset, srcOffset = 0;
 
+    /* Use maskflag to record the exaScratch.type when it is COMP_TYPE_MASK.
+     * This is useful for PictOpSrc operation when exaScratch.type is changed */
+    int maskflag = 0;
+
     xPointFixed srcPoint;
 
     int opX = dstX;
@@ -1022,7 +1028,8 @@ lx_do_composite(PixmapPtr pxDst, int srcX, int srcY, int maskX,
     /* When mask exists, exaScratch.srcWidth and exaScratch.srcHeight are
      * the source width and source height; Otherwise, they are mask width
      * and mask height */
-    /* exaScratch.repeat is the source repeat attribute */
+    /* exaScratch.repeat is the source repeat attribute
+     * exaScratch.maskrepeat is the mask repeat attribute */
     /* If type is COMP_TYPE_MASK, maskX and maskY are not zero, we should
      * subtract them to do the operation in the correct region */
 
@@ -1053,6 +1060,7 @@ lx_do_composite(PixmapPtr pxDst, int srcX, int srcY, int maskX,
 		int direction =
 		    (opPtr->channel == CIMGP_CHANNEL_A_SOURCE) ? 0 : 1;
 
+		maskflag = 1;
 		if (direction == 1) {
 		    dstOffset =
 			GetPixmapOffset(exaScratch.srcPixmap, opX, opY);
@@ -1080,9 +1088,6 @@ lx_do_composite(PixmapPtr pxDst, int srcX, int srcY, int maskX,
 	    break;
 	}
 
-	if (!exaScratch.repeat)
-	    break;
-
 	opX += opWidth;
 
 	if (opX >= dstX + width) {
@@ -1097,16 +1102,36 @@ lx_do_composite(PixmapPtr pxDst, int srcX, int srcY, int maskX,
 	 * and maskY coordinate are negative or greater than
 	 * exaScratch.srcWidth and exaScratch.srcHeight */
 
-	if (exaScratch.type == COMP_TYPE_MASK) {
+	if (maskflag == 1) {
 	    opWidth = ((dstX + width) - opX) > (exaScratch.srcWidth - maskX)
 		? (exaScratch.srcWidth - maskX) : (dstX + width) - opX;
 	    opHeight = ((dstY + height) - opY) > (exaScratch.srcHeight - maskY)
 		? (exaScratch.srcHeight - maskY) : (dstY + height) - opY;
+	    /* Use the PictOpClear to make other non-blending region(out of
+	     * mask region) to be black if the op is PictOpSrc or
+	     * PictOpClear */
+	    if (!exaScratch.maskrepeat)
+		if ((exaScratch.op == PictOpClear) ||
+		    (exaScratch.op == PictOpSrc)) {
+		    exaScratch.op = PictOpClear;
+		    exaScratch.type = COMP_TYPE_ONEPASS;
+		}
 	} else {
 	    opWidth = ((dstX + width) - opX) > exaScratch.srcWidth ?
 		exaScratch.srcWidth : (dstX + width) - opX;
 	    opHeight = ((dstY + height) - opY) > exaScratch.srcHeight ?
 		exaScratch.srcHeight : (dstY + height) - opY;
+	    /* Use the PictOpClear to make other non-blending region(out of
+	     * source region) to be black if the op is PictOpSrc or
+	     * PictOpClear. Special attention to rotation condition */
+	    if (!exaScratch.repeat && (exaScratch.type == COMP_TYPE_ONEPASS))
+		if ((exaScratch.op == PictOpClear) ||
+		    (exaScratch.op == PictOpSrc))
+		    exaScratch.op = PictOpClear;
+		else
+		    break;
+	    if (!exaScratch.repeat && (exaScratch.type == COMP_TYPE_ROTATE))
+		    break;
 	}
     }
 }
