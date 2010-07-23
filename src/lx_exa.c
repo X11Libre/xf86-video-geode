@@ -409,13 +409,12 @@ struct blend_ops_t
     },
 	/* PictOpOver */
     {
-    CIMGP_ALPHA_A_PLUS_BETA_B, CIMGP_CHANNEL_A_ALPHA, CIMGP_CHANNEL_A_SOURCE},
-    {
-    },
+    CIMGP_A_PLUS_BETA_B, CIMGP_CHANNEL_A_ALPHA, CIMGP_CHANNEL_A_SOURCE}, {
+    CIMGP_ALPHA_TIMES_A, CIMGP_CONVERTED_ALPHA, CIMGP_CHANNEL_A_SOURCE},
 	/* PictOpOverReverse */
     {
-    CIMGP_ALPHA_A_PLUS_BETA_B, CIMGP_CHANNEL_A_ALPHA, CIMGP_CHANNEL_A_DEST}, {
-    },
+    CIMGP_A_PLUS_BETA_B, CIMGP_CHANNEL_A_ALPHA, CIMGP_CHANNEL_A_DEST}, {
+    CIMGP_ALPHA_TIMES_A, CIMGP_CONVERTED_ALPHA, CIMGP_CHANNEL_A_DEST},
 	/* PictOpIn */
     {
     CIMGP_ALPHA_TIMES_A, CIMGP_CHANNEL_B_ALPHA, CIMGP_CHANNEL_A_SOURCE}, {
@@ -675,13 +674,21 @@ lx_prepare_composite(int op, PicturePtr pSrc, PicturePtr pMsk,
 	int direction = (opPtr->channel == CIMGP_CHANNEL_A_SOURCE) ? 0 : 1;
 
 	/* Get the source color */
+	/* If the op is PictOpOver, we should get the ARGB32 source format */
 
-	if (direction == 0)
+	if (op == PictOpOver && (srcFmt->alphabits != 0))
+	    exaScratch.srcColor = exaGetPixmapFirstPixel(pxSrc);
+	else if (op == PictOpOver && (srcFmt->alphabits == 0))
 	    exaScratch.srcColor = lx_get_source_color(pxSrc, pSrc->format,
-		pDst->format);
-	else
-	    exaScratch.srcColor = lx_get_source_color(pxDst, pDst->format,
-		pSrc->format);
+		PICT_a8r8g8b8);
+	else {
+	    if (direction == 0)
+		exaScratch.srcColor = lx_get_source_color(pxSrc, pSrc->format,
+		    pDst->format);
+	    else
+		exaScratch.srcColor = lx_get_source_color(pxDst, pDst->format,
+		    pSrc->format);
+	}
 
 	/* Save off the info we need (reuse the source values to save space) */
 
@@ -934,6 +941,84 @@ lx_do_composite_mask(PixmapPtr pxDst, unsigned long dstOffset,
 			      ((_x) * exaScratch.srcBpp))
 
 static void
+lx_do_composite_mask_opover(PixmapPtr pxDst, unsigned long dstOffset,
+    unsigned int maskOffset, int width, int height, int opX, int opY,
+    xPointFixed srcPoint)
+{
+    int apply, type;
+    struct blend_ops_t *opPtr;
+    int opWidth, opHeight;
+    int opoverX, opoverY;
+
+    opoverX = opX;
+    opoverY = opY;
+
+    /* The rendering region should not be bigger than off-screen memory size
+     * which equals to DEFAULT_EXA_SCRATCH_BFRSZ. If that happens, we split
+     * the PictOpOver rendering region into several 256KB chunks. And because
+     * of the Pitch(stride) parameter, so we use maximun width of mask picture.
+     * that is to say it is a scanline rendering process */
+    if (width * height * 4 > DEFAULT_EXA_SCRATCH_BFRSZ) {
+	opWidth = width;
+	opHeight = DEFAULT_EXA_SCRATCH_BFRSZ / (width * 4);
+    } else {
+	opWidth = width;
+	opHeight = height;
+    }
+
+    while (1) {
+
+	/* Wait until the GP is idle - this will ensure that the scratch buffer
+	 * isn't occupied */
+
+	gp_wait_until_idle();
+
+	/* Copy the source to the scratch buffer, and do a src * mask raster
+	 * operation */
+
+	gp_declare_blt(0);
+	opPtr = &lx_alpha_ops[(exaScratch.op * 2) + 1];
+	gp_set_source_format(CIMGP_SOURCE_FMT_8_8_8_8);
+	gp_set_strides(opWidth * 4, exaScratch.srcPitch);
+	gp_set_bpp(lx_get_bpp_from_format(CIMGP_SOURCE_FMT_8_8_8_8));
+	gp_set_solid_source(exaScratch.srcColor);
+	gp_blend_mask_blt(exaScratch.bufferOffset, 0, opWidth, opHeight,
+	    maskOffset, exaScratch.srcPitch, opPtr->operation,
+	    exaScratch.fourBpp);
+
+	/* Do a PictOpOver operation(src + (1-a) * dst), and copy the operation
+	 * result to destination */
+
+	gp_declare_blt(CIMGP_BLTFLAGS_HAZARD);
+	opPtr = &lx_alpha_ops[exaScratch.op * 2];
+	apply = (exaScratch.dstFormat->alphabits == 0) ?
+	    CIMGP_APPLY_BLEND_TO_RGB : CIMGP_APPLY_BLEND_TO_ALL;
+	gp_set_source_format(CIMGP_SOURCE_FMT_8_8_8_8);
+	gp_set_strides(exaGetPixmapPitch(pxDst), opWidth * 4);
+	gp_set_bpp(lx_get_bpp_from_format(exaScratch.dstFormat->fmt));
+	type = CIMGP_CONVERTED_ALPHA;
+	gp_set_alpha_operation(opPtr->operation, type, opPtr->channel,
+	    apply, 0);
+	gp_screen_to_screen_convert(dstOffset, exaScratch.bufferOffset,
+	    opWidth, opHeight, 0);
+
+	if (width * height * 4 > DEFAULT_EXA_SCRATCH_BFRSZ) {
+	    /* Finish the rendering */
+	    if (opoverY + opHeight == opY + height)
+		break;
+	    /* Recalculate the Dest and Mask rendering start point */
+	    srcPoint.y = srcPoint.y + F(opHeight);
+	    opoverY = opoverY + opHeight;
+	    if (opoverY + opHeight > opY + height)
+		opHeight = opY + height - opoverY;
+	    dstOffset = GetPixmapOffset(pxDst, opoverX, opoverY);
+	    maskOffset = GetSrcOffset(I(srcPoint.x), I(srcPoint.y));
+	} else
+	    break;
+    }
+}
+
+static void
 transformPoint(PictTransform * t, xPointFixed * point)
 {
     PictVector v;
@@ -1064,11 +1149,20 @@ lx_do_composite(PixmapPtr pxDst, int srcX, int srcY, int maskX,
 		if (direction == 1) {
 		    dstOffset =
 			GetPixmapOffset(exaScratch.srcPixmap, opX, opY);
-		    lx_do_composite_mask(exaScratch.srcPixmap, dstOffset,
-			srcOffset, opWidth, opHeight);
+		    if (exaScratch.op == PictOpOver)
+			lx_do_composite_mask_opover(exaScratch.srcPixmap,
+			    dstOffset, srcOffset, opWidth, opHeight,
+			    opX, opY, srcPoint);
+		    else
+			lx_do_composite_mask(exaScratch.srcPixmap, dstOffset,
+			    srcOffset, opWidth, opHeight);
 		} else {
-		    lx_do_composite_mask(pxDst, dstOffset, srcOffset, opWidth,
-			opHeight);
+		    if (exaScratch.op == PictOpOver)
+			lx_do_composite_mask_opover(pxDst, dstOffset,
+			    srcOffset, opWidth, opHeight, opX, opY, srcPoint);
+		    else
+			lx_do_composite_mask(pxDst, dstOffset, srcOffset,
+			    opWidth, opHeight);
 		}
 	    }
 	    break;
@@ -1115,7 +1209,8 @@ lx_do_composite(PixmapPtr pxDst, int srcX, int srcY, int maskX,
 		    (exaScratch.op == PictOpSrc)) {
 		    exaScratch.op = PictOpClear;
 		    exaScratch.type = COMP_TYPE_ONEPASS;
-		}
+		} else if (exaScratch.op == PictOpOver)
+		    break;
 	} else {
 	    opWidth = ((dstX + width) - opX) > exaScratch.srcWidth ?
 		exaScratch.srcWidth : (dstX + width) - opX;
