@@ -368,7 +368,7 @@ lx_crtc_gamma_set(xf86CrtcPtr crtc, CARD16 * red, CARD16 * green,
      * of card space is returned.
      */
 
-Bool
+static Bool
 LXAllocShadow(ScrnInfoPtr pScrni, int size)
 {
     GeodeRec *pGeode = GEODEPTR(pScrni);
@@ -390,6 +390,7 @@ LXAllocShadow(ScrnInfoPtr pScrni, int size)
     }
 
     pScrni->fbOffset = pGeode->shadowArea->offset;
+    return TRUE;
 }
 
 static void *
@@ -402,9 +403,8 @@ lx_crtc_shadow_allocate(xf86CrtcPtr crtc, int width, int height)
     rpitch = pScrni->displayWidth * (pScrni->bitsPerPixel / 8);
     size = rpitch * height;
 
-    LXAllocShadow(pScrni, size); /* Allocate shadow memory */
-
-    if (pGeode->shadowArea->offset == NULL) {
+    /* Allocate shadow memory */
+    if (LXAllocShadow(pScrni, size) == FALSE) {
 	xf86DrvMsg(pScrni->scrnIndex, X_ERROR,
 	    "Couldn't allocate the shadow memory for rotation\n");
 	xf86DrvMsg(pScrni->scrnIndex, X_ERROR,
