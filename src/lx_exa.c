@@ -65,7 +65,8 @@ static const struct exa_format_t
     PICT_b5g6r5, 16, CIMGP_SOURCE_FMT_16BPP_BGR, 0}, {
     PICT_x1r5g5b5, 16, CIMGP_SOURCE_FMT_1_5_5_5, 0}, {
     PICT_x1b5g5r5, 16, CIMGP_SOURCE_FMT_15BPP_BGR, 0}, {
-    PICT_r3g3b2, 8, CIMGP_SOURCE_FMT_3_3_2, 0}
+    PICT_r3g3b2, 8, CIMGP_SOURCE_FMT_3_3_2, 0}, {
+    PICT_a8, 32, CIMGP_SOURCE_FMT_8_8_8_8, 8}
 };
 
 /* This is a chunk of memory we use for scratch space */
@@ -457,16 +458,9 @@ lx_get_format(PicturePtr p)
     int i;
     unsigned int format = p->format;
 
-    for (i = 0; i < ARRAY_SIZE(lx_exa_formats); i++) {
-
-	if (lx_exa_formats[i].bpp < PICT_FORMAT_BPP(format))
-	    break;
-	else if (lx_exa_formats[i].bpp != PICT_FORMAT_BPP(format))
-	    continue;
-
+    for (i = 0; i < ARRAY_SIZE(lx_exa_formats); i++)
 	if (lx_exa_formats[i].exa == format)
 	    return (&lx_exa_formats[i]);
-    }
 
     return NULL;
 }
@@ -543,6 +537,20 @@ lx_check_composite(int op, PicturePtr pSrc, PicturePtr pMsk, PicturePtr pDst)
     if (op > PictOpAdd)
 	return FALSE;
 
+    /* FIXME: Meet this conditions from the debug for PictOpAdd.
+     * Any Other possibilities? Add a judge for the future supplement */
+    if (op == PictOpAdd && pSrc->format == PICT_a8r8g8b8 &&
+	pDst->format == PICT_a8 && !pMsk)
+	return TRUE;
+
+    if (op == PictOpAdd && pSrc->format == PICT_x8r8g8b8 &&
+	pDst->format == PICT_a8 && !pMsk)
+	return TRUE;
+
+    if (op == PictOpAdd && pSrc->format == PICT_r5g6b5 &&
+	pDst->format == PICT_a8 && !pMsk)
+	return TRUE;
+
     /* We need the off-screen buffer to do the multipass work */
 
     if (usesPasses(op)) {
@@ -586,7 +594,8 @@ lx_check_composite(int op, PicturePtr pSrc, PicturePtr pMsk, PicturePtr pDst)
 
     /* XXX - I don't understand PICT_a8 enough - so I'm punting */
 
-    if (pSrc->format == PICT_a8 || pDst->format == PICT_a8)
+    if ((op != PictOpAdd) && (pSrc->format == PICT_a8 ||
+	pDst->format == PICT_a8))
 	return FALSE;
 
     if (pMsk && op != PictOpClear) {
@@ -793,6 +802,63 @@ get_op_type(struct exa_format_t *src, struct exa_format_t *dst, int type)
 
 #define GetSrcOffset(_x, _y) (exaScratch.srcOffset + ((_y) * exaScratch.srcPitch) + \
 			      ((_x) * exaScratch.srcBpp))
+
+static void
+lx_composite_onepass_pict_a8(PixmapPtr pxDst, unsigned long dstOffset,
+    unsigned long srcOffset, int width, int height, int opX, int opY,
+    int srcX, int srcY)
+{
+    struct blend_ops_t *opPtr;
+    int apply, type;
+    int optempX, optempY;
+    int i, j;
+    unsigned long pixmapOffset, pixmapPitch, calBitsPixel;
+
+    pixmapOffset = exaGetPixmapOffset(pxDst);
+    pixmapPitch = exaGetPixmapPitch(pxDst);
+    calBitsPixel = (pxDst->drawable.bitsPerPixel + 7) / 8;
+
+    /* Keep this GP idle judge here. Otherwise the SW method has chance to
+     * conflict with the HW rendering method */
+    gp_wait_until_idle();
+
+    if (opX % 4 == 0 && srcX % 4 == 0) {
+	/* HW acceleration */
+	opPtr = &lx_alpha_ops[exaScratch.op * 2];
+	apply = CIMGP_APPLY_BLEND_TO_ALL;
+	gp_declare_blt(0);
+	gp_set_bpp(32);
+	gp_set_strides(exaGetPixmapPitch(pxDst), exaScratch.srcPitch);
+	gp_set_source_format(8);
+	type = opPtr->type;
+	gp_set_alpha_operation(opPtr->operation, type, opPtr->channel, apply, 0);
+	gp_screen_to_screen_convert(dstOffset, srcOffset, width / 4, height, 0);
+	/* Calculate the pixels in the tail of each line */
+	for (j = srcY; j < srcY + height; j++)
+	    for (i = srcX + (width / 4) * 4; i < srcX + width; i++) {
+		srcOffset = GetSrcOffset(i, j);
+		optempX = opX + i - srcX;
+		optempY = opY + j - srcY;
+		dstOffset = pixmapOffset + pixmapPitch * optempY +
+		    calBitsPixel * optempX;
+		*(cim_fb_ptr + dstOffset) = (*(cim_fb_ptr + srcOffset)
+		    + *(cim_fb_ptr + dstOffset) <= 0xff) ?
+		    *(cim_fb_ptr + srcOffset) + *(cim_fb_ptr + dstOffset) : 0xff;
+	}
+    } else {
+	for (j = srcY; j < srcY + height; j++)
+	    for (i = srcX; i < srcX + width; i++) {
+		srcOffset = GetSrcOffset(i, j);
+		optempX = opX + i - srcX;
+		optempY = opY + j - srcY;
+		dstOffset = pixmapOffset + pixmapPitch * optempY +
+		    calBitsPixel * optempX;
+		*(cim_fb_ptr + dstOffset) = (*(cim_fb_ptr + srcOffset) +
+		    *(cim_fb_ptr + dstOffset) <= 0xff) ?
+		    *(cim_fb_ptr + srcOffset) + *(cim_fb_ptr + dstOffset) : 0xff;
+	}
+    }
+}
 
 static void
 lx_composite_onepass(PixmapPtr pxDst, unsigned long dstOffset,
@@ -1299,7 +1365,11 @@ lx_do_composite(PixmapPtr pxDst, int srcX, int srcY, int maskX,
 		lx_composite_onepass_special(pxDst, opWidth, opHeight, opX, opY,
 		    srcX, srcY);
 		return ;
-	    } else
+	    } else if ((exaScratch.op == PictOpAdd) && (exaScratch.srcFormat->exa
+		== PICT_a8) && (exaScratch.dstFormat->exa == PICT_a8))
+		lx_composite_onepass_pict_a8(pxDst, dstOffset, srcOffset,
+		    opWidth, opHeight, opX, opY, srcX, srcY);
+	    else
 		lx_composite_onepass(pxDst, dstOffset, srcOffset, opWidth,
 		    opHeight);
 	    break;
