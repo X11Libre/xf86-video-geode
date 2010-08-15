@@ -6,8 +6,8 @@ performance enhancement.
 
 This release also marks the return of AMD to the development team. 
 
-Noticable changes compared to 2.11.8
-------------------------------------
+Noticeable changes compared to 2.11.8
+-------------------------------------
  * Fixes all known rendering bugs, most notably those pertaining to the
    GNOME and KDE desktop environments, to video player applications and
    to the Chrome and Firefox browsers.
