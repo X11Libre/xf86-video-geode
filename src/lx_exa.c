@@ -414,8 +414,8 @@ struct blend_ops_t
     CIMGP_ALPHA_TIMES_A, CIMGP_CONVERTED_ALPHA, CIMGP_CHANNEL_A_SOURCE},
 	/* PictOpOverReverse */
     {
-    CIMGP_A_PLUS_BETA_B, CIMGP_CHANNEL_A_ALPHA, CIMGP_CHANNEL_A_DEST}, {
-    CIMGP_ALPHA_TIMES_A, CIMGP_CONVERTED_ALPHA, CIMGP_CHANNEL_A_DEST},
+    CIMGP_A_PLUS_BETA_B, CIMGP_CHANNEL_B_ALPHA, CIMGP_CHANNEL_A_DEST}, {
+    CIMGP_ALPHA_TIMES_A, CIMGP_CONVERTED_ALPHA, CIMGP_CHANNEL_A_SOURCE},
 	/* PictOpIn */
     {
     CIMGP_ALPHA_TIMES_A, CIMGP_CHANNEL_B_ALPHA, CIMGP_CHANNEL_A_SOURCE}, {
@@ -423,7 +423,7 @@ struct blend_ops_t
 	/* PictOpInReverse */
     {
     CIMGP_ALPHA_TIMES_A, CIMGP_CHANNEL_B_ALPHA, CIMGP_CHANNEL_A_DEST}, {
-    },
+    CIMGP_ALPHA_TIMES_A, CIMGP_CONVERTED_ALPHA, CIMGP_CHANNEL_A_SOURCE},
 	/* PictOpOut */
     {
     CIMGP_BETA_TIMES_B, CIMGP_CHANNEL_A_ALPHA, CIMGP_CHANNEL_A_SOURCE}, {
@@ -679,27 +679,20 @@ lx_prepare_composite(int op, PicturePtr pSrc, PicturePtr pMsk,
     exaScratch.bufferOffset = pGeode->exaBfrOffset;
 
     if (pMsk && op != PictOpClear) {
-	struct blend_ops_t *opPtr = &lx_alpha_ops[op * 2];
-	int direction = (opPtr->channel == CIMGP_CHANNEL_A_SOURCE) ? 0 : 1;
-
 	/* Get the source color */
-	/* If the op is PictOpOver, we should get the ARGB32 source format */
+	/* If the op is PictOpOver(or PictOpOutReverse,PictOpInReverse)
+	 * we should get the ARGB32 source format */
 
-	if ((op == PictOpOver || op == PictOpOutReverse) &&
-	    (srcFmt->alphabits != 0))
+	if ((op == PictOpOver || op == PictOpOutReverse || op ==
+	    PictOpInReverse) && (srcFmt->alphabits != 0))
 	    exaScratch.srcColor = exaGetPixmapFirstPixel(pxSrc);
-	else if ((op == PictOpOver || op == PictOpOutReverse) &&
-	    (srcFmt->alphabits == 0))
+	else if ((op == PictOpOver || op == PictOpOutReverse || op ==
+	    PictOpInReverse) && (srcFmt->alphabits == 0))
 	    exaScratch.srcColor = lx_get_source_color(pxSrc, pSrc->format,
 		PICT_a8r8g8b8);
-	else {
-	    if (direction == 0)
-		exaScratch.srcColor = lx_get_source_color(pxSrc, pSrc->format,
-		    pDst->format);
-	    else
-		exaScratch.srcColor = lx_get_source_color(pxDst, pDst->format,
-		    pSrc->format);
-	}
+	else
+	    exaScratch.srcColor = lx_get_source_color(pxSrc, pSrc->format,
+		pDst->format);
 
 	/* Save off the info we need (reuse the source values to save space) */
 
@@ -715,11 +708,6 @@ lx_prepare_composite(int op, PicturePtr pSrc, PicturePtr pMsk,
 
 	/* Flag to indicate if this a 8BPP or a 4BPP mask */
 	exaScratch.fourBpp = (pxMsk->drawable.bitsPerPixel == 4) ? 1 : 0;
-
-	/* If the direction is reversed, then remember the source */
-
-	if (direction == 1)
-	    exaScratch.srcPixmap = pxSrc;
     } else {
 	if (usesPasses(op))
 	    exaScratch.type = COMP_TYPE_TWOPASS;
@@ -888,6 +876,27 @@ lx_composite_onepass(PixmapPtr pxDst, unsigned long dstOffset,
     gp_set_alpha_operation(opPtr->operation, type, opPtr->channel, apply, 0);
 
     gp_screen_to_screen_convert(dstOffset, srcOffset, width, height, 0);
+}
+
+static void
+lx_composite_all_black(unsigned long srcOffset, int width, int height)
+{
+    struct blend_ops_t *opPtr;
+    int apply, type;
+
+    opPtr = &lx_alpha_ops[0];
+    apply = (exaScratch.srcFormat->alphabits != 0) ?
+	CIMGP_APPLY_BLEND_TO_ALL : CIMGP_APPLY_BLEND_TO_RGB;
+    gp_declare_blt(0);
+    gp_set_bpp(lx_get_bpp_from_format(exaScratch.srcFormat->fmt));
+    gp_set_strides(exaScratch.srcPitch, exaScratch.srcPitch);
+    lx_set_source_format(exaScratch.srcFormat->fmt,
+	exaScratch.srcFormat->fmt);
+    type =
+	get_op_type(exaScratch.srcFormat, exaScratch.srcFormat, opPtr->type);
+    gp_set_alpha_operation(opPtr->operation, type, opPtr->channel, apply, 0);
+    gp_screen_to_screen_convert(srcOffset, srcOffset, width, height, 0);
+
 }
 
 static void
@@ -1130,8 +1139,8 @@ lx_do_composite_mask_two_pass(PixmapPtr pxDst, unsigned long dstOffset,
 	    maskOffset, exaScratch.srcPitch, opPtr->operation,
 	    exaScratch.fourBpp);
 
-	/* Do a PictOpOver operation(src + (1-a) * dst), and copy the operation
-	 * result to destination */
+	/* Do a relative operation(refer rendercheck ops.c), and copy the
+	 * operation result to destination */
 
 	gp_declare_blt(CIMGP_BLTFLAGS_HAZARD);
 	opPtr = &lx_alpha_ops[exaScratch.op * 2];
@@ -1182,8 +1191,6 @@ static void
 lx_do_composite(PixmapPtr pxDst, int srcX, int srcY, int maskX,
     int maskY, int dstX, int dstY, int width, int height)
 {
-    struct blend_ops_t *opPtr = &lx_alpha_ops[exaScratch.op * 2];
-
     unsigned int dstOffset, srcOffset = 0;
 
     /* Use maskflag to record the exaScratch.type when it is COMP_TYPE_MASK.
@@ -1337,29 +1344,14 @@ lx_do_composite(PixmapPtr pxDst, int srcX, int srcY, int maskX,
 	switch (exaScratch.type) {
 
 	case COMP_TYPE_MASK:{
-		int direction =
-		    (opPtr->channel == CIMGP_CHANNEL_A_SOURCE) ? 0 : 1;
 		maskflag = 1;
-		if (direction == 1) {
-		    dstOffset =
-			GetPixmapOffset(exaScratch.srcPixmap, opX, opY);
-		    if (exaScratch.op == PictOpOver || exaScratch.op ==
-			PictOpOutReverse)
-			lx_do_composite_mask_two_pass(exaScratch.srcPixmap,
-			    dstOffset, srcOffset, opWidth, opHeight,
-			    opX, opY, srcPoint);
-		    else
-			lx_do_composite_mask(exaScratch.srcPixmap, dstOffset,
-			    srcOffset, opWidth, opHeight);
-		} else {
-		    if (exaScratch.op == PictOpOver || exaScratch.op ==
-			PictOpOutReverse)
-			lx_do_composite_mask_two_pass(pxDst, dstOffset,
-			    srcOffset, opWidth, opHeight, opX, opY, srcPoint);
-		    else
-			lx_do_composite_mask(pxDst, dstOffset, srcOffset,
-			    opWidth, opHeight);
-		}
+		if (exaScratch.op == PictOpOver || exaScratch.op ==
+		    PictOpOutReverse || exaScratch.op == PictOpInReverse)
+		    lx_do_composite_mask_two_pass(pxDst, dstOffset,
+			srcOffset, opWidth, opHeight, opX, opY, srcPoint);
+		else
+		    lx_do_composite_mask(pxDst, dstOffset, srcOffset,
+			opWidth, opHeight);
 	    }
 	    break;
 
@@ -1418,7 +1410,8 @@ lx_do_composite(PixmapPtr pxDst, int srcX, int srcY, int maskX,
 		} else if (exaScratch.op == PictOpOver)
 		    break;
 		/* Outside the source is all zero vectors */
-		else if (exaScratch.op == PictOpOutReverse)
+		else if (exaScratch.op == PictOpOutReverse || exaScratch.op ==
+		    PictOpInReverse)
 		    exaScratch.srcColor = 0x0;
 	    }
 	} else {
@@ -1452,6 +1445,11 @@ lx_do_composite(PixmapPtr pxDst, int srcX, int srcY, int maskX,
 		if ((exaScratch.op == PictOpClear) ||
 		    (exaScratch.op == PictOpSrc))
 		    exaScratch.op = PictOpClear;
+		/* Outside the source is all zero vectors */
+		else if (exaScratch.op == PictOpOutReverse || exaScratch.op ==
+		    PictOpInReverse)
+		    lx_composite_all_black(srcOffset, exaScratch.srcWidth,
+			exaScratch.srcHeight);
 		else
 		    break;
 	    }
