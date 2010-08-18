@@ -414,20 +414,20 @@ struct blend_ops_t
     CIMGP_ALPHA_TIMES_A, CIMGP_CONVERTED_ALPHA, CIMGP_CHANNEL_A_SOURCE},
 	/* PictOpOverReverse */
     {
-    CIMGP_A_PLUS_BETA_B, CIMGP_CHANNEL_B_ALPHA, CIMGP_CHANNEL_A_DEST}, {
+    CIMGP_A_PLUS_BETA_B, CIMGP_CHANNEL_A_ALPHA, CIMGP_CHANNEL_A_DEST}, {
     CIMGP_ALPHA_TIMES_A, CIMGP_CONVERTED_ALPHA, CIMGP_CHANNEL_A_SOURCE},
 	/* PictOpIn */
     {
     CIMGP_ALPHA_TIMES_A, CIMGP_CHANNEL_B_ALPHA, CIMGP_CHANNEL_A_SOURCE}, {
-    },
+    CIMGP_ALPHA_TIMES_A, CIMGP_CONVERTED_ALPHA, CIMGP_CHANNEL_A_SOURCE},
 	/* PictOpInReverse */
     {
     CIMGP_ALPHA_TIMES_A, CIMGP_CHANNEL_B_ALPHA, CIMGP_CHANNEL_A_DEST}, {
     CIMGP_ALPHA_TIMES_A, CIMGP_CONVERTED_ALPHA, CIMGP_CHANNEL_A_SOURCE},
 	/* PictOpOut */
     {
-    CIMGP_BETA_TIMES_B, CIMGP_CHANNEL_A_ALPHA, CIMGP_CHANNEL_A_SOURCE}, {
-    },
+    CIMGP_BETA_TIMES_B, CIMGP_CHANNEL_A_ALPHA, CIMGP_CHANNEL_A_DEST}, {
+    CIMGP_ALPHA_TIMES_A, CIMGP_CONVERTED_ALPHA, CIMGP_CHANNEL_A_SOURCE},
 	/* PictOpOutReverse */
     {
     CIMGP_BETA_TIMES_B, CIMGP_CHANNEL_A_ALPHA, CIMGP_CHANNEL_A_SOURCE}, {
@@ -680,14 +680,18 @@ lx_prepare_composite(int op, PicturePtr pSrc, PicturePtr pMsk,
 
     if (pMsk && op != PictOpClear) {
 	/* Get the source color */
-	/* If the op is PictOpOver(or PictOpOutReverse,PictOpInReverse)
-	 * we should get the ARGB32 source format */
+	/* If the op is PictOpOver(or PictOpOutReverse, PictOpInReverse,
+	 * PictOpIn, PictOpOut, PictOpOverReverse), we should get the
+	 * ARGB32 source format */
 
 	if ((op == PictOpOver || op == PictOpOutReverse || op ==
-	    PictOpInReverse) && (srcFmt->alphabits != 0))
+	    PictOpInReverse || op == PictOpIn || op == PictOpOut ||
+	    op == PictOpOverReverse) && (srcFmt->alphabits != 0))
 	    exaScratch.srcColor = exaGetPixmapFirstPixel(pxSrc);
 	else if ((op == PictOpOver || op == PictOpOutReverse || op ==
-	    PictOpInReverse) && (srcFmt->alphabits == 0))
+	    PictOpInReverse || op == PictOpIn || op == PictOpOut ||
+	    op == PictOpOverReverse) &&
+	    (srcFmt->alphabits == 0))
 	    exaScratch.srcColor = lx_get_source_color(pxSrc, pSrc->format,
 		PICT_a8r8g8b8);
 	else
@@ -1193,10 +1197,6 @@ lx_do_composite(PixmapPtr pxDst, int srcX, int srcY, int maskX,
 {
     unsigned int dstOffset, srcOffset = 0;
 
-    /* Use maskflag to record the exaScratch.type when it is COMP_TYPE_MASK.
-     * This is useful for PictOpSrc operation when exaScratch.type is changed */
-    int maskflag = 0;
-
     xPointFixed srcPoint;
 
     int opX = dstX;
@@ -1279,62 +1279,62 @@ lx_do_composite(PixmapPtr pxDst, int srcX, int srcY, int maskX,
 	if ((exaScratch.srcHeight - maskY) < opHeight)
 	    opHeight = exaScratch.srcHeight - maskY;
     } else {
-	    if (exaScratch.type == COMP_TYPE_ONEPASS) {
-		/* This is the condition srcX or/and srcY is/are out of source
-		 * region */
-		if (((srcX >= 0 && srcY >= exaScratch.srcHeight)
-		    || (srcX >= exaScratch.srcWidth  && srcY >= 0)) &&
-		    (exaScratch.op == PictOpOver || exaScratch.op == PictOpSrc)) {
-		    if (exaScratch.repeat == 1) {
-			opWidth = width;
-			opHeight = height;
-		    } else {
-			if (exaScratch.op == PictOpOver)
-			    return ;
-			else {
-			    exaScratch.op = PictOpClear;
-			    opWidth = width;
-			    opHeight = height;
-			}
-		    }
-		/* This is the condition srcX or/and srcY is/are in the source
-		 * region */
-		} else if (srcX >= 0 && srcY >= 0 &&
-		    (exaScratch.op == PictOpOver || exaScratch.op == PictOpSrc)) {
-		    if (exaScratch.repeat == 1) {
-			opWidth = width;
-			opHeight = height;
-		    } else {
-			if ((exaScratch.srcWidth - srcX) < opWidth)
-			    opWidth = exaScratch.srcWidth - srcX;
-			if ((exaScratch.srcHeight - srcY) < opHeight)
-			    opHeight = exaScratch.srcHeight - srcY;
-		    }
-		/* This is the condition srcX or/and srcY is/are negative */
-		} else if ((srcX < 0 || srcY < 0) &&
-		    (exaScratch.op == PictOpOver || exaScratch.op == PictOpSrc)) {
-		    if (exaScratch.repeat == 1) {
-			opWidth = width;
-			opHeight = height;
-		    } else {
-			/* Have not met this condition till now */
-			return ;
-		    }
+	if (exaScratch.type == COMP_TYPE_ONEPASS) {
+	    /* This is the condition srcX or/and srcY is/are out of source
+	     * region */
+	    if (((srcX >= 0 && srcY >= exaScratch.srcHeight)
+		|| (srcX >= exaScratch.srcWidth  && srcY >= 0)) &&
+		(exaScratch.op == PictOpOver || exaScratch.op == PictOpSrc)) {
+		if (exaScratch.repeat == 1) {
+		    opWidth = width;
+		    opHeight = height;
 		} else {
-		    if (exaScratch.srcWidth < opWidth)
-			opWidth = exaScratch.srcWidth;
-		    if (exaScratch.srcHeight < opHeight)
-			opHeight = exaScratch.srcHeight;
+		    if (exaScratch.op == PictOpOver)
+			return ;
+		    else {
+			exaScratch.op = PictOpClear;
+			opWidth = width;
+			opHeight = height;
+		    }
+		}
+	    /* This is the condition srcX or/and srcY is/are in the source
+	     * region */
+	    } else if (srcX >= 0 && srcY >= 0 &&
+		(exaScratch.op == PictOpOver || exaScratch.op == PictOpSrc)) {
+		if (exaScratch.repeat == 1) {
+		    opWidth = width;
+		    opHeight = height;
+		} else {
+		    if ((exaScratch.srcWidth - srcX) < opWidth)
+			opWidth = exaScratch.srcWidth - srcX;
+		    if ((exaScratch.srcHeight - srcY) < opHeight)
+			opHeight = exaScratch.srcHeight - srcY;
+		}
+	    /* This is the condition srcX or/and srcY is/are negative */
+	    } else if ((srcX < 0 || srcY < 0) &&
+		(exaScratch.op == PictOpOver || exaScratch.op == PictOpSrc)) {
+		if (exaScratch.repeat == 1) {
+		    opWidth = width;
+		    opHeight = height;
+		} else {
+		/* Have not met this condition till now */
+		    return ;
 		}
 	    } else {
-		if (exaScratch.rotate == RR_Rotate_180) {
-		} else {
-		    if ((exaScratch.srcWidth - srcY) < opWidth)
-			opWidth = exaScratch.srcWidth - srcY;
-		    if ((exaScratch.srcHeight - srcX) < opHeight)
-			opHeight = exaScratch.srcHeight - srcX;
-		}
+		if (exaScratch.srcWidth < opWidth)
+		    opWidth = exaScratch.srcWidth;
+		if (exaScratch.srcHeight < opHeight)
+		    opHeight = exaScratch.srcHeight;
 	    }
+	} else {
+	    if (exaScratch.rotate == RR_Rotate_180) {
+	    } else {
+		if ((exaScratch.srcWidth - srcY) < opWidth)
+		    opWidth = exaScratch.srcWidth - srcY;
+		if ((exaScratch.srcHeight - srcX) < opHeight)
+		    opHeight = exaScratch.srcHeight - srcX;
+	    }
+	}
     }
 
     while (1) {
@@ -1344,14 +1344,15 @@ lx_do_composite(PixmapPtr pxDst, int srcX, int srcY, int maskX,
 	switch (exaScratch.type) {
 
 	case COMP_TYPE_MASK:{
-		maskflag = 1;
-		if (exaScratch.op == PictOpOver || exaScratch.op ==
-		    PictOpOutReverse || exaScratch.op == PictOpInReverse)
-		    lx_do_composite_mask_two_pass(pxDst, dstOffset,
-			srcOffset, opWidth, opHeight, opX, opY, srcPoint);
-		else
-		    lx_do_composite_mask(pxDst, dstOffset, srcOffset,
-			opWidth, opHeight);
+	    if (exaScratch.op == PictOpOver || exaScratch.op ==
+		PictOpOutReverse || exaScratch.op == PictOpInReverse ||
+		exaScratch.op == PictOpIn || exaScratch.op == PictOpOut ||
+		exaScratch.op == PictOpOverReverse)
+		lx_do_composite_mask_two_pass(pxDst, dstOffset,
+		    srcOffset, opWidth, opHeight, opX, opY, srcPoint);
+	    else
+		lx_do_composite_mask(pxDst, dstOffset, srcOffset,
+		    opWidth, opHeight);
 	    }
 	    break;
 
@@ -1394,26 +1395,14 @@ lx_do_composite(PixmapPtr pxDst, int srcX, int srcY, int maskX,
 	 * and maskY coordinate are negative or greater than
 	 * exaScratch.srcWidth and exaScratch.srcHeight */
 
-	if (maskflag == 1) {
+	if (exaScratch.type == COMP_TYPE_MASK) {
 	    opWidth = ((dstX + width) - opX) > (exaScratch.srcWidth - maskX)
 		? (exaScratch.srcWidth - maskX) : (dstX + width) - opX;
 	    opHeight = ((dstY + height) - opY) > (exaScratch.srcHeight - maskY)
 		? (exaScratch.srcHeight - maskY) : (dstY + height) - opY;
-	    /* Use the PictOpClear to make other non-blending region(out of
-	     * mask region) to be black if the op is PictOpSrc or
-	     * PictOpClear */
-	    if (!exaScratch.maskrepeat) {
-		if ((exaScratch.op == PictOpClear) ||
-		    (exaScratch.op == PictOpSrc)) {
-		    exaScratch.op = PictOpClear;
-		    exaScratch.type = COMP_TYPE_ONEPASS;
-		} else if (exaScratch.op == PictOpOver)
-		    break;
-		/* Outside the source is all zero vectors */
-		else if (exaScratch.op == PictOpOutReverse || exaScratch.op ==
-		    PictOpInReverse)
-		    exaScratch.srcColor = 0x0;
-	    }
+	    /* All black out of the mask */
+	    if (!exaScratch.maskrepeat)
+		exaScratch.srcColor = 0x0;
 	} else {
 	    if (exaScratch.type == COMP_TYPE_ONEPASS) {
 		if (srcX >= 0 && srcY >= 0 && (exaScratch.op == PictOpOver ||
@@ -1437,21 +1426,10 @@ lx_do_composite(PixmapPtr pxDst, int srcX, int srcY, int maskX,
 		opHeight = ((dstY + height) - opY) > (exaScratch.srcHeight - srcX
 		    ) ? (exaScratch.srcHeight - srcX) : (dstY + height) - opY;
 	    }
-
-	    /* Use the PictOpClear to make other non-blending region(out of
-	     * source region) to be black if the op is PictOpSrc or
-	     * PictOpClear. Special attention to rotation condition */
+	    /* All black out of the source */
 	    if (!exaScratch.repeat && (exaScratch.type == COMP_TYPE_ONEPASS)) {
-		if ((exaScratch.op == PictOpClear) ||
-		    (exaScratch.op == PictOpSrc))
-		    exaScratch.op = PictOpClear;
-		/* Outside the source is all zero vectors */
-		else if (exaScratch.op == PictOpOutReverse || exaScratch.op ==
-		    PictOpInReverse)
 		    lx_composite_all_black(srcOffset, exaScratch.srcWidth,
 			exaScratch.srcHeight);
-		else
-		    break;
 	    }
 	    if (!exaScratch.repeat && (exaScratch.type == COMP_TYPE_ROTATE))
 		    break;
