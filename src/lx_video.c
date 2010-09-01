@@ -677,7 +677,7 @@ LXSetupImageVideo(ScreenPtr pScrn)
     XF86VideoAdaptorPtr adapt;
     GeodePortPrivRec *pPriv;
 
-    adapt = xcalloc(1, sizeof(XF86VideoAdaptorRec) +
+    adapt = calloc(1, sizeof(XF86VideoAdaptorRec) +
 	sizeof(GeodePortPrivRec) + sizeof(DevUnion));
 
     if (adapt == NULL) {
@@ -822,11 +822,11 @@ LXAllocateSurface(ScrnInfoPtr pScrni, int id, unsigned short w,
     surface->width = w;
     surface->height = h;
 
-    surface->pitches = xalloc(sizeof(int));
+    surface->pitches = malloc(sizeof(int));
 
-    surface->offsets = xalloc(sizeof(int));
+    surface->offsets = malloc(sizeof(int));
 
-    pPriv = xalloc(sizeof(struct OffscreenPrivRec));
+    pPriv = malloc(sizeof(struct OffscreenPrivRec));
 
     if (pPriv && surface->pitches && surface->offsets) {
 
@@ -844,10 +844,10 @@ LXAllocateSurface(ScrnInfoPtr pScrni, int id, unsigned short w,
     }
 
     if (surface->offsets)
-	xfree(surface->offsets);
+	free(surface->offsets);
 
     if (surface->pitches)
-	xfree(surface->pitches);
+	free(surface->pitches);
 
     if (vidmem)
 	GeodeFreeOffscreen(pGeode, vidmem);
@@ -881,9 +881,9 @@ LXFreeSurface(XF86SurfacePtr surface)
 	pPriv->vidmem = NULL;
     }
 
-    xfree(surface->pitches);
-    xfree(surface->offsets);
-    xfree(surface->devPrivate.ptr);
+    free(surface->pitches);
+    free(surface->offsets);
+    free(surface->devPrivate.ptr);
 
     return Success;
 }
@@ -908,7 +908,7 @@ LXInitOffscreenImages(ScreenPtr pScrn)
     XF86OffscreenImagePtr offscreenImages;
 
     /* need to free this someplace */
-    if (!(offscreenImages = xalloc(sizeof(XF86OffscreenImageRec))))
+    if (!(offscreenImages = malloc(sizeof(XF86OffscreenImageRec))))
 	return;
 
     offscreenImages[0].image = &Images[0];
@@ -957,7 +957,7 @@ LXInitVideo(ScreenPtr pScrn)
 	adaptors = &newAdaptor;
     } else {
 	newAdaptors =
-	    xalloc((num_adaptors + 1) * sizeof(XF86VideoAdaptorPtr *));
+	    malloc((num_adaptors + 1) * sizeof(XF86VideoAdaptorPtr *));
 
 	if (newAdaptors) {
 	    memcpy(newAdaptors, adaptors, num_adaptors *
@@ -973,5 +973,5 @@ LXInitVideo(ScreenPtr pScrn)
 	xf86XVScreenInit(pScrn, adaptors, num_adaptors);
 
     if (newAdaptors)
-	xfree(newAdaptors);
+	free(newAdaptors);
 }

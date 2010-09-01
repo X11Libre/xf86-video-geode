@@ -242,7 +242,7 @@ static void
 lx_output_destroy(xf86OutputPtr output)
 {
     if (output->driver_private)
-	xfree(output->driver_private);
+	free(output->driver_private);
 
     output->driver_private = NULL;
 }
