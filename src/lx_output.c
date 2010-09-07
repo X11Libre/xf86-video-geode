@@ -247,6 +247,12 @@ lx_output_destroy(xf86OutputPtr output)
     output->driver_private = NULL;
 }
 
+static xf86CrtcPtr lx_output_get_crtc(xf86OutputPtr output)
+{
+    return output->crtc;
+}
+
+
 static const xf86OutputFuncsRec lx_output_funcs = {
     .create_resources = lx_create_resources,
     .dpms = lx_output_dpms,
@@ -259,6 +265,7 @@ static const xf86OutputFuncsRec lx_output_funcs = {
     .commit = lx_output_commit,
     .detect = lx_output_detect,
     .get_modes = lx_output_get_modes,
+    .get_crtc = lx_output_get_crtc,
     .set_property = lx_output_set_property,
     .destroy = lx_output_destroy,
 };
