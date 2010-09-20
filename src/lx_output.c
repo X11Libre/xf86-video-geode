@@ -156,13 +156,13 @@ lx_output_mode_valid(xf86OutputPtr output, DisplayModePtr pMode)
     GeodeRec *pGeode = GEODEPTR(pScrni);
 
     /* DCON Panel specific resolution - OLPC's one */
-    if (pGeode->Output & (OUTPUT_PANEL | OUTPUT_DCON)) {
+    if (pGeode->Output & OUTPUT_DCON) {
         if (pGeode->panelMode->HDisplay == 1200 &&
             pGeode->panelMode->VDisplay == 900)
             return MODE_OK;
     }
 
-    if (pGeode->Output & OUTPUT_PANEL &&
+    if ((pGeode->Output & OUTPUT_PANEL) &&
         gfx_is_panel_mode_supported(pGeode->panelMode->HDisplay,
                                     pGeode->panelMode->VDisplay,
                                     pMode->HDisplay,
