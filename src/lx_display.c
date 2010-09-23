@@ -363,7 +363,7 @@ lx_crtc_gamma_set(xf86CrtcPtr crtc, CARD16 * red, CARD16 * green,
     WRITE_VID32(DF_DISPLAY_CONFIG, dcfg);
 }
 
-    /* Allocates shadow memory, and allocating a new space for Rotatation.
+    /* Allocates shadow memory, and allocating a new space for Rotation.
      * The size is measured in bytes, and the offset from the beginning
      * of card space is returned.
      */
