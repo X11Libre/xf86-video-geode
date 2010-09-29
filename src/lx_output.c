@@ -182,7 +182,7 @@ lx_output_mode_valid(xf86OutputPtr output, DisplayModePtr pMode)
     if (pMode->type & (M_T_DRIVER | M_T_PREFERRED))
         return MODE_OK;
 
-    return MODE_BAD;
+    return MODE_OK;
 }
 
 static Bool
