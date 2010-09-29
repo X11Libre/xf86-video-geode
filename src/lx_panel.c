@@ -57,6 +57,9 @@ DisplayModeRec lx_panel_modes[] = {
     {MODEPREFIX, 40000, 800, 840, 968, 1056, 0, 600, 601, 605, 628, 0,
 	V_NHSYNC | V_NVSYNC, MODESUFFIX}
     ,				       /* 880x600@60 */
+    {MODEPREFIX, 48960, 1024, 1064, 1168, 1312, 0, 600, 601, 604, 622, 0,
+	V_NHSYNC | V_NVSYNC, MODESUFFIX}
+    ,				       /* 1024x600@60 */
     {MODEPREFIX, 65000, 1024, 1048, 1184, 1344, 0, 768, 771, 777, 806, 0,
 	V_NHSYNC | V_NVSYNC, MODESUFFIX}
     ,				       /* 1024x768@60 */
