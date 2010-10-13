@@ -99,7 +99,7 @@ static XF86ImageRec Images[] = {
 
 typedef struct
 {
-    GeodeMemPtr vidmem;
+    ExaOffscreenArea *vidmem;
     RegionRec clip;
     CARD32 filter;
     CARD32 colorKey;
@@ -188,13 +188,16 @@ struct
 /* Copy planar YUV data */
 
 static Bool
-LXAllocMem(GeodeRec *pGeode, GeodePortPrivRec *pPriv, int size)
+LXAllocateVidMem(ScrnInfoPtr pScrni, GeodePortPrivRec *pPriv, int size)
 {
     if (!pPriv->vidmem || pPriv->vidmem->size < size) { 
-	if (pPriv->vidmem) 
-		GeodeFreeOffscreen(pGeode, pPriv->vidmem);
+	if (pPriv->vidmem) {
+		exaOffscreenFree(pScrni->pScreen, pPriv->vidmem);
+		pPriv->vidmem = NULL;
+	}
 
-    	pPriv->vidmem = GeodeAllocOffscreen(pGeode, size, 4);
+	pPriv->vidmem = exaOffscreenAlloc(pScrni->pScreen, size, 4,
+			TRUE, NULL, NULL);
 
     	if (pPriv->vidmem == NULL) {
 		ErrorF("Could not allocate memory for the video\n");
@@ -236,8 +239,10 @@ LXCopyPlanar(ScrnInfoPtr pScrni, int id, unsigned char *buf,
     size = YDstPitch * height;
     size += UVDstPitch * height;
 
-    if (LXAllocMem(pGeode, pPriv, size) == FALSE)
+    if (LXAllocateVidMem(pScrni, pPriv, size) == FALSE) {
+	ErrorF("Error allocating an offscreen Planar region.\n");
 	return FALSE;
+    }
 
     /* The top of the source region we want to copy */
     top = y1 & ~1;
@@ -297,8 +302,10 @@ LXCopyPacked(ScrnInfoPtr pScrni, int id, unsigned char *buf,
 
     lines = ((dstPitch * height) + pGeode->Pitch - 1) / pGeode->Pitch;
 
-    if (LXAllocMem(pGeode, pPriv, lines) == FALSE)
+    if (LXAllocateVidMem(pScrni, pPriv, lines) == FALSE) {
+	ErrorF("Error allocating an offscreen Packed region.\n");
 	return FALSE;
+    }
 
     /* The top of the source region we want to copy */
     top = y1;
@@ -578,7 +585,6 @@ static void
 LXStopVideo(ScrnInfoPtr pScrni, pointer data, Bool exit)
 {
     GeodePortPrivRec *pPriv = (GeodePortPrivRec *) data;
-    GeodeRec *pGeode = GEODEPTR(pScrni);
 
     if (pPriv->videoStatus == 0)
 	return;
@@ -597,7 +603,7 @@ LXStopVideo(ScrnInfoPtr pScrni, pointer data, Bool exit)
 	}
 
 	if (pPriv->vidmem) {
-	    GeodeFreeOffscreen(pGeode, pPriv->vidmem);
+	    exaOffscreenFree(pScrni->pScreen, pPriv->vidmem);
 	    pPriv->vidmem = NULL;
 	}
 
@@ -659,7 +665,7 @@ LXVidBlockHandler(int i, pointer blockData, pointer pTimeout,
 	    if (pPriv->freeTime < now) {
 
 		if (pPriv->vidmem) {
-		    GeodeFreeOffscreen(pGeode, pPriv->vidmem);
+		    exaOffscreenFree(pScrni->pScreen, pPriv->vidmem);
 		    pPriv->vidmem = NULL;
 		}
 
@@ -742,7 +748,7 @@ LXSetupImageVideo(ScreenPtr pScrn)
 
 struct OffscreenPrivRec
 {
-    GeodeMemPtr vidmem;
+    ExaOffscreenArea *vidmem;
     Bool isOn;
 };
 
@@ -800,7 +806,7 @@ LXAllocateSurface(ScrnInfoPtr pScrni, int id, unsigned short w,
 {
     GeodeRec *pGeode = GEODEPTR(pScrni);
     int pitch, lines;
-    GeodeMemPtr vidmem;
+    ExaOffscreenArea *vidmem;
     struct OffscreenPrivRec *pPriv;
 
     if (w > 1024 || h > 1024)
@@ -812,7 +818,8 @@ LXAllocateSurface(ScrnInfoPtr pScrni, int id, unsigned short w,
     pitch = ((w << 1) + 15) & ~15;
     lines = ((pitch * h) + (pGeode->Pitch - 1)) / pGeode->Pitch;
 
-    vidmem = GeodeAllocOffscreen(pGeode, lines, 4);
+    vidmem = exaOffscreenAlloc(pScrni->pScreen, lines, 4, TRUE,
+		NULL, NULL);
 
     if (vidmem == NULL) {
 	ErrorF("Error while allocating an offscreen region.\n");
@@ -849,8 +856,10 @@ LXAllocateSurface(ScrnInfoPtr pScrni, int id, unsigned short w,
     if (surface->pitches)
 	free(surface->pitches);
 
-    if (vidmem)
-	GeodeFreeOffscreen(pGeode, vidmem);
+    if (vidmem) {
+	exaOffscreenFree(pScrni->pScreen, vidmem);
+	vidmem = NULL;
+    }
 
     return BadAlloc;
 }
@@ -871,13 +880,12 @@ LXFreeSurface(XF86SurfacePtr surface)
     struct OffscreenPrivRec *pPriv = (struct OffscreenPrivRec *)
 	surface->devPrivate.ptr;
     ScrnInfoPtr pScrni = surface->pScrn;
-    GeodeRec *pGeode = GEODEPTR(pScrni);
 
     if (pPriv->isOn)
 	LXStopSurface(surface);
 
     if (pPriv->vidmem) {
-	GeodeFreeOffscreen(pGeode, pPriv->vidmem);
+	exaOffscreenFree(pScrni->pScreen, pPriv->vidmem);
 	pPriv->vidmem = NULL;
     }
 

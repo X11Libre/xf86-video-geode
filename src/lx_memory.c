@@ -247,9 +247,6 @@ LXInitOffscreen(ScrnInfoPtr pScrni)
 	/* Get the amount of offscreen memory still left */
 	size = GeodeOffscreenFreeSize(pGeode);
 
-	/* Deduct the maxmimum size of a video overlay */
-	size -= 0x200000;	
-
 	/* Align the size to a K boundary */	
 	size &= ~1023;
 
