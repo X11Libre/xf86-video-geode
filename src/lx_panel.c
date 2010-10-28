@@ -57,9 +57,6 @@ DisplayModeRec lx_panel_modes[] = {
     {MODEPREFIX, 40000, 800, 840, 968, 1056, 0, 600, 601, 605, 628, 0,
 	V_NHSYNC | V_NVSYNC, MODESUFFIX}
     ,				       /* 880x600@60 */
-    {MODEPREFIX, 48960, 1024, 1064, 1168, 1312, 0, 600, 601, 604, 622, 0,
-	V_NHSYNC | V_NVSYNC, MODESUFFIX}
-    ,				       /* 1024x600@60 */
     {MODEPREFIX, 65000, 1024, 1048, 1184, 1344, 0, 768, 771, 777, 806, 0,
 	V_NHSYNC | V_NVSYNC, MODESUFFIX}
     ,				       /* 1024x768@60 */
@@ -72,6 +69,9 @@ DisplayModeRec lx_panel_modes[] = {
     {MODEPREFIX, 162000, 1600, 1664, 1856, 2160, 0, 1200, 1201, 1204, 1250, 0,
 	V_NHSYNC | V_NVSYNC, MODESUFFIX}
     ,				       /* 1600x1200@60 */
+    {MODEPREFIX, 67630, 1024, 1080, 1184, 1344, 0, 600, 601, 604, 629, 0,
+	V_NHSYNC | V_NVSYNC, MODESUFFIX}
+    ,				       /* 1024x600@80 */
 };
 
 /* Get the legacy panel size from VSA, and return the associated mode rec */
@@ -87,12 +87,14 @@ LXGetLegacyPanelMode(void)
 	reg = LX_READ_VG(0x02);
 	ret = (reg >> 3) & 0x07;
 
-	/* 7 is a "reserved" value - if we get it, we can only
-	 * assume that a panel doesn't exist (or it hasn't been
-	 * configured in the BIOS)
+	/* FIXME: 7 is reserved in default. We use this value to support
+ 	 * wide screen resolution 1024x600@80 now for panel. If you want to use
+ 	 * that resolution, please assign ret to 7 manually here:
+ 	 * "reg = 7"
+ 	 * The user can use this entry for other wide screen resolutions.
 	 */
 
-	if (ret < 7)
+	if (ret < 8)
 	    return &lx_panel_modes[ret];
 
     }
