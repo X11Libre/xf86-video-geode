@@ -152,35 +152,8 @@ lx_output_restore(xf86OutputPtr output)
 static int
 lx_output_mode_valid(xf86OutputPtr output, DisplayModePtr pMode)
 {
-    ScrnInfoPtr pScrni = output->scrn;
-    GeodeRec *pGeode = GEODEPTR(pScrni);
-
-    /* DCON Panel specific resolution - OLPC's one */
-    if (pGeode->Output & OUTPUT_DCON) {
-        if (pGeode->panelMode->HDisplay == 1200 &&
-            pGeode->panelMode->VDisplay == 900)
-            return MODE_OK;
-    }
-
-    if ((pGeode->Output & OUTPUT_PANEL) &&
-        gfx_is_panel_mode_supported(pGeode->panelMode->HDisplay,
-                                    pGeode->panelMode->VDisplay,
-                                    pMode->HDisplay,
-                                    pMode->VDisplay,
-                                    pScrni->bitsPerPixel) != -1) {
-
-        return MODE_OK;
-    }
-
-    if (gfx_is_display_mode_supported(pMode->HDisplay,
-                                      pMode->VDisplay,
-                                      pScrni->bitsPerPixel,
-                                      GeodeGetRefreshRate(pMode)) != -1) {
-        return MODE_OK;
-    }
-
-    if (pMode->type & (M_T_DRIVER | M_T_PREFERRED))
-        return MODE_OK;
+    /* FIXME: Mode validation code should be placed here for the modes
+     * that geode can not support */
 
     return MODE_OK;
 }
