@@ -577,7 +577,7 @@ LXSetupCrtc(ScrnInfoPtr pScrni)
 	return;
     }
 
-    lxpriv = xnfcalloc(sizeof(LXCrtcPrivateRec), 1);
+    lxpriv = xnfcalloc(1, sizeof(LXCrtcPrivateRec));
 
     if (!lxpriv) {
 	xf86CrtcDestroy(crtc);
