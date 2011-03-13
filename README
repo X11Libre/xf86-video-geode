@@ -1,6 +1,6 @@
 xf86-video-geode -- AMD Geode GX and LX graphics driver for X.org
 =================================================================
-README last updated: 2009-09-09
+README last updated: 2011-03-13
 
 GIT repository:
         git://anongit.freedesktop.org/git/xorg/driver/xf86-video-geode
@@ -56,7 +56,20 @@ because it utilizes the new common DDC probing libraries from X.Org.
 
   Patches accomplishing the same trick for the Geode driver are welcome.
 
+= Maximum Resolutions =
+
+LX: 1920x1440 (CRT) and 1600x1200 (TFT)
+GX: 1600x1200 (CRT) and 1280x1024 (TFT)
+SC: 1280x1024 (CRT/TFT) - Currently unsupported by this driver.
+
 = FAQ =
+
+Q: Why doesn't the GEODE driver work at WXGA (wide screen) resolutions?
+
+A: Make sure that TFT Panel support is disabled in the BIOS settings, 
+   otherwise resolutions will be restricted to traditional VGA modes. 
+   The GEODE offers a choice between CRT-only, CRT+TFT, TFT-only for
+   output device and selecting CRT-only removes the VGA restriction.
 
 Q: Why doesn't screen rotation work?
 
@@ -64,13 +77,6 @@ A: Make sure that a sufficient amount of video RAM is reserved in the BIOS,
    otherwise rotation will fail and this error message appear in Xorg.log:
       Couldn't allocate the shadow memory for rotation
       You need XX bytes, but only YY bytes are available
-
-Q: Why doesn't this GEODE driver work at WXGA (wide screen) resolutions?
-
-A: Make sure that TFT Panel support is disabled in the BIOS settings, 
-   otherwise resolutions will be restricted to traditional VGA modes. 
-   The GEODE offers a choice between CRT-only, CRT+TFT, TFT-only for
-   output device and selecting CRT-only removes the VGA restriction.
 
 Q: How do I produce useful information whenever submiting a bug report?
 
