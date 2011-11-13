@@ -6,6 +6,10 @@
 #include <errno.h>
 #include "os.h"
 #include "geode.h"
+#ifdef __FreeBSD__
+#define lseek64 lseek
+#define off64_t off_t
+#endif
 
 static int
 _msr_open(void)
