@@ -124,6 +124,7 @@ case $host_os in
 esac
 
 AM_CONDITIONAL(BUILD_Z4L, [test "x$BUILD_Z4L" = xyes]) 
+
 is386=false
 
 case $host_cpu in
