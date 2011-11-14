@@ -145,12 +145,10 @@ EXTRA_DIST = \
         gx_vga.c \
         lx_vga.c
 
-#if BUILD_Z4L
 ztv_drv_la_LTLIBRARIES = ztv_drv.la
 ztv_drv_la_LDFLAGS = -module -avoid-version
 ztv_drv_ladir = @moduledir@/drivers
 
 ztv_drv_la_SOURCES = \
         z4l.c
-#endif
 

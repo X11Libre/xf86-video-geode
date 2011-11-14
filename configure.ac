@@ -114,17 +114,6 @@ AC_SUBST([XORG_CFLAGS])
 AC_SUBST([moduledir])
 AC_SUBST([AMD_CFLAGS])
 
-case $host_os in
-  *linux*)
-	BUILD_Z4L=yes
-  ;;
-  *)
-	BUILD_Z4l=no
-  ;;
-esac
-
-AM_CONDITIONAL(BUILD_Z4L, [test "x$BUILD_Z4L" = xyes]) 
-
 is386=false
 
 case $host_cpu in

@@ -3,11 +3,6 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/types.h>
-/* Complement BSD variants not found via types.h */
-#if defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)
-#define lseek64 lseek
-#define off64_t off_t
-#endif
 #include <errno.h>
 #include "os.h"
 #include "geode.h"
