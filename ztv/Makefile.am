@@ -6,7 +6,6 @@ AM_CFLAGS =			\
 	$(AMD_CFLAGS)		\
 	-DHAVE_GX		\
 	-DHAVE_LX		\
-	-DAMD_V4L2_VIDEO	\
 	-DOPT_ACCEL		\
 	-DLINUX_2_6
 
