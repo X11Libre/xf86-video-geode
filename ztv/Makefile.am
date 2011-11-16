@@ -4,9 +4,6 @@ if BUILD_ZTV
 AM_CFLAGS =			\
 	$(XORG_CFLAGS)		\
 	$(AMD_CFLAGS)		\
-	-DHAVE_GX		\
-	-DHAVE_LX		\
-	-DOPT_ACCEL		\
 	-DLINUX_2_6
 
 ztv_drv_la_LTLIBRARIES = ztv_drv.la
