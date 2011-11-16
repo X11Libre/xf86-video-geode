@@ -110,6 +110,10 @@ if test "x$XSERVER_LIBPCIACCESS" = xyes; then
     XORG_CFLAGS="$XORG_CFLAGS $PCIACCESS_CFLAGS"
 fi
 
+# Check for Video4Linux Version 2 (V4L2)
+AC_CHECK_HEADERS([linux/videodev2.h],[v4l2=yes])
+AM_CONDITIONAL(BUILD_ZTV, [test "x$v4l2" = xyes])
+
 AC_SUBST([XORG_CFLAGS])
 AC_SUBST([moduledir])
 AC_SUBST([AMD_CFLAGS])

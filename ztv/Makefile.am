@@ -1,4 +1,6 @@
 
+if BUILD_ZTV
+
 AM_CFLAGS =			\
 	$(XORG_CFLAGS)		\
 	$(AMD_CFLAGS)		\
@@ -13,3 +15,5 @@ ztv_drv_la_LDFLAGS = -module -avoid-version
 ztv_drv_ladir = $(moduledir)/drivers
 
 ztv_drv_la_SOURCES = z4l.c
+
+endif BUILD_ZTV
