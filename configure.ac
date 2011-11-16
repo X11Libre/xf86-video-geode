@@ -70,6 +70,27 @@ AC_ARG_ENABLE(visibility,
 			     [ AMD_CFLAGS="$AMD_CFLAGS -fvisibility=hidden" ],
 			     [ : ])
 
+# Define a configure option to enable/disable ztv
+AC_ARG_ENABLE(ztv,
+	AS_HELP_STRING([--enable-ztv],
+	    [Enable Video For Linux based ZTV driver (default: auto-detected)]),
+	    [ztv=$enableval],
+	    [ztv=auto])
+
+# Check for Video4Linux Version 2 (V4L2) availability
+AC_CHECK_HEADERS([linux/videodev2.h],[v4l2=yes],[v4l2=no])
+if test "x$ztv" != "xno" ; then
+    if test "x$v4l2" = "xno" ; then
+	if test "x$ztv" = "xyes" ; then
+	    # User really wants ztv but V4L2 is not found
+	    AC_MSG_ERROR([ZTV driver requested, but videodev2.h not found.])
+	fi
+    else
+	BUILD_ZTV=yes
+    fi
+fi
+AM_CONDITIONAL(BUILD_ZTV, [test "x$BUILD_ZTV" = xyes])
+
 if test "x$GCC" = "xyes"; then
        GCC_WARNINGS1="-Wall -Wpointer-arith -Wstrict-prototypes"
        GCC_WARNINGS2="-Wmissing-prototypes -Wmissing-declarations"
@@ -109,10 +130,6 @@ if test "x$XSERVER_LIBPCIACCESS" = xyes; then
     PKG_CHECK_MODULES([PCIACCESS], [pciaccess >= 0.8.0])
     XORG_CFLAGS="$XORG_CFLAGS $PCIACCESS_CFLAGS"
 fi
-
-# Check for Video4Linux Version 2 (V4L2)
-AC_CHECK_HEADERS([linux/videodev2.h],[v4l2=yes])
-AM_CONDITIONAL(BUILD_ZTV, [test "x$v4l2" = xyes])
 
 AC_SUBST([XORG_CFLAGS])
 AC_SUBST([moduledir])
