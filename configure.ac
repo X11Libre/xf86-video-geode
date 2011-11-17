@@ -60,10 +60,6 @@ AC_ARG_ENABLE(geodegx-panel,
 	      [ ], 
 	      [ AMD_CFLAGS="-DPNL_SUP $AMD_CFLAGS" ])
 
-AC_ARG_ENABLE(werror,        AC_HELP_STRING([--enable-werror],
-				  [Treat warnings as errors (default: disabled)]),
-			        [WERROR=$enableval], [WERROR=no])
-
 # Define a configure option to enable/disable ztv
 AC_ARG_ENABLE(ztv,
 	AS_HELP_STRING([--enable-ztv],
@@ -84,17 +80,6 @@ if test "x$ztv" != "xno" ; then
     fi
 fi
 AM_CONDITIONAL(BUILD_ZTV, [test "x$BUILD_ZTV" = xyes])
-
-if test "x$GCC" = "xyes"; then
-       GCC_WARNINGS1="-Wall -Wpointer-arith -Wstrict-prototypes"
-       GCC_WARNINGS2="-Wmissing-prototypes -Wmissing-declarations"
-       GCC_WARNINGS3="-Wnested-externs -fno-strict-aliasing"
-       GCC_WARNINGS="$GCC_WARNINGS1 $GCC_WARNINGS2 $GCC_WARNINGS3"
-       if test "x$WERROR" = "xyes"; then
-               GCC_WARNINGS="${GCC_WARNINGS} -Werror"
-       fi
-       AMD_CFLAGS="$GCC_WARNINGS $AMD_CFLAGS"
-fi
 
 # Checks for extensions
 XORG_DRIVER_CHECK_EXT(RANDR, randrproto)

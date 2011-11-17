@@ -32,9 +32,13 @@ AM_CPPFLAGS = 			\
 
 # -DPNL_SUP is now provided by AMD_CFLAGS
 #
-AM_CFLAGS = @XORG_CFLAGS@ \
-   -DHAVE_GX -DHAVE_LX -DOPT_ACCEL \
-   @AMD_CFLAGS@
+AM_CFLAGS = 		\
+	$(XORG_CFLAGS)	\
+	$(CWARNFLAGS)	\
+	$(AMD_CFLAGS)	\
+	-DHAVE_GX	\
+	-DHAVE_LX	\
+	-DOPT_ACCEL
 
 geode_drv_la_LTLIBRARIES = geode_drv.la
 geode_drv_la_LDFLAGS = -module -avoid-version
