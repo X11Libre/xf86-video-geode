@@ -1,10 +1,7 @@
 
 if BUILD_ZTV
 
-AM_CFLAGS =			\
-	$(XORG_CFLAGS)		\
-	$(AMD_CFLAGS)		\
-	-DLINUX_2_6
+AM_CFLAGS = $(XORG_CFLAGS) $(AMD_CFLAGS)
 
 ztv_drv_la_LTLIBRARIES = ztv_drv.la
 ztv_drv_la_LDFLAGS = -module -avoid-version
