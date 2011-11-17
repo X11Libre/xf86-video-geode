@@ -64,11 +64,6 @@ AC_ARG_ENABLE(geodegx-panel,
 AC_ARG_ENABLE(werror,        AC_HELP_STRING([--enable-werror],
 				  [Treat warnings as errors (default: disabled)]),
 			        [WERROR=$enableval], [WERROR=no])
-AC_ARG_ENABLE(visibility,
-	      AC_HELP_STRING([--enable-visibility],
-			     [Enable GCC visibility optimizations]),
-			     [ AMD_CFLAGS="$AMD_CFLAGS -fvisibility=hidden" ],
-			     [ : ])
 
 # Define a configure option to enable/disable ztv
 AC_ARG_ENABLE(ztv,
