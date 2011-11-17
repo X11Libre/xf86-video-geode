@@ -114,21 +114,6 @@ AC_SUBST([XORG_CFLAGS])
 AC_SUBST([moduledir])
 AC_SUBST([AMD_CFLAGS])
 
-is386=false
-
-case $host_cpu in
-  i*86)
-	is386=true
-	;;
-esac
-
-# Unset is386 if compiling for AMD64/EM64T
-if test $is386 = true ; then
-	AC_CHECK_DECLS([_LP64, __amd64__, amd64], [is386=false])
-fi
-
-AM_CONDITIONAL([I386ARCH], [test $is386 = true])
-
 DRIVER_NAME=geode
 AC_SUBST([DRIVER_NAME])
 
