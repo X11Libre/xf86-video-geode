@@ -1,6 +1,6 @@
 xf86-video-geode -- AMD Geode GX and LX graphics driver for X.org
 =================================================================
-README last updated: 2011-03-13
+README last updated: 2011-11-17
 
 GIT repository:
         git://anongit.freedesktop.org/git/xorg/driver/xf86-video-geode
@@ -17,21 +17,22 @@ IRC channel:
 = Introduction =
 
 This is the X graphics driver for the AMD Geode GX and LX processors.
-The GX driver features XAA and EXA support for graphics acceleration,
-and the LX driver supports EXA (including compositing).  Both drivers
-support Xv overlay supprot and dynamic rotation with XRandR.
+The GX component supports both XAA and EXA for graphics acceleration.
+The LX component supports EXA including compositing.  Both support Xv 
+overlay and dynamic rotation with XRandR. Additionally, a V4L2 driver
+for the Geode LX is provided.
 
 = Dependencies =
 
-As of version 2.9.0, this driver depends on X server 1.3 or newer,
+Since version 2.9.0, this driver depends on X server 1.3 or greater,
 because it utilizes the new common DDC probing libraries from X.Org.
 
-  If necessary, it might be possible to create autoconf macros to make 
-  this driver compile against older X servers, following this example:
+If necessary, it might be possible to create autoconf macros to make 
+this driver compile against older X servers, following this example:
 
-  http://lists.freedesktop.org/archives/xorg-commit/2007-February/010341.html
+http://lists.freedesktop.org/archives/xorg-commit/2007-February/010341.html
 
-  Patches accomplishing the same trick for the Geode driver are welcome.
+Patches accomplishing the same trick for the Geode driver are welcome.
 
 = Roadmap =
 
@@ -61,7 +62,7 @@ The driver suppports all maximum resolutions advertized by AMD, namely:
 
 LX: 1920x1440 (CRT) and 1600x1200 (TFT)
 GX: 1600x1200 (CRT) and 1280x1024 (TFT)
-SC: 1280x1024 (CRT/TFT) - Currently unsupported by this driver -
+SC: 1280x1024 (CRT/TFT) *** Currently unsupported by this driver ***
 
 = FAQ =
 
@@ -82,7 +83,7 @@ A: Make sure that a sufficient amount of video RAM is reserved in the BIOS,
 Q: How do I produce useful information whenever submiting a bug report?
 
 A: See http://www.x.org/wiki/Development/Documentation/ServerDebugging
-   and follow the instructions.
+   and follow the instructions found there.
 
 Q: How do I test development snapshots from the upstream GIT repository?
 
