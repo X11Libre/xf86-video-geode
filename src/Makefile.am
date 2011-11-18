@@ -24,11 +24,10 @@
 # _ladir passes a dummy rpath to libtool so the thing will actually link
 # TODO: -nostdlib/-Bstatic/-lgcc platform magic, not installing the .a, etc.
 
-AM_CPPFLAGS = 			\
-	-I$(top_srcdir)/src/cim \
-	-I$(top_srcdir)/src/gfx \
-	-I$(top_srcdir)/src/panel \
-	-I$(top_srcdir)/linux_v26
+AM_CPPFLAGS = 				\
+	-I$(top_srcdir)/src/cim 	\
+	-I$(top_srcdir)/src/gfx 	\
+	-I$(top_srcdir)/src/panel
 
 # -DPNL_SUP is now provided by AMD_CFLAGS
 #
