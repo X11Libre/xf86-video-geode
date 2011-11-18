@@ -1,7 +1,7 @@
 
 if BUILD_ZTV
 
-AM_CFLAGS = $(XORG_CFLAGS) $(CWARNFLAGS)
+AM_CFLAGS = $(XORG_CFLAGS) $(CWARNFLAGS) $(M32_CFLAGS)
 
 ztv_drv_la_LTLIBRARIES = ztv_drv.la
 ztv_drv_la_LDFLAGS = -module -avoid-version

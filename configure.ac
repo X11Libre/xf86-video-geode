@@ -81,6 +81,30 @@ if test "x$ztv" != "xno" ; then
 fi
 AM_CONDITIONAL(BUILD_ZTV, [test "x$BUILD_ZTV" = xyes])
 
+# Check if GCC supports compiling in 32 bit mode for 64 bit computers
+case $host_cpu in
+    x86_64*|amd64*)
+	if  test "x$GCC" = xyes ; then
+	    SAVE_CFLAGS="$CFLAGS"
+	    CFLAGS="$CFLAGS -m32"
+	    AC_MSG_CHECKING([if $CC supports the -m32 Intel/AMD option])
+	    AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
+#include <unistd.h>
+int
+main ()
+{
+  ;
+  return 0;
+}]])],
+		[m32_support=yes; M32_CFLAGS=-m32],
+		[m32_support=no])
+	    AC_MSG_RESULT([$m32_support])
+	    CFLAGS="$SAVE_CFLAGS"
+	fi
+	;;
+esac
+AC_SUBST([M32_CFLAGS])
+
 # Checks for extensions
 XORG_DRIVER_CHECK_EXT(RANDR, randrproto)
 XORG_DRIVER_CHECK_EXT(RENDER, renderproto)
