@@ -20,7 +20,7 @@ This is the X graphics driver for the AMD Geode GX and LX processors.
 The GX component supports both XAA and EXA for graphics acceleration.
 The LX component supports EXA, including compositing. Both support Xv 
 overlay and dynamic rotation with XRandR. Additionally, a V4L2 driver
-for the LX's video input port (VIP) feature is provided.
+for the LX's video input port (VIP) feature is provided as "ztv".
 
 = Dependencies =
 
