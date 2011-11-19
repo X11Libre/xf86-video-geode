@@ -1,6 +1,6 @@
 xf86-video-geode -- AMD Geode GX and LX graphics driver for X.org
 =================================================================
-README last updated: 2011-11-17
+README last updated: 2011-11-19
 
 GIT repository:
         git://anongit.freedesktop.org/git/xorg/driver/xf86-video-geode
@@ -18,9 +18,9 @@ IRC channel:
 
 This is the X graphics driver for the AMD Geode GX and LX processors.
 The GX component supports both XAA and EXA for graphics acceleration.
-The LX component supports EXA including compositing.  Both support Xv 
+The LX component supports EXA, including compositing. Both support Xv 
 overlay and dynamic rotation with XRandR. Additionally, a V4L2 driver
-for the Geode LX is provided.
+for the LX's video input port (VIP) feature is provided.
 
 = Dependencies =
 
