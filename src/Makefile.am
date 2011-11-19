@@ -27,18 +27,13 @@
 AM_CPPFLAGS = 				\
 	-I$(top_srcdir)/src/cim 	\
 	-I$(top_srcdir)/src/gfx 	\
-	-I$(top_srcdir)/src/panel
-
-# -DPNL_SUP is now provided by AMD_CFLAGS
-#
-AM_CFLAGS = 		\
-	$(XORG_CFLAGS)	\
-	$(CWARNFLAGS)	\
-	$(AMD_CFLAGS)	\
-	$(M32_CFLAGS)	\
-	-DHAVE_GX	\
-	-DHAVE_LX	\
+	-I$(top_srcdir)/src/panel	\
+	$(PANEL_CPPFLAGS)		\
+	-DHAVE_GX			\
+	-DHAVE_LX			\
 	-DOPT_ACCEL
+
+AM_CFLAGS = $(XORG_CFLAGS) $(CWARNFLAGS) $(M32_CFLAGS)
 
 geode_drv_la_LTLIBRARIES = geode_drv.la
 geode_drv_la_LDFLAGS = -module -avoid-version

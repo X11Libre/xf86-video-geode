@@ -58,7 +58,8 @@ AC_ARG_ENABLE(geodegx-panel,
 	      AC_HELP_STRING([--disable-geodegx-panel],
 	      	             [Disable support for flatpanels with the Geode GX]),
 	      [ ], 
-	      [ AMD_CFLAGS="-DPNL_SUP $AMD_CFLAGS" ])
+	      [ PANEL_CPPFLAGS=-DPNL_SUP ])
+AC_SUBST(PANEL_CPPFLAGS)
 
 # Define a configure option to enable/disable ztv
 AC_ARG_ENABLE(ztv,
@@ -136,7 +137,6 @@ fi
 
 AC_SUBST([XORG_CFLAGS])
 AC_SUBST([moduledir])
-AC_SUBST([AMD_CFLAGS])
 
 DRIVER_NAME=geode
 AC_SUBST([DRIVER_NAME])
