@@ -144,5 +144,4 @@ AC_SUBST([DRIVER_NAME])
 AC_OUTPUT([
 	Makefile
 	src/Makefile
-	ztv/Makefile
 ])
