@@ -53,6 +53,7 @@ AC_ARG_WITH(xorg-module-dir,
                            [Default xorg module directory [[default=$libdir/xorg/modules]]]),
             [moduledir="$withval"],
             [moduledir="$libdir/xorg/modules"])
+AC_SUBST([moduledir])
 
 AC_ARG_ENABLE(geodegx-panel, 
 	      AC_HELP_STRING([--disable-geodegx-panel],
@@ -117,7 +118,6 @@ PKG_CHECK_MODULES(XORG, [xorg-server xproto fontsproto $REQUIRED_MODULES])
 PKG_CHECK_MODULES(XEXT, [xextproto >= 7.0.99.1],
                   HAVE_XEXTPROTO_71="yes"; AC_DEFINE(HAVE_XEXTPROTO_71, 1, [xextproto 7.1 available]),
                   HAVE_XEXTPROTO_71="no")
-AM_CONDITIONAL(HAVE_XEXTPROTO_71, [ test "$HAVE_XEXTPROTO_71" = "yes" ])
 
 # Checks for libraries.
 SAVE_CPPFLAGS="$CPPFLAGS"
@@ -127,19 +127,10 @@ AC_CHECK_DECL(XSERVER_LIBPCIACCESS,
               [#include "xorg-server.h"])
 CPPFLAGS="$SAVE_CPPFLAGS"
 
-# Checks for header files.
-AC_HEADER_STDC
-
 if test "x$XSERVER_LIBPCIACCESS" = xyes; then
     PKG_CHECK_MODULES([PCIACCESS], [pciaccess >= 0.8.0])
     XORG_CFLAGS="$XORG_CFLAGS $PCIACCESS_CFLAGS"
 fi
-
-AC_SUBST([XORG_CFLAGS])
-AC_SUBST([moduledir])
-
-DRIVER_NAME=geode
-AC_SUBST([DRIVER_NAME])
 
 AC_OUTPUT([
 	Makefile
