@@ -1,6 +1,6 @@
 xf86-video-geode -- AMD Geode GX and LX graphics driver for X.org
 =================================================================
-README last updated: 2011-11-19
+README last updated: 2011-11-21
 
 GIT repository:
         git://anongit.freedesktop.org/git/xorg/driver/xf86-video-geode
@@ -106,7 +106,7 @@ A: See http://www.x.org/wiki/Development/Documentation/SubmittingPatches
 
 = Configuration options =
 
-You can specify driver options in /etc/xorg.conf in the usual fashion:
+You can specify driver options in /etc/X11/xorg.conf in the usual fashion:
 
 Section "Device"
 	Identifier "AMD Geode"
@@ -137,4 +137,40 @@ OSMColorExpBuffers: Set the number of color expansion buffers (XAA only)
 
 ExaScratch: Specify the amount of extra EXA scratch buffer (in bytes)
 
-= EOF =
+=== Using these and xorg.conf standard options ===
+
+Here is a sample configuration that defines arbitrary panel resolutions
+such as those available on the Hercules eCafe 800:
+
+#############################################################
+#/etc/X11/xorg.conf for 1024x600 and 800x480 laptops panels #
+#############################################################
+#### By J.KASPER and B.HIBRY #### for Hercules eCafe 800 ####
+#############################################################
+
+Section "Device"
+    Identifier	"card0"
+    Driver	"geode"
+    BusID	"PCI:0:1:1"
+    Option	"PanelMode" "33450 800 840 968 1056 480 490 492 525"
+EndSection
+
+Section "Monitor"
+    Identifier	"monitor0"
+    Modeline	"1024x600" 48.96 1024 1064 1168 1312 600 601 604 622 -hsync +vsync
+    Modeline	"800x480" 33.45 800 840 968 1056 480 490 492 525 -hsync -vsync
+    Option	"dpms"
+EndSection
+
+Section "Screen"
+    Identifier	"Default Screen"
+    Monitor	"monitor0"
+    Device	"card0"
+    DefaultDepth 24
+    Subsection "Display"
+        Depth 24
+        Modes "1024x600" "800x480"
+    EndSubsection        
+EndSection
+
+### EOF ###
