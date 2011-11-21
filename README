@@ -43,7 +43,7 @@ Until then, the current situation for Geode coverage is as follow:
  
 xf86-video-geode
  * Geode LX      (a.k.a. GX3) PCI ID 0x1022:0x2081
- * Geode GX      (a.k.a. GX2) PCI ID 0x100B:0x0030 (rebranded GX2)
+ * Geode GX      (a.k.a. GX2) PCI ID 0x100B:0x0030 (re-branded GX2)
 
 xf86-video-nsc
  * Geode GX2     (a.k.a. GX2) PCI ID 0x100B:0x0030 (a.k.a. "Red Cloud")
@@ -58,7 +58,7 @@ However, only GEODE has up-to-date code, while NSC is deprecated.
 
 = Maximum Resolutions =
 
-The driver suppports all maximum resolutions advertized by AMD, namely:
+The driver supports all maximum resolutions advertised by AMD, namely:
 
 LX: 1920x1440 (CRT) and 1600x1200 (TFT)
 GX: 1600x1200 (CRT) and 1280x1024 (TFT)
@@ -80,7 +80,7 @@ A: Make sure that a sufficient amount of video RAM is reserved in the BIOS,
       Couldn't allocate the shadow memory for rotation
       You need XX bytes, but only YY bytes are available
 
-Q: How do I produce useful information whenever submiting a bug report?
+Q: How do I produce useful information whenever submitting a bug report?
 
 A: See http://www.x.org/wiki/Development/Documentation/ServerDebugging
    and follow the instructions found there.
@@ -137,13 +137,13 @@ OSMColorExpBuffers: Set the number of color expansion buffers (XAA only)
 
 ExaScratch: Specify the amount of extra EXA scratch buffer (in bytes)
 
-=== Using these and xorg.conf standard options ===
+=== Using these and standard xorg.conf options ===
 
 Here is a sample configuration that defines arbitrary panel resolutions
 such as those available on the Hercules eCafe 800:
 
 #############################################################
-#/etc/X11/xorg.conf for 1024x600 and 800x480 laptops panels #
+# /etc/X11/xorg.conf for 1024x600 and 800x480 laptop panels #
 #############################################################
 #### By J.KASPER and B.HIBRY #### for Hercules eCafe 800 ####
 #############################################################
