@@ -5,22 +5,22 @@ README last updated: 2011-11-21
 = Project Contacts =
 
 Project homepage:
-	http://www.x.org/wiki/GeodeDriver
+http://www.x.org/wiki/GeodeDriver
 
 Mailing list:
-	http://lists.freedesktop.org/mailman/listinfo/xorg-driver-geode
+http://lists.freedesktop.org/mailman/listinfo/xorg-driver-geode
 
 Bug reports:
-        https://bugs.freedesktop.org/enter_bug.cgi?product=xorg&component=Driver%2Fgeode
+https://bugs.freedesktop.org/enter_bug.cgi?product=xorg&component=Driver%2Fgeode
 
 Code browser:
-        http://cgit.freedesktop.org/xorg/driver/xf86-video-geode
+http://cgit.freedesktop.org/xorg/driver/xf86-video-geode
 
 Code repository:
-        git://anongit.freedesktop.org/git/xorg/driver/xf86-video-geode
+git://anongit.freedesktop.org/git/xorg/driver/xf86-video-geode
 
 IRC channel:
-	#geode on the Freenode network.
+#geode on the Freenode network.
 
 = Introduction =
 
