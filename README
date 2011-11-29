@@ -15,13 +15,6 @@ for the LX's video input port (VIP) feature is provided as "ztv".
 Since version 2.9.0, this driver depends on X server 1.3 or greater,
 because it utilizes the new common DDC probing libraries from X.Org.
 
-If necessary, it might be possible to create autoconf macros to make 
-this driver compile against older X servers, following this example:
-
-http://lists.freedesktop.org/archives/xorg-commit/2007-February/010341.html
-
-Patches accomplishing the same trick for the Geode driver are welcome.
-
 3.ROADMAP
 
 Support for old GX1 Geodes by Cyrix and NSC will be reintroduced soon,
