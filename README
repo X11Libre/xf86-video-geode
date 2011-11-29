@@ -96,7 +96,7 @@ A: By adding the desired modes to /etc/X11/xorg.conf as follow:
       cvt 1024 600 60
 
       Where 1024x600 is the resolution and 60 the refresh rate. 
-      The resulting modeline is:
+      The resulting modeline using "gtf" is:
 
 Modeline "1024x600" 48.96 1024 1064 1168 1312 600 601 604 622 -hsync +vsync
 
@@ -109,6 +109,9 @@ Modeline "1024x600" 48.96 1024 1064 1168 1312 600 601 604 622 -hsync +vsync
 #############################################################
 #### By J.KASPER and B.HIBRY #### for Hercules eCafe 800 ####
 #############################################################
+Section "Module"
+    Load  "ztv"
+EndSection
 Section "Device"
     Identifier	"card0"
     Driver	"geode"
@@ -117,8 +120,9 @@ Section "Device"
 EndSection
 Section "Monitor"
     Identifier	"monitor0"
-    Modeline	"1024x600" 48.96 1024 1064 1168 1312 600 601 604 622 -hsync +vsync
-    Modeline	"800x480" 33.45 800 840 968 1056 480 490 492 525 -hsync -vsync
+    Modeline  "1024x768" 64.56 1024 1056 1296 1328 768 783 791 807 -hsync +vsync
+    Modeline  "1024x600" 48.96 1024 1064 1168 1312 600 601 604 622 -hsync +vsync
+    Modeline   "800x480" 33.45  800  840  968 1056 480 490 492 525 -hsync +vsync
     Option	"dpms"
 EndSection
 Section "Screen"
@@ -128,7 +132,7 @@ Section "Screen"
     DefaultDepth 24
     Subsection "Display"
         Depth 24
-        Modes "1024x600" "800x480"
+        Modes "1024x600" "1024x768" "800x480"
     EndSubsection        
 EndSection
 ### EOF ###
