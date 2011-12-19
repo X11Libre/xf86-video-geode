@@ -312,6 +312,8 @@ LXPreInit(ScrnInfoPtr pScrni, int flags)
     if (pGeode->useVGA) {
 	if (!xf86LoadSubModule(pScrni, "vgahw") || !vgaHWGetHWRec(pScrni))
 	    pGeode->useVGA = FALSE;
+	else
+	    vgaHWSetStdFuncs(VGAHWPTR(pScrni));
 
 	pGeode->vesa = calloc(1, sizeof(VESARec));
     }

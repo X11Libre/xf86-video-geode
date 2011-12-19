@@ -445,6 +445,8 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
     if (pGeode->useVGA) {
 	if (!xf86LoadSubModule(pScrni, "vgahw") || !vgaHWGetHWRec(pScrni))
 	    pGeode->useVGA = FALSE;
+	else
+	    vgaHWSetStdFuncs(VGAHWPTR(pScrni));
 
 #if INT10_SUPPORT
 	pGeode->vesa = calloc(1, sizeof(VESARec));
