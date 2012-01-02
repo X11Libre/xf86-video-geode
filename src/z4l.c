@@ -47,8 +47,6 @@
 #include "xf86xv.h"
 #include "fourcc.h"
 
-#include <linux/types.h>
-
 #define __s64 __s_64
 typedef long long __s64;
 
