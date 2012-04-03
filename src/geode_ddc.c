@@ -155,7 +155,7 @@ GeodeI2CInit(ScrnInfoPtr pScrni, I2CBusPtr * ptr, char *name)
 
     bus->I2CGetBits = geode_ddc_getbits;
     bus->I2CPutBits = geode_ddc_putbits;
-    bus->DriverPrivate.ptr = (void *)(ddciobase);
+    bus->DriverPrivate.ptr = (void *)(unsigned long)(ddciobase);
 
     if (!xf86I2CBusInit(bus))
 	return FALSE;
