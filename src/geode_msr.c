@@ -16,9 +16,9 @@ _msr_open(void)
     static int msrfd = 0;
 
     if (msrfd == 0) {
-	msrfd = open("/dev/cpu/0/msr", O_RDWR);
-	if (msrfd == -1)
-	    ErrorF("Unable to open /dev/cpu/0/msr: %d\n", errno);
+        msrfd = open("/dev/cpu/0/msr", O_RDWR);
+        if (msrfd == -1)
+            ErrorF("Unable to open /dev/cpu/0/msr: %d\n", errno);
     }
 
     return msrfd;
@@ -32,17 +32,17 @@ GeodeReadMSR(unsigned long addr, unsigned long *lo, unsigned long *hi)
     int ret;
 
     if (fd == -1)
-	return -1;
+        return -1;
 
     ret = lseek(fd, (off_t) addr, SEEK_SET);
 
     if (ret == -1)
-	return -1;
+        return -1;
 
-    ret = read(fd, (void *)data, sizeof(data));
+    ret = read(fd, (void *) data, sizeof(data));
 
     if (ret != 8)
-	return -1;
+        return -1;
 
     *hi = data[1];
     *lo = data[0];
@@ -57,16 +57,16 @@ GeodeWriteMSR(unsigned long addr, unsigned long lo, unsigned long hi)
     int fd = _msr_open();
 
     if (fd == -1)
-	return -1;
+        return -1;
 
     if (lseek(fd, (off_t) addr, SEEK_SET) == -1)
-	return -1;
+        return -1;
 
     data[0] = lo;
     data[1] = hi;
 
-    if (write(fd, (void *)data, 8) != 8)
-	return -1;
+    if (write(fd, (void *) data, 8) != 8)
+        return -1;
 
     return 0;
 }
