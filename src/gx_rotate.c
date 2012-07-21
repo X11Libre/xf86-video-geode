@@ -158,7 +158,7 @@ GXRotate(ScrnInfoPtr pScrni, DisplayModePtr mode)
                                                    pScrni->fbOffset));
 
     /* Don't use XAA pixmap cache or offscreen pixmaps when rotated */
-
+#if XF86XAA
     if (pGeode->AccelInfoRec) {
         if (pGeode->rotation == RR_Rotate_0) {
             pGeode->AccelInfoRec->Flags =
@@ -174,6 +174,7 @@ GXRotate(ScrnInfoPtr pScrni, DisplayModePtr mode)
             pGeode->AccelInfoRec->maxOffPixHeight = 1;
         }
     }
+#endif
 
     return TRUE;
 

@@ -54,8 +54,10 @@
 #include "geode.h"
 #include "xf86xv.h"
 #include <X11/extensions/Xv.h>
+#ifdef HAVE_XAA_H
 #include "xaa.h"
 #include "xaalocal.h"
+#endif
 #include "dixstruct.h"
 #include "fourcc.h"
 #include "geode_fourcc.h"

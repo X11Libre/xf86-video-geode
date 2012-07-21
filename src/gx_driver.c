@@ -258,6 +258,7 @@ GXAllocateMemory(ScreenPtr pScrn, ScrnInfoPtr pScrni, int rotate)
 
         if (!pGeode->useEXA) {
 
+#if XF86XAA
             if (!xf86FBManagerRunning(pScrn)) {
 
                 unsigned int offset = fboffset;
@@ -296,6 +297,7 @@ GXAllocateMemory(ScreenPtr pScrn, ScrnInfoPtr pScrni, int rotate)
             else
                 xf86DrvMsg(pScrni->scrnIndex, X_INFO,
                            "XAA offscreen memory has already been allocated.\n");
+#endif
         }
     }
     return ret;
@@ -972,8 +974,10 @@ GXCloseScreen(int scrnIndex, ScreenPtr pScrn)
     if (pScrni->vtSema)
         GXLeaveGraphics(pScrni);
 
+#ifdef XF86XAA
     if (pGeode->AccelInfoRec)
         XAADestroyInfoRec(pGeode->AccelInfoRec);
+#endif
 
     if (pGeode->AccelImageWriteBuffers) {
         free(pGeode->AccelImageWriteBuffers[0]);

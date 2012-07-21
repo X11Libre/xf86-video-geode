@@ -30,7 +30,9 @@
 #include "geode_pcirename.h"
 #include "config.h"
 
+#ifdef HAVE_XAA_H
 #include "xaa.h"
+#endif
 #include "exa.h"
 #include "xf86Cursor.h"
 
@@ -49,6 +51,12 @@
 #endif
 #else
 #undef XF86EXA
+#endif
+
+#ifdef HAVE_XAA_H
+#define XF86XAA 1
+#else
+#undef XF86XAA
 #endif
 
 #define CFB 0
@@ -71,7 +79,7 @@
 
 #define GFX_CPU_GEODELX   4
 
-#ifdef HAVE_GX
+#if defined(HAVE_GX) && XF86XAA
 #define GX_FILL_RECT_SUPPORT 1
 #define GX_BRES_LINE_SUPPORT 1
 #define GX_DASH_LINE_SUPPORT 0  /* does not do dashed lines */
@@ -84,10 +92,10 @@
 #define GX_USE_OFFSCRN_MEM 0
 #define GX_ONE_LINE_AT_A_TIME 1
 #define GX_WRITE_PIXMAP_SUPPORT 1
+#endif
 
 #define GFX(func) gfx_##func
 #define GFX2(func) gfx2_##func
-#endif
 
 #define GEODEPTR(p) ((GeodeRec *)((p)->driverPrivate))
 
@@ -299,7 +307,9 @@ typedef struct _geodeRec {
     int NoOfImgBuffers;
     unsigned char **AccelColorExpandBuffers;
     int NoOfColorExpandLines;
+#if XF86XAA
     XAAInfoRecPtr AccelInfoRec;
+#endif
 
     /* Save state */
     unsigned long FBCompressionOffset;

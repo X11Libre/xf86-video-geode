@@ -39,7 +39,9 @@
 
 #include "vgaHW.h"
 #include "xf86.h"
+#ifdef HAVE_XAA_H
 #include "xaalocal.h"
+#endif
 #include "xf86fbman.h"
 #include "miline.h"
 #include "xaarop.h"
@@ -128,7 +130,9 @@ static GDashLine gdln;
 static unsigned int gu2_xshift, gu2_yshift;
 static unsigned int gu2_pitch;
 
+#if XF86XAA
 static XAAInfoRecPtr localRecPtr;
+#endif
 
 /* pat  0xF0 */
 /* src  0xCC */
@@ -1964,6 +1968,8 @@ GXAccelInit(ScreenPtr pScrn)
     }
 #endif
 
+#if XF86XAA
+
     /* Getting the pointer for acceleration Inforecord */
     pGeode->AccelInfoRec = localRecPtr = XAACreateInfoRec();
     if (!pGeode->AccelInfoRec)
@@ -2076,6 +2082,9 @@ GXAccelInit(ScreenPtr pScrn)
 #endif
 
     return (XAAInit(pScrn, localRecPtr));
+#else /* XF86XAA */
+    return FALSE;
+#endif
 }
 
 /* END OF FILE */
