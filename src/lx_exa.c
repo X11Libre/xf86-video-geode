@@ -461,7 +461,9 @@ struct blend_ops_t {
     }
 };
 
+#ifndef ARRAY_SIZE
 #define ARRAY_SIZE(a) (sizeof((a)) / (sizeof(*(a))))
+#endif
 
 static const struct exa_format_t *
 lx_get_format(PicturePtr p)
@@ -1508,7 +1510,7 @@ lx_upload_to_screen(PixmapPtr pxDst, int x, int y, int w, int h,
 static Bool
 lx_exa_pixmap_is_offscreen(PixmapPtr pPixmap)
 {
-    ScrnInfoPtr pScrni = xf86Screens[pPixmap->drawable.pScreen->myNum];
+    ScrnInfoPtr pScrni = xf86ScreenToScrn(pPixmap->drawable.pScreen);
     GeodeRec *pGeode = GEODEPTR(pScrni);
     void *start = (void *) (pGeode->FBBase);
     void *end =
@@ -1527,7 +1529,7 @@ lx_exa_pixmap_is_offscreen(PixmapPtr pPixmap)
 Bool
 LXExaInit(ScreenPtr pScreen)
 {
-    ScrnInfoPtr pScrni = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrni = xf86ScreenToScrn(pScreen);
     GeodeRec *pGeode = GEODEPTR(pScrni);
     ExaDriverPtr pExa = pGeode->pExa;
 

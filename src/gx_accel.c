@@ -1904,7 +1904,7 @@ amd_gx_exa_Composite(PixmapPtr pxDst, int srcX, int srcY, int maskX,
 Bool
 GXAccelInit(ScreenPtr pScrn)
 {
-    ScrnInfoPtr pScrni = xf86Screens[pScrn->myNum];
+    ScrnInfoPtr pScrni = xf86ScreenToScrn(pScrn);
     GeodeRec *pGeode = GEODEPTR(pScrni);
 
 #if XF86EXA

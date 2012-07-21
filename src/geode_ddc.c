@@ -173,7 +173,7 @@ GeodeGetDDC(ScrnInfoPtr pScrni)
     if (!GeodeI2CInit(pScrni, &bus, "CS5536 DDC BUS"))
         return NULL;
 
-    mon = xf86DoEDID_DDC2(pScrni->scrnIndex, bus);
+    mon = xf86DoEDID_DDC2(DDC_CALL(pScrni), bus);
 
 #if (XORG_VERSION_CURRENT >= XORG_VERSION_NUMERIC(1,4,99,0,0))
     if (mon)

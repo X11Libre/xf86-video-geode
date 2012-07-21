@@ -67,7 +67,7 @@ extern void GXSetVideoPosition(int x, int y, int width, int height,
 Bool
 GXHWCursorInit(ScreenPtr pScrn)
 {
-    ScrnInfoPtr pScrni = xf86Screens[pScrn->myNum];
+    ScrnInfoPtr pScrni = xf86ScreenToScrn(pScrn);
     GeodeRec *pGeode = GEODEPTR(pScrni);
     xf86CursorInfoPtr infoPtr;
 

@@ -61,7 +61,9 @@
 #define TIMER_MASK      (OFF_TIMER | FREE_TIMER)
 
 #define MAKE_ATOM(a) MakeAtom(a, sizeof(a) - 1, TRUE)
+#ifndef ARRAY_SIZE
 #define ARRAY_SIZE(a) (sizeof((a)) / (sizeof(*(a))))
+#endif
 
 /* Local function prototypes */
 static void LXStopVideo(ScrnInfoPtr pScrni, pointer data, Bool exit);
@@ -638,15 +640,15 @@ LXResetVideo(ScrnInfoPtr pScrni)
 }
 
 static void
-LXVidBlockHandler(int i, pointer blockData, pointer pTimeout, pointer pReadmask)
+LXVidBlockHandler(BLOCKHANDLER_ARGS_DECL)
 {
-    ScreenPtr pScrn = screenInfo.screens[i];
-    ScrnInfoPtr pScrni = xf86Screens[i];
+    SCREEN_PTR(arg);
+    ScrnInfoPtr pScrni = xf86ScreenToScrn(pScrn);
     GeodeRec *pGeode = GEODEPTR(pScrni);
     GeodePortPrivRec *pPriv = GET_PORT_PRIVATE(pScrni);
 
     pScrn->BlockHandler = pGeode->BlockHandler;
-    (*pScrn->BlockHandler) (i, blockData, pTimeout, pReadmask);
+    (*pScrn->BlockHandler) (BLOCKHANDLER_ARGS);
     pScrn->BlockHandler = LXVidBlockHandler;
 
     if (pPriv->videoStatus & TIMER_MASK) {
@@ -684,7 +686,7 @@ LXVidBlockHandler(int i, pointer blockData, pointer pTimeout, pointer pReadmask)
 static XF86VideoAdaptorPtr
 LXSetupImageVideo(ScreenPtr pScrn)
 {
-    ScrnInfoPtr pScrni = xf86Screens[pScrn->myNum];
+    ScrnInfoPtr pScrni = xf86ScreenToScrn(pScrn);
     GeodeRec *pGeode = GEODEPTR(pScrni);
     XF86VideoAdaptorPtr adapt;
     GeodePortPrivRec *pPriv;
@@ -946,7 +948,7 @@ void
 LXInitVideo(ScreenPtr pScrn)
 {
     GeodeRec *pGeode;
-    ScrnInfoPtr pScrni = xf86Screens[pScrn->myNum];
+    ScrnInfoPtr pScrni = xf86ScreenToScrn(pScrn);
     XF86VideoAdaptorPtr *adaptors, *newAdaptors = NULL;
     XF86VideoAdaptorPtr newAdaptor = NULL;
     int num_adaptors;

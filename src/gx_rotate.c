@@ -35,7 +35,7 @@ static void *
 GXWindowLinear(ScreenPtr pScreen, CARD32 row, CARD32 offset, int mode,
                CARD32 *size, void *closure)
 {
-    ScrnInfoPtr pScrni = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrni = xf86ScreenToScrn(pScreen);
     GeodeRec *pGeode = GEODEPTR(pScrni);
 
     *size = pGeode->displayPitch;
@@ -47,7 +47,7 @@ GXWindowLinear(ScreenPtr pScreen, CARD32 row, CARD32 offset, int mode,
 static void
 GXUpdate(ScreenPtr pScreen, shadowBufPtr pBuf)
 {
-    ScrnInfoPtr pScrni = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrni = xf86ScreenToScrn(pScreen);
     GeodeRec *pGeode = GEODEPTR(pScrni);
     int rotate = pGeode->rotation;
 

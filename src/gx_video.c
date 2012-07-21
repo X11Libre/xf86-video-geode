@@ -105,7 +105,7 @@ static int GXPutImage(ScrnInfoPtr, short, short, short, short, short, short,
                       short, short, int, unsigned char *, short, short, Bool,
                       RegionPtr, pointer, DrawablePtr pDraw);
 
-static void GXBlockHandler(int, pointer, pointer, pointer);
+static void GXBlockHandler(BLOCKHANDLER_ARGS_DECL);
 void GXSetVideoPosition(int x, int y, int width, int height,
                         short src_w, short src_h, short drw_w,
                         short drw_h, int id, int offset, ScrnInfoPtr pScrni);
@@ -164,7 +164,7 @@ void
 GXInitVideo(ScreenPtr pScrn)
 {
     GeodeRec *pGeode;
-    ScrnInfoPtr pScrni = xf86Screens[pScrn->myNum];
+    ScrnInfoPtr pScrni = xf86ScreenToScrn(pScrn);
 
     pGeode = GEODEPTR(pScrni);
 
@@ -371,7 +371,7 @@ GXResetVideo(ScrnInfoPtr pScrni)
 static XF86VideoAdaptorPtr
 GXSetupImageVideo(ScreenPtr pScrn)
 {
-    ScrnInfoPtr pScrni = xf86Screens[pScrn->myNum];
+    ScrnInfoPtr pScrni = xf86ScreenToScrn(pScrn);
     GeodeRec *pGeode = GEODEPTR(pScrni);
     XF86VideoAdaptorPtr adapt;
     GeodePortPrivRec *pPriv;
@@ -690,7 +690,7 @@ GXCopyData422(unsigned char *src, unsigned char *dst,
 static void
 GXVideoSave(ScreenPtr pScreen, ExaOffscreenArea * area)
 {
-    ScrnInfoPtr pScrni = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrni = xf86ScreenToScrn(pScreen);
     GeodePortPrivRec *pPriv = GET_PORT_PRIVATE(pScrni);
 
     if (area == pPriv->area)
@@ -701,7 +701,7 @@ GXVideoSave(ScreenPtr pScreen, ExaOffscreenArea * area)
 static int
 GXAllocateMemory(ScrnInfoPtr pScrni, void **memp, int numlines)
 {
-    ScreenPtr pScrn = screenInfo.screens[pScrni->scrnIndex];
+    ScreenPtr pScrn = xf86ScrnToScreen(pScrni);
     GeodeRec *pGeode = GEODEPTR(pScrni);
 
     //long displayWidth = pGeode->Pitch / ((pScrni->bitsPerPixel + 7) / 8);
@@ -1320,15 +1320,15 @@ GeodeQueryImageAttributes(ScrnInfoPtr pScrni,
 }
 
 static void
-GXBlockHandler(int i, pointer blockData, pointer pTimeout, pointer pReadmask)
+GXBlockHandler(BLOCKHANDLER_ARGS_DECL)
 {
-    ScreenPtr pScrn = screenInfo.screens[i];
-    ScrnInfoPtr pScrni = xf86Screens[i];
+    SCREEN_PTR(arg);
+    ScrnInfoPtr pScrni = xf86ScreenToScrn(pScrn);
     GeodeRec *pGeode = GEODEPTR(pScrni);
     GeodePortPrivRec *pPriv = GET_PORT_PRIVATE(pScrni);
 
     pScrn->BlockHandler = pGeode->BlockHandler;
-    (*pScrn->BlockHandler) (i, blockData, pTimeout, pReadmask);
+    (*pScrn->BlockHandler) (BLOCKHANDLER_ARGS);
     pScrn->BlockHandler = GXBlockHandler;
 
     if (pPriv->videoStatus & TIMER_MASK) {

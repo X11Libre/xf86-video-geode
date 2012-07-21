@@ -76,7 +76,7 @@ unsigned char *XpressROMPtr;
 static Bool
 LXSaveScreen(ScreenPtr pScrn, int mode)
 {
-    ScrnInfoPtr pScrni = xf86Screens[pScrn->myNum];
+    ScrnInfoPtr pScrni = xf86ScreenToScrn(pScrn);
     GeodePtr pGeode = GEODEPTR(pScrni);
 
     if (pGeode->useVGA && !pScrni->vtSema)
@@ -630,9 +630,9 @@ LXUnmapMem(ScrnInfoPtr pScrni)
 /* These should be correctly accounted for rotation */
 
 void
-LXAdjustFrame(int scrnIndex, int x, int y, int flags)
+LXAdjustFrame(ADJUST_FRAME_ARGS_DECL)
 {
-    ScrnInfoPtr pScrni = xf86Screens[scrnIndex];
+    SCRN_INFO_PTR(arg);
     GeodeRec *pGeode = GEODEPTR(pScrni);
 
     unsigned long offset;
@@ -644,9 +644,9 @@ LXAdjustFrame(int scrnIndex, int x, int y, int flags)
 }
 
 static Bool
-LXSwitchMode(int index, DisplayModePtr pMode, int flags)
+LXSwitchMode(SWITCH_MODE_ARGS_DECL)
 {
-    ScrnInfoPtr pScrni = xf86Screens[index];
+    SCRN_INFO_PTR(arg);
     GeodeRec *pGeode = GEODEPTR(pScrni);
 
     /* Set the new mode */
@@ -693,9 +693,9 @@ LXLeaveGraphics(ScrnInfoPtr pScrni)
 }
 
 static Bool
-LXCloseScreen(int scrnIndex, ScreenPtr pScrn)
+LXCloseScreen(CLOSE_SCREEN_ARGS_DECL)
 {
-    ScrnInfoPtr pScrni = xf86Screens[scrnIndex];
+    ScrnInfoPtr pScrni = xf86ScreenToScrn(pScrn);
     GeodeRec *pGeode = GEODEPTR(pScrni);
 
     if (pScrni->vtSema)
@@ -719,7 +719,7 @@ LXCloseScreen(int scrnIndex, ScreenPtr pScrn)
     pScrn->CloseScreen = pGeode->CloseScreen;
 
     if (pScrn->CloseScreen)
-        return (*pScrn->CloseScreen) (scrnIndex, pScrn);
+        return (*pScrn->CloseScreen) (CLOSE_SCREEN_ARGS);
 
     return TRUE;
 }
@@ -815,9 +815,9 @@ LXLoadPalette(ScrnInfoPtr pScrni,
 }
 
 static Bool
-LXScreenInit(int scrnIndex, ScreenPtr pScrn, int argc, char **argv)
+LXScreenInit(SCREEN_INIT_ARGS_DECL)
 {
-    ScrnInfoPtr pScrni = xf86Screens[scrnIndex];
+    ScrnInfoPtr pScrni = xf86ScreenToScrn(pScrn);
     GeodeRec *pGeode = GEODEPTR(pScrni);
     int ret;
     unsigned int dwidth;
@@ -850,7 +850,7 @@ LXScreenInit(int scrnIndex, ScreenPtr pScrn, int argc, char **argv)
             pGeode->pExa->maxY = LX_MAX_HEIGHT - 1;
         }
         else {
-            xf86DrvMsg(scrnIndex, X_ERROR,
+            xf86DrvMsg(pScrni->scrnIndex, X_ERROR,
                        "Couldn't allocate the EXA structure.\n");
             pGeode->NoAccel = TRUE;
         }
@@ -942,7 +942,7 @@ LXScreenInit(int scrnIndex, ScreenPtr pScrn, int argc, char **argv)
 
     if (pGeode->tryHWCursor) {
         if (!LXCursorInit(pScrn))
-            xf86DrvMsg(scrnIndex, X_ERROR,
+            xf86DrvMsg(pScrni->scrnIndex, X_ERROR,
                        "Hardware cursor initialization failed.\n");
     }
 
@@ -973,7 +973,7 @@ LXScreenInit(int scrnIndex, ScreenPtr pScrn, int argc, char **argv)
     pScrn->SaveScreen = LXSaveScreen;
 
     if (!xf86CrtcScreenInit(pScrn)) {
-        xf86DrvMsg(scrnIndex, X_ERROR, "CRTCScreenInit failed.\n");
+        xf86DrvMsg(pScrni->scrnIndex, X_ERROR, "CRTCScreenInit failed.\n");
         return FALSE;
     }
 
@@ -986,21 +986,22 @@ LXScreenInit(int scrnIndex, ScreenPtr pScrn, int argc, char **argv)
 }
 
 static int
-LXValidMode(int scrnIndex, DisplayModePtr pMode, Bool Verbose, int flags)
+LXValidMode(VALID_MODE_ARGS_DECL)
 {
     return MODE_OK;
 }
 
 static Bool
-LXEnterVT(int scrnIndex, int flags)
+LXEnterVT(VT_FUNC_ARGS_DECL)
 {
-    return LXEnterGraphics(NULL, xf86Screens[scrnIndex]);
+    SCRN_INFO_PTR(arg);
+    return LXEnterGraphics(NULL, pScrni);
 }
 
 static void
-LXLeaveVT(int scrnIndex, int flags)
+LXLeaveVT(VT_FUNC_ARGS_DECL)
 {
-    ScrnInfoPtr pScrni = xf86Screens[scrnIndex];
+    SCRN_INFO_PTR(arg);
     GeodeRec *pGeode = GEODEPTR(pScrni);
 
     pGeode->PrevDisplayOffset = vg_get_display_offset();

@@ -306,7 +306,7 @@ GXAllocateMemory(ScreenPtr pScrn, ScrnInfoPtr pScrni, int rotate)
 static Bool
 GXSaveScreen(ScreenPtr pScrn, int mode)
 {
-    ScrnInfoPtr pScrni = xf86Screens[pScrn->myNum];
+    ScrnInfoPtr pScrni = xf86ScreenToScrn(pScrn);
     GeodePtr pGeode = GEODEPTR(pScrni);
 
     if (pGeode->useVGA && !pScrni->vtSema)
@@ -784,9 +784,9 @@ GXSetDvLineSize(unsigned int pitch)
 /* XXX - this is nothing like the original function - not sure exactly what the purpose is for this quite yet */
 
 static void
-GXAdjustFrame(int scrnIndex, int x, int y, int flags)
+GXAdjustFrame(ADJUST_FRAME_ARGS_DECL)
 {
-    ScrnInfoPtr pScrni = xf86Screens[scrnIndex];
+    SCRN_INFO_PTR(arg);
     GeodeRec *pGeode = GEODEPTR(pScrni);
     unsigned long offset;
 
@@ -868,16 +868,16 @@ GXSetVideoMode(ScrnInfoPtr pScrni, DisplayModePtr pMode)
         pGeode->HWCursor = FALSE;
     }
 
-    GXAdjustFrame(pScrni->scrnIndex, pScrni->frameX0, pScrni->frameY0, 0);
+    GXAdjustFrame(ADJUST_FRAME_ARGS(pScrni->frameX0, pScrni->frameY0));
     gx_enable_dac_power();
 
     return TRUE;
 }
 
 static Bool
-GXSwitchMode(int index, DisplayModePtr pMode, int flags)
+GXSwitchMode(SWITCH_MODE_ARGS_DECL)
 {
-    ScrnInfoPtr pScrni = xf86Screens[index];
+    SCRN_INFO_PTR(arg);
     GeodeRec *pGeode = GEODEPTR(pScrni);
     int ret = TRUE;
     int rotate;
@@ -966,9 +966,9 @@ GXLeaveGraphics(ScrnInfoPtr pScrni)
 }
 
 static Bool
-GXCloseScreen(int scrnIndex, ScreenPtr pScrn)
+GXCloseScreen(CLOSE_SCREEN_ARGS_DECL)
 {
-    ScrnInfoPtr pScrni = xf86Screens[scrnIndex];
+    ScrnInfoPtr pScrni = xf86ScreenToScrn(pScrn);
     GeodeRec *pGeode = GEODEPTR(pScrni);
 
     if (pScrni->vtSema)
@@ -1004,7 +1004,7 @@ GXCloseScreen(int scrnIndex, ScreenPtr pScrn)
     pScrn->CloseScreen = pGeode->CloseScreen;
 
     if (pScrn->CloseScreen)
-        return (*pScrn->CloseScreen) (scrnIndex, pScrn);
+        return (*pScrn->CloseScreen) (CLOSE_SCREEN_ARGS);
 
     return TRUE;
 }
@@ -1199,7 +1199,7 @@ GXDPMSSet(ScrnInfoPtr pScrni, int mode, int flags)
 static Bool
 GXCreateScreenResources(ScreenPtr pScreen)
 {
-    ScrnInfoPtr pScrni = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrni = xf86ScreenToScrn(pScreen);
     GeodeRec *pGeode = GEODEPTR(pScrni);
 
     pScreen->CreateScreenResources = pGeode->CreateScreenResources;
@@ -1235,9 +1235,9 @@ GXCreateScreenResources(ScreenPtr pScreen)
 }
 
 static Bool
-GXScreenInit(int scrnIndex, ScreenPtr pScrn, int argc, char **argv)
+GXScreenInit(SCREEN_INIT_ARGS_DECL)
 {
-    ScrnInfoPtr pScrni = xf86Screens[scrnIndex];
+    ScrnInfoPtr pScrni = xf86ScreenToScrn(pScrn);
     GeodeRec *pGeode = GEODEPTR(pScrni);
     XF86ModReqInfo shadowReq;
     int maj, min, ret, rotate;
@@ -1259,7 +1259,7 @@ GXScreenInit(int scrnIndex, ScreenPtr pScrn, int argc, char **argv)
         if (pGeode->useEXA) {
 
             if (!(pGeode->pExa = exaDriverAlloc())) {
-                xf86DrvMsg(scrnIndex, X_ERROR,
+                xf86DrvMsg(pScrni->scrnIndex, X_ERROR,
                            "Couldn't allocate the EXA structure.\n");
                 pGeode->NoAccel = TRUE;
             }
@@ -1360,7 +1360,7 @@ GXScreenInit(int scrnIndex, ScreenPtr pScrn, int argc, char **argv)
 
     if (pGeode->tryHWCursor) {
         if (!GXHWCursorInit(pScrn))
-            xf86DrvMsg(scrnIndex, X_ERROR,
+            xf86DrvMsg(pScrni->scrnIndex, X_ERROR,
                        "Hardware cursor initialization failed.\n");
     }
 
@@ -1434,9 +1434,9 @@ GXScreenInit(int scrnIndex, ScreenPtr pScrn, int argc, char **argv)
 }
 
 static int
-GXValidMode(int scrnIndex, DisplayModePtr pMode, Bool Verbose, int flags)
+GXValidMode(VALID_MODE_ARGS_DECL)
 {
-    ScrnInfoPtr pScrni = xf86Screens[scrnIndex];
+    SCRN_INFO_PTR(arg);
     GeodeRec *pGeode = GEODEPTR(pScrni);
     int p;
     int custom = 0;
@@ -1485,19 +1485,20 @@ GXValidMode(int scrnIndex, DisplayModePtr pMode, Bool Verbose, int flags)
 /* XXX - Way more to do here */
 
 static Bool
-GXEnterVT(int scrnIndex, int flags)
+GXEnterVT(VT_FUNC_ARGS_DECL)
 {
-    return GXEnterGraphics(NULL, xf86Screens[scrnIndex]);
+    SCRN_INFO_PTR(arg);
+    return GXEnterGraphics(NULL, pScrni);
 }
 
 static void
-GXLeaveVT(int scrnIndex, int flags)
+GXLeaveVT(VT_FUNC_ARGS_DECL)
 {
-    ScrnInfoPtr pScrni = xf86Screens[scrnIndex];
+    SCRN_INFO_PTR(arg);
     GeodeRec *pGeode = GEODEPTR(pScrni);
 
     pGeode->PrevDisplayOffset = gfx_get_display_offset();
-    GXLeaveGraphics(xf86Screens[scrnIndex]);
+    GXLeaveGraphics(pScrni);
 }
 
 void
@@ -1520,9 +1521,9 @@ GXSetupChipsetFPtr(ScrnInfoPtr pScrn)
  * ============================== */
 
 void
-GeodePointerMoved(int index, int x, int y)
+GeodePointerMoved(POINTER_MOVED_ARGS_DECL)
 {
-    ScrnInfoPtr pScrni = xf86Screens[index];
+    SCRN_INFO_PTR(arg);
     GeodeRec *pGeode = GEODEPTR(pScrni);
 
     int newX = x, newY = y;
@@ -1544,7 +1545,7 @@ GeodePointerMoved(int index, int x, int y)
         break;
     }
 
-    (*pGeode->PointerMoved) (index, newX, newY);
+    (*pGeode->PointerMoved) (POINTER_MOVED_ARGS(newX, newY));
 }
 
 int
@@ -1566,19 +1567,20 @@ GeodeFreeRec(ScrnInfoPtr pScrni)
 }
 
 void
-GeodeFreeScreen(int scrnIndex, int flags)
+GeodeFreeScreen(FREE_SCREEN_ARGS_DECL)
 {
-    GeodeRec *pGeode = GEODEPTR(xf86Screens[scrnIndex]);
+    SCRN_INFO_PTR(arg);
+    GeodeRec *pGeode = GEODEPTR(pScrni);
 
     if (pGeode == NULL)
         return;
 
     if (pGeode->useVGA) {
         if (xf86LoaderCheckSymbol("vgaHWFreeHWRec"))
-            vgaHWFreeHWRec(xf86Screens[scrnIndex]);
+            vgaHWFreeHWRec(pScrni);
     }
 
-    GeodeFreeRec(xf86Screens[scrnIndex]);
+    GeodeFreeRec(pScrni);
 }
 
 int

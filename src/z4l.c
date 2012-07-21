@@ -47,6 +47,8 @@
 #include "xf86xv.h"
 #include "fourcc.h"
 
+#include "compat-api.h"
+
 #define __s64 __s_64
 typedef long long __s64;
 
@@ -1271,19 +1273,20 @@ Z4lGetPortAttribute(ScrnInfoPtr pScrni, Atom attribute, INT32 *value,
     return Success;
 }
 
-static void (*oldAdjustFrame) (int scrnIndex, int x, int y, int flags) = NULL;
+static void (*oldAdjustFrame) (ADJUST_FRAME_ARGS_DECL) = NULL;
 
 static void
-Z4lAdjustFrame(int scrnIndex, int x, int y, int flags)
+Z4lAdjustFrame(ADJUST_FRAME_ARGS_DECL)
 {
+    SCRN_INFO_PTR(arg);
     int i;
     XF86VideoAdaptorPtr adpt;
     Z4lPortPrivRec *pPriv;
 
-    DBLOG(3, "Z4lAdjustFrame(%d,%d,%d)\n", x, y, flags);
+    DBLOG(3, "Z4lAdjustFrame(%d,%d)\n", x, y);
     z4l_x_offset = x;
     z4l_y_offset = y;
-    oldAdjustFrame(scrnIndex, x, y, flags);
+    oldAdjustFrame(ADJUST_FRAME_ARGS(x, y));
 
     /* xv adjust does not handle putvideo case */
     for (i = 0; i < Z4l_nAdaptors; ++i) {

@@ -43,6 +43,8 @@
 
 #include "xf86xv.h"
 
+#include "compat-api.h"
+
 /* We only support EXA version >=2 */
 
 #if (EXA_VERSION_MAJOR >= 2)
@@ -248,7 +250,7 @@ typedef struct _geodeRec {
 
     /* Hooks */
 
-    void (*PointerMoved) (int index, int x, int y);
+    void (*PointerMoved) (POINTER_MOVED_ARGS_DECL);
     CloseScreenProcPtr CloseScreen;
     Bool (*CreateScreenResources) (ScreenPtr);
 
@@ -405,8 +407,8 @@ xf86MonPtr GeodeDoDDC(ScrnInfoPtr pScrni, int index);
 Bool GeodeI2CInit(ScrnInfoPtr pScrni, I2CBusPtr * ptr, char *name);
 
 int GeodeGetFPGeometry(const char *str, int *width, int *height);
-void GeodePointerMoved(int index, int x, int y);
-void GeodeFreeScreen(int scrnIndex, int flags);
+void GeodePointerMoved(POINTER_MOVED_ARGS_DECL);
+void GeodeFreeScreen(FREE_SCREEN_ARGS_DECL);
 int GeodeCalculatePitchBytes(unsigned int width, unsigned int bpp);
 void GXSetupChipsetFPtr(ScrnInfoPtr pScrn);
 
@@ -458,7 +460,7 @@ void LXSetupOutput(ScrnInfoPtr);
 DisplayModePtr LXGetLegacyPanelMode(ScrnInfoPtr pScrni);
 DisplayModePtr LXGetManualPanelMode(char *modestr);
 
-void LXAdjustFrame(int scrnIndex, int x, int y, int flags);
+void LXAdjustFrame(ADJUST_FRAME_ARGS_DECL);
 
 /* lx_display.c */
 void LXSetupCrtc(ScrnInfoPtr pScrni);
