@@ -1503,7 +1503,7 @@ lx_upload_to_screen(PixmapPtr pxDst, int x, int y, int w, int h,
 }
 #endif
 
-#if EXA_VERSION_MINOR >= 2
+#if EXA_VERSION_MAJOR > 2 || (EXA_VERSION_MAJOR == 2 && EXA_VERSION_MINOR >= 2)
 
 static Bool
 lx_exa_pixmap_is_offscreen(PixmapPtr pPixmap)
@@ -1551,7 +1551,7 @@ LXExaInit(ScreenPtr pScreen)
     pExa->DoneComposite = lx_done;
     //pExa->UploadToScreen =  lx_upload_to_screen;
 
-#if EXA_VERSION_MINOR >= 2
+#if EXA_VERSION_MAJOR > 2 || (EXA_VERSION_MAJOR == 2 && EXA_VERSION_MINOR >= 2)
     pExa->PixmapIsOffscreen = lx_exa_pixmap_is_offscreen;
 #endif
 
