@@ -369,7 +369,6 @@ AmdPciProbe(DriverPtr driver,
             int entity_num, struct pci_device *device, intptr_t match_data)
 {
     ScrnInfoPtr scrn = NULL;
-    int cpu_detected;
 
     ErrorF("AmdPciProbe: Probing for supported devices!\n");
 
@@ -385,13 +384,11 @@ AmdPciProbe(DriverPtr driver,
         switch (device->device_id) {
 #ifdef HAVE_LX
         case PCI_CHIP_GEODELX:
-            cpu_detected = LX;
             LXSetupChipsetFPtr(scrn);
             break;
 #endif
 #ifdef HAVE_GX
         case PCI_CHIP_GEODEGX:
-            cpu_detected = GX;
             GXSetupChipsetFPtr(scrn);
             break;
 #endif
@@ -399,9 +396,6 @@ AmdPciProbe(DriverPtr driver,
             ErrorF("AmdPciProbe: unknown device ID\n");
             return FALSE;
         }
-
-        DEBUGMSG(1, (0, X_INFO, "AmdPciProbe: CPUDetected %d!\n",
-                     cpu_detected));
     }
     return scrn != NULL;
 }
