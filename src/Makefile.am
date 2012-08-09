@@ -40,6 +40,7 @@ geode_drv_la_LDFLAGS = -module -avoid-version
 geode_drv_ladir = $(moduledir)/drivers
 
 geode_drv_la_SOURCES =		\
+	compat-api.h		\
 	cimarron.c		\
 	cim_dev.h		\
 	durango.c		\
