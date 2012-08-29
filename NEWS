@@ -1,3 +1,43 @@
+Geode 2.11.13 (2011-12-26)
+==========================
+This release mainly features a complete overhaul of the building scripts plus
+a cleanup of deprecated macros. The key benefit is that this Geode driver can
+finally build on FreeBSD and on other platforms not offering V4L2 support and
+that it can also build on a 64-bit host using its 32-bit personality.
+
+Support for the Video Input Port (VIP) feature of the Geode LX found in 'ztv'
+is now documented and the source code saw the removal of deprecated Linux 2.4
+backward compatibility code. Compiling is skipped on platforms without V4L2.
+
+Configuration for laptops featuring WXGA resolutions is finally documented.
+
+Setting the GEODE_TRACE_FALL macro now enables composite operation tracing on
+this driver. This can be used to profile the performance during development.
+
+Fixes to keep this driver compilable on recent X servers are also included.
+
+VALIDATION PLATFORMS
+* Debian/stable (X server 1.7.7) on Artec DBE61 and Hercules EC-800.
+* Ubuntu/Precise (X server 1.10.4) on FIC ION603A.
+
+Geode 2.11.12 (2011-02-13)
+==========================
+This release drops the "linux/videodev.h" include in z4l.c because
+V4L1 support was dropped as of Linux kernel 2.6.38, and it fixes 
+packed overlay offscreen allocations.
+
+Geode 2.11.10 (2010-11-09)
+==========================
+This release migrates deprecated xalloc/xrealloc/xfree/xcalloc calls
+to malloc/realloc/free/calloc, fixes several DCON-specific issues, 
+improves mode validation and adds support for one WXGA resolution.
+
+Geode 2.11.11 (2010-12-27)
+==========================
+This release restores code compatibility down to X server 1.4, it fixes
+compilation under 1.9.99 and newer, and it improves handling of gamma
+correction in video vs graphics
+
 Geode 2.11.9 (2010-08-23)
 =========================
 We are pleased to announce this maintenance release of xf86-video-geode.
