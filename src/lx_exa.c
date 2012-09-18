@@ -547,27 +547,32 @@ lx_check_composite(int op, PicturePtr pSrc, PicturePtr pMsk, PicturePtr pDst)
     if (op > PictOpAdd)
         GEODE_FALLBACK(("Operation %d is not supported\n", op));
 
-    /* FIXME: Meet this conditions from the debug for PictOpAdd.
-     * Any Other possibilities? Add a judge for the future supplement */
-    if (op == PictOpAdd && pSrc->format == PICT_a8r8g8b8 &&
-        pDst->format == PICT_a8 && !pMsk)
-        return TRUE;
-
-    if (op == PictOpAdd && pSrc->format == PICT_x8r8g8b8 &&
-        pDst->format == PICT_a8 && !pMsk)
-        return TRUE;
-
-    if (op == PictOpAdd && pSrc->format == PICT_r5g6b5 &&
-        pDst->format == PICT_a8 && !pMsk)
-        return TRUE;
-
-    if (usesPasses(op)) {
-        if (pGeode->exaBfrOffset == 0 || !pMsk)
-            GEODE_FALLBACK(("Multipass operation requires off-screen buffer\n"));
-    }
+    /* XXX - don't know if we can do any hwaccel on solid fills or gradient types */
+    if (pSrc->pSourcePict || (pMsk && pMsk->pSourcePict))
+        GEODE_FALLBACK(("Solid fills or gradient types are not supported\n"));
 
     if (pMsk && op == PictOpAdd)
         GEODE_FALLBACK(("PictOpAdd with mask is not supported\n"));
+
+    /* FIXME: Meet this conditions from the debug for PictOpAdd.
+     * Any Other possibilities? Add a judge for the future supplement */
+    if (op == PictOpAdd && pSrc->format == PICT_a8r8g8b8 &&
+        pDst->format == PICT_a8)
+        return TRUE;
+
+    if (op == PictOpAdd && pSrc->format == PICT_x8r8g8b8 &&
+        pDst->format == PICT_a8)
+        return TRUE;
+
+    if (op == PictOpAdd && pSrc->format == PICT_r5g6b5 &&
+        pDst->format == PICT_a8)
+        return TRUE;
+
+    if (usesPasses(op)) {
+        /* FIXME: Slightly misleading fallback msg when !pMsk */
+        if (pGeode->exaBfrOffset == 0 || !pMsk)
+            GEODE_FALLBACK(("Multipass operation requires off-screen buffer\n"));
+    }
 
     /* Check that the filter matches what we support */
 
@@ -584,10 +589,6 @@ lx_check_composite(int op, PicturePtr pSrc, PicturePtr pMsk, PicturePtr pDst)
 
     if (pMsk && pMsk->transform)
         GEODE_FALLBACK(("Mask transforms are not supported\n"));
-
-    /* XXX - don't know if we can do any hwaccel on solid fills or gradient types */
-    if (pSrc->pSourcePict || (pMsk && pMsk->pSourcePict))
-        GEODE_FALLBACK(("Solid fills or gradient types are not supported\n"));
 
     /* Keep an eye out for source rotation transforms - those we can
      * do something about */
