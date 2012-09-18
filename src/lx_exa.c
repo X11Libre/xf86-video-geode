@@ -630,15 +630,11 @@ lx_check_composite(int op, PicturePtr pSrc, PicturePtr pMsk, PicturePtr pDst)
 
     /* Get the formats for the source and destination */
 
-    if ((srcFmt = lx_get_format(pSrc)) == NULL) {
-        ErrorF("EXA: Invalid source format %x\n", pSrc->format);
-        return FALSE;
-    }
+    if ((srcFmt = lx_get_format(pSrc)) == NULL)
+        GEODE_FALLBACK(("Unsupported source format %x\n", pSrc->format));
 
-    if ((dstFmt = lx_get_format(pDst)) == NULL) {
-        ErrorF("EXA: Invalid destination format %x\n", pDst->format);
-        return FALSE;
-    }
+    if ((dstFmt = lx_get_format(pDst)) == NULL)
+        GEODE_FALLBACK(("Unsupported destination format %x\n", pDst->format));
 
     /* Make sure operations that need alpha bits have them */
     /* If a mask is enabled, the alpha will come from there */
