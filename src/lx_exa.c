@@ -547,9 +547,12 @@ lx_check_composite(int op, PicturePtr pSrc, PicturePtr pMsk, PicturePtr pDst)
     if (op > PictOpAdd)
         GEODE_FALLBACK(("Operation %d is not supported\n", op));
 
-    /* XXX - don't know if we can do any hwaccel on solid fills or gradient types */
-    if (pSrc->pSourcePict || (pMsk && pMsk->pSourcePict))
-        GEODE_FALLBACK(("Solid fills or gradient types are not supported\n"));
+    /* XXX - don't know if we can do any hwaccel on solid fills or gradient types in generic cases */
+    if (pMsk && pMsk->pSourcePict)
+        GEODE_FALLBACK(("%s are not supported as a mask\n", pMsk->pSourcePict->type == SourcePictTypeSolidFill ? "Solid pictures" : "Gradients"));
+
+    if (pSrc->pSourcePict && pSrc->pSourcePict->type != SourcePictTypeSolidFill)
+        GEODE_FALLBACK(("Gradients are not supported as the source\n"));
 
     if (pMsk && op == PictOpAdd)
         GEODE_FALLBACK(("PictOpAdd with mask is not supported\n"));
@@ -608,8 +611,8 @@ lx_check_composite(int op, PicturePtr pSrc, PicturePtr pMsk, PicturePtr pDst)
         struct blend_ops_t *opPtr = &lx_alpha_ops[op * 2];
         int direction = (opPtr->channel == CIMGP_CHANNEL_A_SOURCE) ? 0 : 1;
 
-        /* Direction 0 indicates src->dst, 1 indiates dst->src */
-        if (((direction == 0) && (pSrc->pDrawable->bitsPerPixel < 16)) ||
+        /* Direction 0 indicates src->dst, 1 indicates dst->src */
+        if (((direction == 0) && (pSrc->pDrawable && pSrc->pDrawable->bitsPerPixel < 16)) ||
             ((direction == 1) && (pDst->pDrawable->bitsPerPixel < 16))) {
             ErrorF("Mask blending unsupported with <16bpp\n");
             return FALSE;
@@ -618,14 +621,19 @@ lx_check_composite(int op, PicturePtr pSrc, PicturePtr pMsk, PicturePtr pDst)
             GEODE_FALLBACK(("Masks can be only done with a 8bpp or 4bpp depth\n"));
 
         /* The pSrc should be 1x1 pixel if the pMsk is not zero */
-        if (pSrc->pDrawable->width != 1 || pSrc->pDrawable->height != 1)
+        if (pSrc->pDrawable && (pSrc->pDrawable->width != 1 || pSrc->pDrawable->height != 1))
             GEODE_FALLBACK(("pSrc should be 1x1 pixel if pMsk is not zero\n"));
         /* FIXME: In lx_prepare_composite, there are no variables to record the
          * one pixel source's width and height when the mask is not zero.
          * That will lead to bigger region to render instead of one pixel in lx
          * _do_composite, so we should fallback currently to avoid this */
-        if (!pSrc->repeat)
+        /* Not an issue for solid pictures, because we'll treat it as 1x1R too */
+        if (!pSrc->repeat && !(pSrc->pSourcePict && pSrc->pSourcePict->type == SourcePictTypeSolidFill)) {
             GEODE_FALLBACK(("FIXME: unzero mask might lead to bigger rendering region than 1x1 pixels\n"));
+        }
+    } else {
+        if (pSrc->pSourcePict)
+            GEODE_FALLBACK(("Solid source pictures without a mask are not supported\n"));
     }
 
     /* Get the formats for the source and destination */
@@ -681,25 +689,28 @@ lx_prepare_composite(int op, PicturePtr pSrc, PicturePtr pMsk,
 
     if (pMsk && op != PictOpClear) {
         /* Get the source color */
-        /* If the op is PictOpOver(or PictOpOutReverse, PictOpInReverse,
-         * PictOpIn, PictOpOut, PictOpOverReverse), we should get the
-         * ARGB32 source format */
+        if (pSrc->pSourcePict) {
+            exaScratch.srcColor = pSrc->pSourcePict->solidFill.color;
+        } else {
+            /* If the op is PictOpOver(or PictOpOutReverse, PictOpInReverse,
+             * PictOpIn, PictOpOut, PictOpOverReverse), we should get the
+             * ARGB32 source format */
 
-        if ((op == PictOpOver || op == PictOpOutReverse || op ==
-             PictOpInReverse || op == PictOpIn || op == PictOpOut ||
-             op == PictOpOverReverse) && (srcFmt->alphabits != 0))
-            exaScratch.srcColor = exaGetPixmapFirstPixel(pxSrc);
-        else if ((op == PictOpOver || op == PictOpOutReverse || op ==
-                  PictOpInReverse || op == PictOpIn || op == PictOpOut ||
-                  op == PictOpOverReverse) && (srcFmt->alphabits == 0))
-            exaScratch.srcColor = lx_get_source_color(pxSrc, pSrc->format,
-                                                      PICT_a8r8g8b8);
-        else
-            exaScratch.srcColor = lx_get_source_color(pxSrc, pSrc->format,
-                                                      pDst->format);
+            if ((op == PictOpOver || op == PictOpOutReverse || op ==
+                 PictOpInReverse || op == PictOpIn || op == PictOpOut ||
+                 op == PictOpOverReverse) && (srcFmt->alphabits != 0))
+                exaScratch.srcColor = exaGetPixmapFirstPixel(pxSrc);
+            else if ((op == PictOpOver || op == PictOpOutReverse || op ==
+                      PictOpInReverse || op == PictOpIn || op == PictOpOut ||
+                      op == PictOpOverReverse) && (srcFmt->alphabits == 0))
+                exaScratch.srcColor = lx_get_source_color(pxSrc, pSrc->format,
+                                                          PICT_a8r8g8b8);
+            else
+                exaScratch.srcColor = lx_get_source_color(pxSrc, pSrc->format,
+                                                          pDst->format);
+        }
 
         /* Save off the info we need (reuse the source values to save space) */
-
         exaScratch.type = COMP_TYPE_MASK;
         exaScratch.maskrepeat = pMsk->repeat;
 
