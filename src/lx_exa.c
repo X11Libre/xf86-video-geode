@@ -95,7 +95,6 @@ static struct {
     unsigned int srcPitch;
     unsigned int srcBpp;
     unsigned int srcWidth, srcHeight;
-    PixmapPtr srcPixmap;
 
     unsigned int srcColor;
     int op;
@@ -285,6 +284,7 @@ lx_get_source_color(PixmapPtr pSrc, int srcFormat, int dstFormat)
      * exaGetPixmapFirstPixel, so this should be adjusted so
      * the stall isn't run needlessly
      */
+    /* FIXME: xserver-1.4 with a supposed fix for this is really old, so kill the stall? */
 
     gp_wait_until_idle();
     in = exaGetPixmapFirstPixel(pSrc);
