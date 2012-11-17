@@ -1303,8 +1303,8 @@ lx_do_composite(PixmapPtr pxDst, int srcX, int srcY, int maskX,
         if (exaScratch.type == COMP_TYPE_ONEPASS) {
             /* This is the condition srcX or/and srcY is/are out of source
              * region */
-            if (((srcX >= 0 && srcY >= exaScratch.srcHeight)
-                 || (srcX >= exaScratch.srcWidth && srcY >= 0)) &&
+            if (((srcY >= 0 && srcY >= exaScratch.srcHeight)
+                 || (srcX >= 0 && srcX >= exaScratch.srcWidth)) &&
                 (exaScratch.op == PictOpOver || exaScratch.op == PictOpSrc)) {
                 if (exaScratch.repeat == 1) {
                     opWidth = width;
@@ -1345,8 +1345,29 @@ lx_do_composite(PixmapPtr pxDst, int srcX, int srcY, int maskX,
                     opHeight = height;
                 }
                 else {
-                    /* Have not met this condition till now */
-                    return;
+                    /* FIXME: We can't support negative srcX/Y for all corner cases in
+                     * a sane way without a bit bigger refactoring. So as to avoid
+                     * gross misrenderings (e.g missing tray icons) in current real-world
+                     * applications, just shift destination appropriately for now and
+                     * ignore out of bounds source pixmap zero-vector handling. This is
+                     * actually correct for PictOpOver, but PictOpSrc out of bounds regions
+                     * should be blacked out, but aren't - without this workaround however
+                     * it'd be simply all black instead, which is probably worse till a full
+                     * clean solution solves it for all cases. */
+                    if (srcX < 0) {
+                        opX -= srcX;
+                        srcX = 0;
+                    }
+
+                    if (srcY < 0) {
+                        opY -= srcY;
+                        srcY = 0;
+                    }
+
+                    /* EXA has taken care of adjusting srcWidth if it gets cut on the right */
+                    width = opWidth = exaScratch.srcWidth;
+                    /* EXA has taken care of adjusting srcHeight if it gets cut on the bottom */
+                    height = opHeight = exaScratch.srcHeight;
                 }
             }
             else {
@@ -1470,6 +1491,17 @@ lx_do_composite(PixmapPtr pxDst, int srcX, int srcY, int maskX,
             }
             /* All black out of the source */
             if (!exaScratch.repeat && (exaScratch.type == COMP_TYPE_ONEPASS)) {
+                /* FIXME: We black out the source here, so that any further regions
+                 * in the loop get handled as a source that's a zero-vector (as
+                 * defined for out-of-bounds from source pixmap for RepeatModeNone),
+                 * but this will likely interfere with cases where srcX and/or srcY
+                 * is negative - as opposed to e.g width being larger than srcWidth,
+                 * which is exercised in rendercheck (always rectangle in top-left
+                 * corner).
+                 * Additionally it forces the drawing into tiles of srcWidth/srcHeight
+                 * for non-repeat modes too, where we don't really need to tile it like
+                 * this and could draw the out of bound regions all at once (or at most
+                 * in 4 operations without the big loop). */
                 lx_composite_all_black(srcOffset, exaScratch.srcWidth,
                                        exaScratch.srcHeight);
             }
