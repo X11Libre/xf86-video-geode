@@ -26,17 +26,17 @@ This release drops the "linux/videodev.h" include in z4l.c because
 V4L1 support was dropped as of Linux kernel 2.6.38, and it fixes 
 packed overlay offscreen allocations.
 
-Geode 2.11.10 (2010-11-09)
-==========================
-This release migrates deprecated xalloc/xrealloc/xfree/xcalloc calls
-to malloc/realloc/free/calloc, fixes several DCON-specific issues, 
-improves mode validation and adds support for one WXGA resolution.
-
 Geode 2.11.11 (2010-12-27)
 ==========================
 This release restores code compatibility down to X server 1.4, it fixes
 compilation under 1.9.99 and newer, and it improves handling of gamma
 correction in video vs graphics
+
+Geode 2.11.10 (2010-11-09)
+==========================
+This release migrates deprecated xalloc/xrealloc/xfree/xcalloc calls
+to malloc/realloc/free/calloc, fixes several DCON-specific issues, 
+improves mode validation and adds support for one WXGA resolution.
 
 Geode 2.11.9 (2010-08-23)
 =========================
