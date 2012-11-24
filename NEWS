@@ -27,7 +27,7 @@ Better compatibility with xserver-1.13, cairo-1.12 and gtk3.
    very visible text corruption in many instances.
 
  * Handle negative srcX and srcY parameters better in EXA Composite
-   operations, used via the RENDER extension (Mart)
+   operations, used via the RENDER extension (Mart Raudsepp)
    Handling of source picture coordinates outside actual source pixmap
    area is still subpar and ignoring spec in some corner cases, but
    a more specific case is improved to provide correct results in more

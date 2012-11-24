@@ -70,6 +70,7 @@ static void LXStopVideo(ScrnInfoPtr pScrni, pointer data, Bool exit);
 
 static void
 
+
 LXDisplayVideo(ScrnInfoPtr pScrni, int id, short width, short height,
                BoxPtr dstBox, short srcW, short srcH, short drawW, short drawH);
 

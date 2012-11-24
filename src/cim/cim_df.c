@@ -153,8 +153,8 @@ df_configure_video_source(DF_VIDEO_SOURCE_PARAMS * video_source_odd,
     /* PARAMETER - VIDEO PITCH */
 
     pitch =
-        (video_source_odd->
-         y_pitch >> 3) | ((video_source_odd->uv_pitch >> 3) << 16);
+        (video_source_odd->y_pitch >> 3) | ((video_source_odd->uv_pitch >> 3) <<
+                                            16);
 
     /* PARAMETER - VIDEO FORMAT */
 
@@ -1031,8 +1031,8 @@ df_configure_video_cursor_color_key(DF_VIDEO_CURSOR_PARAMS * cursor_color_key)
 
     key = READ_VID32(DF_CURSOR_COLOR_KEY) & DF_CURSOR_COLOR_KEY_ENABLE;
     key =
-        key | (cursor_color_key->
-               key & 0xFFFFFF) | (cursor_color_key->select_color2 << 24);
+        key | (cursor_color_key->key & 0xFFFFFF) | (cursor_color_key->
+                                                    select_color2 << 24);
 
     WRITE_VID32(DF_CURSOR_COLOR_KEY, key);
     WRITE_VID32(DF_CURSOR_COLOR_MASK, (cursor_color_key->mask & 0xFFFFFF));

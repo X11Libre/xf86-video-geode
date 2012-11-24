@@ -549,7 +549,10 @@ lx_check_composite(int op, PicturePtr pSrc, PicturePtr pMsk, PicturePtr pDst)
 
     /* XXX - don't know if we can do any hwaccel on solid fills or gradient types in generic cases */
     if (pMsk && pMsk->pSourcePict)
-        GEODE_FALLBACK(("%s are not supported as a mask\n", pMsk->pSourcePict->type == SourcePictTypeSolidFill ? "Solid pictures" : "Gradients"));
+        GEODE_FALLBACK(("%s are not supported as a mask\n",
+                        pMsk->pSourcePict->type ==
+                        SourcePictTypeSolidFill ? "Solid pictures" :
+                        "Gradients"));
 
     if (pSrc->pSourcePict && pSrc->pSourcePict->type != SourcePictTypeSolidFill)
         GEODE_FALLBACK(("Gradients are not supported as the source\n"));
@@ -612,7 +615,8 @@ lx_check_composite(int op, PicturePtr pSrc, PicturePtr pMsk, PicturePtr pDst)
         int direction = (opPtr->channel == CIMGP_CHANNEL_A_SOURCE) ? 0 : 1;
 
         /* Direction 0 indicates src->dst, 1 indicates dst->src */
-        if (((direction == 0) && (pSrc->pDrawable && pSrc->pDrawable->bitsPerPixel < 16)) ||
+        if (((direction == 0) &&
+             (pSrc->pDrawable && pSrc->pDrawable->bitsPerPixel < 16)) ||
             ((direction == 1) && (pDst->pDrawable->bitsPerPixel < 16))) {
             ErrorF("Mask blending unsupported with <16bpp\n");
             return FALSE;
@@ -621,17 +625,21 @@ lx_check_composite(int op, PicturePtr pSrc, PicturePtr pMsk, PicturePtr pDst)
             GEODE_FALLBACK(("Masks can be only done with a 8bpp or 4bpp depth\n"));
 
         /* The pSrc should be 1x1 pixel if the pMsk is not zero */
-        if (pSrc->pDrawable && (pSrc->pDrawable->width != 1 || pSrc->pDrawable->height != 1))
+        if (pSrc->pDrawable &&
+            (pSrc->pDrawable->width != 1 || pSrc->pDrawable->height != 1))
             GEODE_FALLBACK(("pSrc should be 1x1 pixel if pMsk is not zero\n"));
         /* FIXME: In lx_prepare_composite, there are no variables to record the
          * one pixel source's width and height when the mask is not zero.
          * That will lead to bigger region to render instead of one pixel in lx
          * _do_composite, so we should fallback currently to avoid this */
         /* Not an issue for solid pictures, because we'll treat it as 1x1R too */
-        if (!pSrc->repeat && !(pSrc->pSourcePict && pSrc->pSourcePict->type == SourcePictTypeSolidFill)) {
+        if (!pSrc->repeat &&
+            !(pSrc->pSourcePict &&
+              pSrc->pSourcePict->type == SourcePictTypeSolidFill)) {
             GEODE_FALLBACK(("FIXME: unzero mask might lead to bigger rendering region than 1x1 pixels\n"));
         }
-    } else {
+    }
+    else {
         if (pSrc->pSourcePict)
             GEODE_FALLBACK(("Solid source pictures without a mask are not supported\n"));
     }
@@ -691,7 +699,8 @@ lx_prepare_composite(int op, PicturePtr pSrc, PicturePtr pMsk,
         /* Get the source color */
         if (pSrc->pSourcePict) {
             exaScratch.srcColor = pSrc->pSourcePict->solidFill.color;
-        } else {
+        }
+        else {
             /* If the op is PictOpOver(or PictOpOutReverse, PictOpInReverse,
              * PictOpIn, PictOpOut, PictOpOverReverse), we should get the
              * ARGB32 source format */
@@ -981,12 +990,9 @@ lx_composite_onepass_special(PixmapPtr pxDst, int width, int height, int opX,
             opWidth = ((opX + width) - optempX) > exaScratch.srcWidth
                 ? exaScratch.srcWidth : ((opX + width) - optempX);
             opHeight = ((opY + height) - optempY) > (exaScratch.srcHeight -
-                                                     srcY) ? (exaScratch.
-                                                              srcHeight -
-                                                              srcY) : ((opY +
-                                                                        height)
-                                                                       -
-                                                                       optempY);
+                                                     srcY)
+                ? (exaScratch.srcHeight - srcY) : ((opY + height)
+                                                   - optempY);
         }
         else {
             srcOffset = GetSrcOffset(0, 0);

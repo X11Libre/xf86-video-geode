@@ -152,8 +152,8 @@ GXRotate(ScrnInfoPtr pScrni, DisplayModePtr mode)
                                         pScrni->pScreen->rootDepth,
                                         pScrni->bitsPerPixel,
                                         PixmapBytePad(pScrni->displayWidth,
-                                                      pScrni->pScreen->
-                                                      rootDepth),
+                                                      pScrni->
+                                                      pScreen->rootDepth),
                                         (pointer) (pGeode->FBBase +
                                                    pScrni->fbOffset));
 

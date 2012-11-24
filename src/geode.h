@@ -395,6 +395,7 @@ int GeodeGetSizeFromFB(unsigned int *);
 
 int
 
+
 GeodeQueryImageAttributes(ScrnInfoPtr, int id, unsigned short *w,
                           unsigned short *h, int *pitches, int *offsets);
 

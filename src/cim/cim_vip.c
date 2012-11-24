@@ -794,8 +794,7 @@ vip_set_priority_characteristics(VIPPRIORITYBUFFER * buffer)
                    VIP_MSR_MCR_SECOND_PRIORITY_SHIFT) &
         VIP_MSR_MCR_SECOND_PRIORITY_MASK;
     q_word.low |=
-        (buffer->
-         primary << VIP_MSR_MCR_PRIMARY_PRIORITY_SHIFT) &
+        (buffer->primary << VIP_MSR_MCR_PRIMARY_PRIORITY_SHIFT) &
         VIP_MSR_MCR_PRIMARY_PRIORITY_MASK;
     q_word.low |= (buffer->pid << VIP_MSR_MCR_PID_SHIFT) & VIP_MSR_MCR_PID_MASK;
 
@@ -922,8 +921,7 @@ vip_set_subwindow_enable(VIPSUBWINDOWBUFFER * buffer)
         WRITE_VIP32(VIP_VERTICAL_START_STOP, ((buffer->stop <<
                                                VIP_VSTART_VERTEND_SHIFT) &
                                               VIP_VSTART_VERTEND_MASK) |
-                    ((buffer->
-                      start << VIP_VSTART_VERTSTART_SHIFT) &
+                    ((buffer->start << VIP_VSTART_VERTSTART_SHIFT) &
                      VIP_VSTART_VERTSTART_MASK));
 
         /* ENABLE IN THE CONTROL REGISTER */

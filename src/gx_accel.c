@@ -2082,7 +2082,7 @@ GXAccelInit(ScreenPtr pScrn)
 #endif
 
     return (XAAInit(pScrn, localRecPtr));
-#else /* XF86XAA */
+#else                           /* XF86XAA */
     return FALSE;
 #endif
 }

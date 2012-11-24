@@ -77,7 +77,7 @@
 
 #define VALID_MODE_ARGS_DECL int arg, DisplayModePtr pMode, Bool Verbose, int flags
 
-#else /*XF86_SCRN_INTERFACE)*/
+#else                           /*XF86_SCRN_INTERFACE) */
 
 #define DDC_CALL(pScrni) (pScrni)
 

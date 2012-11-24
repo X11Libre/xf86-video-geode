@@ -897,9 +897,8 @@ vg_set_custom_mode(VG_DISPLAY_MODE * mode_params, int bpp)
 
     if ((mode_params->flags & VG_MODEFLAG_BANDWIDTHMASK) ==
         VG_MODEFLAG_HIGH_BAND || ((mode_params->flags & VG_MODEFLAG_INTERLACED)
-                                  && (mode_params->
-                                      flags & VG_MODEFLAG_INT_MASK) ==
-                                  VG_MODEFLAG_INT_FLICKER) ||
+                                  && (mode_params->flags & VG_MODEFLAG_INT_MASK)
+                                  == VG_MODEFLAG_INT_FLICKER) ||
         (irq_ctl & DC3_IRQFILT_GFX_FILT_EN)) {
         /* HIGH BANDWIDTH */
         /* Set agressive watermarks and disallow forced low priority */

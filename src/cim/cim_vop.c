@@ -101,17 +101,13 @@ vop_set_vbi_window(VOPVBIWINDOWBUFFER * buffer)
 
     WRITE_REG32(DC3_VBI_LN_ODD, ((buffer->odd_line_offset <<
                                   DC3_VBI_ODD_LINE_SHIFT) &
-                                 DC3_VBI_ODD_LINE_MASK) | (buffer->
-                                                           odd_line_capture_mask
-                                                           &
-                                                           DC3_VBI_ODD_ENABLE_MASK));
+                                 DC3_VBI_ODD_LINE_MASK) |
+                (buffer->odd_line_capture_mask & DC3_VBI_ODD_ENABLE_MASK));
 
     WRITE_REG32(DC3_VBI_LN_EVEN, ((buffer->even_line_offset <<
                                    DC3_VBI_EVEN_LINE_SHIFT) &
-                                  DC3_VBI_EVEN_LINE_MASK) | (buffer->
-                                                             even_line_capture_mask
-                                                             &
-                                                             DC3_VBI_EVEN_ENABLE_MASK));
+                                  DC3_VBI_EVEN_LINE_MASK) |
+                (buffer->even_line_capture_mask & DC3_VBI_EVEN_ENABLE_MASK));
 
     /* PROGRAM SOURCE OFFSETS
      * Start with the even offsets.  Note that we always enable 16-bit VBI,
