@@ -1,6 +1,6 @@
-Geode 2.11.14 (2012-11-??)
+Geode 2.11.14 (2012-11-25)
 ==========================
-Better compatibility with xserver-1.13, cairo-1.12 and gtk3.
+Better compatibility with xserver-1.13, cairo-1.12 and gtk3:
 
  * Fix building on Xservers without XAA (Maarten Lankhorst)
    xserver-1.13 dropped XAA acceleration method, as it does not accel
@@ -37,7 +37,14 @@ Better compatibility with xserver-1.13, cairo-1.12 and gtk3.
    drawing area, which in the end is achieved via a negative srcX/srcY.
    https://bugs.freedesktop.org/show_bug.cgi?id=51360
 
- * Various build fixes on exotic or non-target platforms.
+ * Fix builds for exotic and/or non-target platforms (Dave Airlie)
+
+ * Clarify the copyright of older AMD commits (Martin-Éric Racine)
+
+VALIDATION PLATFORMS
+ * Debian (X server 1.7.7) on Artec DBE61 and Hercules EC-800.
+ * Debian (X server 1.12.14) on FIC ION603A.
+ * Fedora (X server 1.13) on OLPC XO-1.
 
 Geode 2.11.13 (2011-12-26)
 ==========================
@@ -58,8 +65,8 @@ this driver. This can be used to profile the performance during development.
 Fixes to keep this driver compilable on recent X servers are also included.
 
 VALIDATION PLATFORMS
-* Debian/stable (X server 1.7.7) on Artec DBE61 and Hercules EC-800.
-* Ubuntu/Precise (X server 1.10.4) on FIC ION603A.
+* Debian (X server 1.7.7) on Artec DBE61 and Hercules EC-800.
+* Ubuntu (X server 1.10.4) on FIC ION603A.
 
 Geode 2.11.12 (2011-02-13)
 ==========================
