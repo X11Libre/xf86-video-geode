@@ -21,7 +21,7 @@
 # Process this file with autoconf to produce a configure script
 
 # Initialize Autoconf
-AC_PREREQ(2.59)
+AC_PREREQ(2.60)
 AC_INIT([xf86-video-geode],
         [2.11.14],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg&component=Driver%2Fgeode],
