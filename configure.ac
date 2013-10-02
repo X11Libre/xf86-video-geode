@@ -26,7 +26,7 @@ AC_INIT([xf86-video-geode],
         [2.11.14],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg&component=Driver%2Fgeode],
         [xf86-video-geode],
-	[http://www.x.org/wiki/GeodeDriver])
+        [http://www.x.org/wiki/GeodeDriver])
 
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
