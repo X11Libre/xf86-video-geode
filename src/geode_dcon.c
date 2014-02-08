@@ -29,9 +29,7 @@
 
 /* Includes that are used by all drivers */
 #include <xf86.h>
-#if XORG_VERSION_CURRENT >= XORG_VERSION_NUMERIC(1,15,0,0,0)
 #include <xf86Modes.h>
-#endif
 #include <xf86_OSproc.h>
 #include <compiler.h>
 
