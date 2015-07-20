@@ -27,8 +27,10 @@
 #ifndef _GEODE_H_
 #define _GEODE_H_
 
-#include "geode_pcirename.h"
+#ifdef HAVE_CONFIG_H
 #include "config.h"
+#endif
+#include "geode_pcirename.h"
 
 #ifdef HAVE_XAA_H
 #include "xaa.h"
