@@ -78,7 +78,7 @@
 
 extern OptionInfoRec GX_GeodeOptions[];
 
-unsigned char *XpressROMPtr;
+extern unsigned char *XpressROMPtr;
 
 static inline void
 gx_enable_dac_power(void)
