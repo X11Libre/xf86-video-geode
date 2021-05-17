@@ -94,7 +94,10 @@ A: Since kernel 4.x Linux has strong memory protection. If the kernel is
 
    GRUB_GFXPAYLOAD_LINUX=text
 
-   Once this option has been added and the GRUB configuration refreshed,
+   Alternately, adding iomem=relaxed to GRUB_CMDLINE_LINUX_DEFAULT will
+   allow the video memory to be accessed by vesafb and the GEODE driver.
+
+   Once either option has been added and the GRUB configuration refreshed,
    the GEODE driver will launch on recent kernels as previously.
 
 Q: Why doesn't the GEODE driver work at WXGA (wide screen) resolutions?
