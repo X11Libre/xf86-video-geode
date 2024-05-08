@@ -324,7 +324,7 @@ LXPreInit(ScrnInfoPtr pScrni, int flags)
         return TRUE;
     }
 
-    pGeode = pScrni->driverPrivate = xnfcalloc(1, sizeof(GeodeRec));
+    pGeode = pScrni->driverPrivate = XNFcallocarray(1, sizeof(GeodeRec));
 
     if (pGeode == NULL)
         return FALSE;

@@ -126,7 +126,7 @@ dcon_init(ScrnInfoPtr pScrni)
         return FALSE;
     }
 
-    pGeode->panelMode = xnfcalloc(1, sizeof(DisplayModeRec));
+    pGeode->panelMode = XNFcallocarray(1, sizeof(DisplayModeRec));
     if (pGeode->panelMode == NULL)
         return FALSE;
 

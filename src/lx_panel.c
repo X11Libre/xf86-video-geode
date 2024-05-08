@@ -126,7 +126,7 @@ LXGetManualPanelMode(char *modestr)
     if (ret != 9)
         return NULL;
 
-    mode = xnfcalloc(1, sizeof(DisplayModeRec));
+    mode = XNFcallocarray(1, sizeof(DisplayModeRec));
 
     if (mode == NULL)
         return NULL;

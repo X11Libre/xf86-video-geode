@@ -462,7 +462,7 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
         return FALSE;
 #endif
 
-    pGeode = pScrni->driverPrivate = xnfcalloc(1, sizeof(GeodeRec));
+    pGeode = pScrni->driverPrivate = XNFcallocarray(1, sizeof(GeodeRec));
 
     if (pGeode == NULL)
         return FALSE;
@@ -692,7 +692,7 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
     else
         pScrni->videoRam = pGeode->pEnt->device->videoRam;
 
-    GeodeClockRange = (ClockRangePtr) xnfcalloc(1, sizeof(ClockRange));
+    GeodeClockRange = (ClockRangePtr) XNFcallocarray(1, sizeof(ClockRange));
     GeodeClockRange->next = NULL;
     GeodeClockRange->minClock = 25175;
     GeodeClockRange->maxClock = 229500;

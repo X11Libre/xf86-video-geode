@@ -285,7 +285,7 @@ LXSetupOutput(ScrnInfoPtr pScrni)
 
     output = xf86OutputCreate(pScrni, &lx_output_funcs, "default");
 
-    lxpriv = xnfcalloc(1, sizeof(LXOutputPrivateRec));
+    lxpriv = XNFcallocarray(1, sizeof(LXOutputPrivateRec));
 
     if (!lxpriv) {
         xf86OutputDestroy(output);
