@@ -175,10 +175,8 @@ GeodeGetDDC(ScrnInfoPtr pScrni)
 
     mon = xf86DoEDID_DDC2(DDC_CALL(pScrni), bus);
 
-#if (XORG_VERSION_CURRENT >= XORG_VERSION_NUMERIC(1,4,99,0,0))
     if (mon)
         xf86DDCApplyQuirks(pScrni->scrnIndex, mon);
-#endif
 
     xf86DestroyI2CBusRec(bus, FALSE, FALSE);
 
