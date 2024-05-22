@@ -61,16 +61,9 @@ typedef struct _GXRandRInfo {
 
 static DevPrivateKeyRec GXRandRIndex;
 
-#define OLD_VIDEODRV_INTERFACE (GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 4)
-
-#if OLD_VIDEODRV_INTERFACE
-#define XF86RANDRINFO(p)   ((XF86RandRInfoPtr) (p)->devPrivates[GXRandRIndex].ptr)
-#define XF86RANDRSET(p, v) (p)->devPrivates[GXRandRIndex].ptr = v
-#else
 #define XF86RANDRINFO(p) ((XF86RandRInfoPtr)						\
 			  dixLookupPrivate(&(p)->devPrivates, &GXRandRIndex))
 #define XF86RANDRSET(p, v) dixSetPrivate(&(p)->devPrivates, &GXRandRIndex, v)
-#endif
 
 static int
 GXRandRModeRefresh(DisplayModePtr mode)
@@ -164,11 +157,7 @@ GXRandRSetMode(ScreenPtr pScreen,
     int oldmmWidth = pScreen->mmWidth;
     int oldmmHeight = pScreen->mmHeight;
 
-#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 8
-    WindowPtr pRoot = WindowTable[pScreen->myNum];
-#else
     WindowPtr pRoot = pScreen->root;
-#endif
     DisplayModePtr currentMode = NULL;
     Bool ret = TRUE;
 
@@ -343,9 +332,6 @@ GXRandRInit(ScreenPtr pScreen, int rotation)
     if (GXRandRGeneration != serverGeneration) {
         GXRandRGeneration = serverGeneration;
     }
-#if OLD_VIDEODRV_INTERFACE
-    GXRandRIndex = AllocateScreenPrivateIndex();
-#endif
     if (!dixRegisterPrivateKey(&GXRandRIndex, PRIVATE_SCREEN, 0))
         return FALSE;
 

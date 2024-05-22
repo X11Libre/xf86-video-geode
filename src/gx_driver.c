@@ -38,9 +38,6 @@
 
 #include "xf86.h"
 #include "xf86_OSproc.h"
-#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 6
-#include "xf86Resources.h"
-#endif
 #include "xf86cmap.h"
 #include "compiler.h"
 #include "mipointer.h"
