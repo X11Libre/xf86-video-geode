@@ -1577,11 +1577,7 @@ Z4lInit(ScrnInfoPtr pScrni, XF86VideoAdaptorPtr ** adaptors)
         pPriv->bufsz = -1;
         pPriv->last = -1;
         pPriv->pixfmt = opixfmt;
-#if defined(REGION_NULL)
         REGION_NULL(pScrni->pScreen, &pPriv->clips);
-#else
-        REGION_INIT(pScrni->pScreen, &pPriv->clips, NullBox, 0);
-#endif
         strncpy(&pPriv->dev_path[0], z4l_dev_paths[dev],
                 sizeof(pPriv->dev_path));
         pPriv->enc = &encs[cenc];

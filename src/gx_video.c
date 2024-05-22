@@ -416,11 +416,7 @@ GXSetupImageVideo(ScreenPtr pScrn)
 #endif
 
     /* gotta uninit this someplace */
-#if defined(REGION_NULL)
     REGION_NULL(pScrn, &pPriv->clip);
-#else
-    REGION_INIT(pScrn, &pPriv->clip, NullBox, 0);
-#endif
 
     pGeode->adaptor = adapt;
 
