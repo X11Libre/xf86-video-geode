@@ -249,11 +249,7 @@ GXRandRSetConfig(ScreenPtr pScreen, Rotation rotation,
     }
 
 /* FIXME: we don't have a new video ABI yet */
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 3
     miPointerGetPosition(inputInfo.pointer, &px, &py);
-#else
-    miPointerPosition(&px, &py);
-#endif
 
     for (mode = pScrni->modes;; mode = mode->next) {
         if (pRandr->maxX == 0 || pRandr->maxY == 0) {
@@ -293,11 +289,7 @@ GXRandRSetConfig(ScreenPtr pScreen, Rotation rotation,
     }
 
 /* FIXME: we don't have a new video ABI yet */
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 3
     if (pScreen == miPointerGetScreen(inputInfo.pointer))
-#else
-    if (pScreen == miPointerCurrentScreen())
-#endif
     {
         px = (px >= pScreen->width ? (pScreen->width - 1) : px);
         py = (py >= pScreen->height ? (pScreen->height - 1) : py);
@@ -305,11 +297,7 @@ GXRandRSetConfig(ScreenPtr pScreen, Rotation rotation,
         xf86SetViewport(pScreen, px, py);
 
 /* FIXME: we don't have a new video ABI yet */
-        (*pScreen->SetCursorPosition) (
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 3
-                                          inputInfo.pointer,
-#endif
-                                          pScreen, px, py, FALSE);
+        (*pScreen->SetCursorPosition) (inputInfo.pointer, pScreen, px, py, FALSE);
     }
 
     return TRUE;
