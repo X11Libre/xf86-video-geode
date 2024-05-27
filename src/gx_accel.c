@@ -39,9 +39,6 @@
 
 #include "vgaHW.h"
 #include "xf86.h"
-#ifdef HAVE_XAA_H
-#include "xaalocal.h"
-#endif
 #include "xf86fbman.h"
 #include "miline.h"
 #include "xaarop.h"
@@ -129,10 +126,6 @@ static GDashLine gdln;
 
 static unsigned int gu2_xshift, gu2_yshift;
 static unsigned int gu2_pitch;
-
-#if XF86XAA
-static XAAInfoRecPtr localRecPtr;
-#endif
 
 /* pat  0xF0 */
 /* src  0xCC */
@@ -1971,123 +1964,5 @@ GXAccelInit(ScreenPtr pScrn)
     }
 #endif
 
-#if XF86XAA
-
-    /* Getting the pointer for acceleration Inforecord */
-    pGeode->AccelInfoRec = localRecPtr = XAACreateInfoRec();
-    if (!pGeode->AccelInfoRec)
-        return FALSE;
-
-    /* SET ACCELERATION FLAGS */
-    localRecPtr->Flags = PIXMAP_CACHE | OFFSCREEN_PIXMAPS | LINEAR_FRAMEBUFFER;
-
-    /* HOOK SYNCRONIZARION ROUTINE */
-    localRecPtr->Sync = GXAccelSync;
-
-#if GX_FILL_RECT_SUPPORT
-    /* HOOK FILLED RECTANGLES */
-    HOOK(SetupForSolidFill);
-    HOOK(SubsequentSolidFillRect);
-    localRecPtr->SolidFillFlags = 0;
-#endif
-
-#if GX_MONO_8X8_PAT_SUPPORT
-    /* Color expansion */
-    HOOK(SetupForMono8x8PatternFill);
-    HOOK(SubsequentMono8x8PatternFillRect);
-/*         BIT_ORDER_IN_BYTE_MSBFIRST | SCANLINE_PAD_DWORD | NO_TRANSPARENCY | */
-    localRecPtr->Mono8x8PatternFillFlags = BIT_ORDER_IN_BYTE_MSBFIRST |
-        HARDWARE_PATTERN_PROGRAMMED_BITS | HARDWARE_PATTERN_SCREEN_ORIGIN;
-#endif
-
-#if GX_CLREXP_8X8_PAT_SUPPORT
-    /* Color expansion */
-    HOOK(SetupForColor8x8PatternFill);
-    HOOK(SubsequentColor8x8PatternFillRect);
-/*         BIT_ORDER_IN_BYTE_MSBFIRST | SCANLINE_PAD_DWORD | NO_TRANSPARENCY | */
-    localRecPtr->Color8x8PatternFillFlags =
-        BIT_ORDER_IN_BYTE_MSBFIRST | SCANLINE_PAD_DWORD |
-        HARDWARE_PATTERN_PROGRAMMED_BITS | HARDWARE_PATTERN_PROGRAMMED_ORIGIN;
-#endif
-
-#if GX_SCR2SCRCPY_SUPPORT
-    /* HOOK SCREEN TO SCREEN COPIES
-     * Set flag to only allow copy if transparency is enabled.
-     */
-    HOOK(SetupForScreenToScreenCopy);
-    HOOK(SubsequentScreenToScreenCopy);
-    localRecPtr->ScreenToScreenCopyFlags =
-        BIT_ORDER_IN_BYTE_MSBFIRST | SCANLINE_PAD_DWORD;
-#endif
-
-#if GX_BRES_LINE_SUPPORT
-    /* HOOK BRESENHAM SOLID LINES */
-    localRecPtr->SolidLineFlags = NO_PLANEMASK;
-    HOOK(SetupForSolidLine);
-    HOOK(SubsequentSolidBresenhamLine);
-    HOOK(SubsequentSolidHorVertLine);
-    HOOK(SubsequentSolidTwoPointLine);
-    localRecPtr->SolidBresenhamLineErrorTermBits = 15;
-#endif
-
-#if GX_DASH_LINE_SUPPORT
-    /* HOOK BRESENHAM DASHED LINES */
-    HOOK(SetupForDashedLine);
-    HOOK(SubsequentDashedBresenhamLine);
-    HOOK(SubsequentDashedTwoPointLine);
-    localRecPtr->DashedBresenhamLineErrorTermBits = 15;
-    localRecPtr->DashPatternMaxLength = 64;
-    localRecPtr->DashedLineFlags = NO_PLANEMASK |       /* TRANSPARENCY_ONLY | */
-        LINE_PATTERN_POWER_OF_2_ONLY | LINE_PATTERN_MSBFIRST_MSBJUSTIFIED;
-#endif
-
-#if GX_SCR2SCREXP_SUPPORT
-    /* Color expansion */
-    HOOK(SetupForScreenToScreenColorExpandFill);
-    HOOK(SubsequentScreenToScreenColorExpandFill);
-    localRecPtr->ScreenToScreenColorExpandFillFlags =
-        BIT_ORDER_IN_BYTE_MSBFIRST | SCANLINE_PAD_DWORD | NO_TRANSPARENCY;
-#endif
-
-    if (pGeode->AccelImageWriteBuffers) {
-#if GX_SCANLINE_SUPPORT
-        localRecPtr->ScanlineImageWriteBuffers = pGeode->AccelImageWriteBuffers;
-        localRecPtr->NumScanlineImageWriteBuffers = pGeode->NoOfImgBuffers;
-        HOOK(SetupForScanlineImageWrite);
-        HOOK(SubsequentScanlineImageWriteRect);
-        HOOK(SubsequentImageWriteScanline);
-        localRecPtr->ScanlineImageWriteFlags = NO_PLANEMASK | NO_GXCOPY |
-            BIT_ORDER_IN_BYTE_MSBFIRST | SCANLINE_PAD_DWORD;
-#endif
-
-    }
-    else {
-        localRecPtr->PixmapCacheFlags = DO_NOT_BLIT_STIPPLES;
-    }
-
-    if (pGeode->AccelColorExpandBuffers) {
-#if GX_CPU2SCREXP_SUPPORT
-        /* Color expansion */
-        localRecPtr->ScanlineColorExpandBuffers =
-            pGeode->AccelColorExpandBuffers;
-        localRecPtr->NumScanlineColorExpandBuffers =
-            pGeode->NoOfColorExpandLines;
-        HOOK(SetupForScanlineCPUToScreenColorExpandFill);
-        HOOK(SubsequentScanlineCPUToScreenColorExpandFill);
-        HOOK(SubsequentColorExpandScanline);
-        localRecPtr->ScanlineCPUToScreenColorExpandFillFlags = NO_PLANEMASK |
-            BIT_ORDER_IN_BYTE_MSBFIRST | SCANLINE_PAD_DWORD;
-#endif
-    }
-#if GX_WRITE_PIXMAP_SUPPORT
-    pGeode->WritePixmap = localRecPtr->WritePixmap;
-    HOOK(WritePixmap);
-#endif
-
-    return (XAAInit(pScrn, localRecPtr));
-#else                           /* XF86XAA */
     return FALSE;
-#endif
 }
-
-/* END OF FILE */

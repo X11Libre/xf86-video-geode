@@ -255,50 +255,6 @@ GXAllocateMemory(ScreenPtr pScrn, ScrnInfoPtr pScrni, int rotate)
             pExa->offScreenBase = fboffset;
             pExa->memorySize = fboffset + fbavail;
         }
-
-        if (!pGeode->useEXA) {
-
-#if XF86XAA
-            if (!xf86FBManagerRunning(pScrn)) {
-
-                unsigned int offset = fboffset;
-                unsigned int avail = fbavail;
-                RegionRec OffscreenRegion;
-                BoxRec AvailBox;
-
-                /* Assume the shadow FB exists even if it doesn't */
-
-                if (pGeode->shadowSize == 0) {
-                    size = (pScrn->width * bytpp) * pScrni->virtualX;
-                    offset += size;
-                    avail -= size;
-                }
-
-                AvailBox.x1 = 0;
-                AvailBox.y1 =
-                    (offset + pGeode->displayPitch - 1) / pGeode->displayPitch;
-
-                AvailBox.x2 = pGeode->displayWidth;
-                AvailBox.y2 = (offset + avail) / pGeode->displayPitch;
-
-                if (AvailBox.y1 < AvailBox.y2) {
-                    REGION_INIT(pScrn, &OffscreenRegion, &AvailBox, 2);
-
-                    if (!xf86InitFBManagerRegion(pScrn, &OffscreenRegion))
-                        xf86DrvMsg(pScrni->scrnIndex, X_ERROR,
-                                   "Memory manager initialization failed.\n");
-
-                    REGION_UNINIT(pScrn, &OffscreenRegion);
-                }
-                else
-                    xf86DrvMsg(pScrni->scrnIndex, X_INFO,
-                               "Cache disabled - no offscreen memory available.\n");
-            }
-            else
-                xf86DrvMsg(pScrni->scrnIndex, X_INFO,
-                           "XAA offscreen memory has already been allocated.\n");
-#endif
-        }
     }
     return ret;
 }
@@ -612,14 +568,7 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
     panelgeo = xf86GetOptValString(GeodeOptions, GX_OPTION_PANEL_GEOMETRY);
 
     if ((s = xf86GetOptValString(GeodeOptions, GX_OPTION_ACCEL_METHOD))) {
-#if defined(XF86XAA) && defined(XF86EXA)
-        if (!xf86NameCmp(s, "XAA"))
-            pGeode->useEXA = FALSE;
-        else if (xf86NameCmp(s, "EXA"))
-            xf86DrvMsg(pScrni->scrnIndex, X_ERROR,
-                       "Unknown acceleration method %s.  Defaulting to XAA.\n",
-                       s);
-#elif defined(XF86EXA)
+#if defined(XF86EXA)
         pGeode->useEXA = TRUE;
 #else
         pGeode->useEXA = FALSE;
@@ -628,7 +577,7 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
 
     xf86DrvMsg(pScrni->scrnIndex, X_INFO,
                "Using %s acceleration architecture\n",
-               pGeode->useEXA ? "EXA" : "XAA");
+               pGeode->useEXA ? "EXA" : "none");
 
     /* Set up the panel */
 
@@ -1010,11 +959,6 @@ GXCloseScreen(CLOSE_SCREEN_ARGS_DECL)
 
     if (pScrni->vtSema)
         GXLeaveGraphics(pScrni);
-
-#ifdef XF86XAA
-    if (pGeode->AccelInfoRec)
-        XAADestroyInfoRec(pGeode->AccelInfoRec);
-#endif
 
     if (pGeode->AccelImageWriteBuffers) {
         free(pGeode->AccelImageWriteBuffers[0]);

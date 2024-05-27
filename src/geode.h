@@ -32,9 +32,6 @@
 #endif
 #include "geode_pcirename.h"
 
-#ifdef HAVE_XAA_H
-#include "xaa.h"
-#endif
 #include "exa.h"
 #include "xf86Cursor.h"
 
@@ -57,12 +54,6 @@
 #undef XF86EXA
 #endif
 
-#ifdef HAVE_XAA_H
-#define XF86XAA 1
-#else
-#undef XF86XAA
-#endif
-
 #define CFB 0
 #define INT10_SUPPORT 1
 
@@ -82,21 +73,6 @@
 #define PCI_CHIP_GEODELX  0x2081
 
 #define GFX_CPU_GEODELX   4
-
-#if defined(HAVE_GX) && XF86XAA
-#define GX_FILL_RECT_SUPPORT 1
-#define GX_BRES_LINE_SUPPORT 1
-#define GX_DASH_LINE_SUPPORT 0  /* does not do dashed lines */
-#define GX_MONO_8X8_PAT_SUPPORT 1
-#define GX_CLREXP_8X8_PAT_SUPPORT 1
-#define GX_SCR2SCREXP_SUPPORT 1
-#define GX_SCR2SCRCPY_SUPPORT 1
-#define GX_CPU2SCREXP_SUPPORT 1
-#define GX_SCANLINE_SUPPORT 1
-#define GX_USE_OFFSCRN_MEM 0
-#define GX_ONE_LINE_AT_A_TIME 1
-#define GX_WRITE_PIXMAP_SUPPORT 1
-#endif
 
 #define GFX(func) gfx_##func
 #define GFX2(func) gfx2_##func
@@ -297,8 +273,6 @@ typedef struct _geodeRec {
 
     xf86CursorInfoPtr CursorInfo;
 
-    /* XAA structures */
-
     unsigned int cpySrcOffset;
     int cpySrcPitch, cpySrcBpp;
     int cpyDx, cpyDy;
@@ -311,9 +285,6 @@ typedef struct _geodeRec {
     int NoOfImgBuffers;
     unsigned char **AccelColorExpandBuffers;
     int NoOfColorExpandLines;
-#if XF86XAA
-    XAAInfoRecPtr AccelInfoRec;
-#endif
 
     /* Save state */
     unsigned long FBCompressionOffset;

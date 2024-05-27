@@ -157,25 +157,6 @@ GXRotate(ScrnInfoPtr pScrni, DisplayModePtr mode)
                                         (pointer) (pGeode->FBBase +
                                                    pScrni->fbOffset));
 
-    /* Don't use XAA pixmap cache or offscreen pixmaps when rotated */
-#if XF86XAA
-    if (pGeode->AccelInfoRec) {
-        if (pGeode->rotation == RR_Rotate_0) {
-            pGeode->AccelInfoRec->Flags =
-                LINEAR_FRAMEBUFFER | OFFSCREEN_PIXMAPS | PIXMAP_CACHE;
-            pGeode->AccelInfoRec->UsingPixmapCache = TRUE;
-            pGeode->AccelInfoRec->maxOffPixWidth = 0;
-            pGeode->AccelInfoRec->maxOffPixHeight = 0;
-        }
-        else {
-            pGeode->AccelInfoRec->Flags = LINEAR_FRAMEBUFFER;
-            pGeode->AccelInfoRec->UsingPixmapCache = FALSE;
-            pGeode->AccelInfoRec->maxOffPixWidth = 1;
-            pGeode->AccelInfoRec->maxOffPixHeight = 1;
-        }
-    }
-#endif
-
     return TRUE;
 
  error:
