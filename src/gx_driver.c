@@ -770,9 +770,8 @@ GXSetDvLineSize(unsigned int pitch)
 /* XXX - this is nothing like the original function - not sure exactly what the purpose is for this quite yet */
 
 static void
-GXAdjustFrame(ADJUST_FRAME_ARGS_DECL)
+GXAdjustFrame(ScrnInfoPtr pScrni, int x, int y)
 {
-    SCRN_INFO_PTR(arg);
     GeodeRec *pGeode = GEODEPTR(pScrni);
     unsigned long offset;
 
@@ -854,16 +853,15 @@ GXSetVideoMode(ScrnInfoPtr pScrni, DisplayModePtr pMode)
         pGeode->HWCursor = FALSE;
     }
 
-    GXAdjustFrame(ADJUST_FRAME_ARGS(pScrni->frameX0, pScrni->frameY0));
+    GXAdjustFrame(pScrni, pScrni->frameX0, pScrni->frameY0);
     gx_enable_dac_power();
 
     return TRUE;
 }
 
 static Bool
-GXSwitchMode(SWITCH_MODE_ARGS_DECL)
+GXSwitchMode(ScrnInfoPtr pScrni, DisplayModePtr pMode)
 {
-    SCRN_INFO_PTR(arg);
     GeodeRec *pGeode = GEODEPTR(pScrni);
     int ret = TRUE;
     int rotate;
@@ -952,7 +950,7 @@ GXLeaveGraphics(ScrnInfoPtr pScrni)
 }
 
 static Bool
-GXCloseScreen(CLOSE_SCREEN_ARGS_DECL)
+GXCloseScreen(ScreenPtr pScrn)
 {
     ScrnInfoPtr pScrni = xf86ScreenToScrn(pScrn);
     GeodeRec *pGeode = GEODEPTR(pScrni);
@@ -985,7 +983,7 @@ GXCloseScreen(CLOSE_SCREEN_ARGS_DECL)
     pScrn->CloseScreen = pGeode->CloseScreen;
 
     if (pScrn->CloseScreen)
-        return (*pScrn->CloseScreen) (CLOSE_SCREEN_ARGS);
+        return (*pScrn->CloseScreen) (pScrn);
 
     return TRUE;
 }
@@ -1216,7 +1214,7 @@ GXCreateScreenResources(ScreenPtr pScreen)
 }
 
 static Bool
-GXScreenInit(SCREEN_INIT_ARGS_DECL)
+GXScreenInit(ScreenPtr pScrn, int argc, char **argv)
 {
     ScrnInfoPtr pScrni = xf86ScreenToScrn(pScrn);
     GeodeRec *pGeode = GEODEPTR(pScrni);
@@ -1416,9 +1414,8 @@ GXScreenInit(SCREEN_INIT_ARGS_DECL)
 }
 
 static int
-GXValidMode(VALID_MODE_ARGS_DECL)
+GXValidMode(ScrnInfoPtr pScrni, DisplayModePtr pMode, Bool Verbose, int flags)
 {
-    SCRN_INFO_PTR(arg);
     GeodeRec *pGeode = GEODEPTR(pScrni);
     int p;
     int custom = 0;
@@ -1467,16 +1464,14 @@ GXValidMode(VALID_MODE_ARGS_DECL)
 /* XXX - Way more to do here */
 
 static Bool
-GXEnterVT(VT_FUNC_ARGS_DECL)
+GXEnterVT(ScrnInfoPtr pScrni)
 {
-    SCRN_INFO_PTR(arg);
     return GXEnterGraphics(NULL, pScrni);
 }
 
 static void
-GXLeaveVT(VT_FUNC_ARGS_DECL)
+GXLeaveVT(ScrnInfoPtr pScrni)
 {
-    SCRN_INFO_PTR(arg);
     GeodeRec *pGeode = GEODEPTR(pScrni);
 
     pGeode->PrevDisplayOffset = gfx_get_display_offset();
@@ -1503,9 +1498,8 @@ GXSetupChipsetFPtr(ScrnInfoPtr pScrn)
  * ============================== */
 
 void
-GeodePointerMoved(POINTER_MOVED_ARGS_DECL)
+GeodePointerMoved(ScrnInfoPtr pScrni, int x, int y)
 {
-    SCRN_INFO_PTR(arg);
     GeodeRec *pGeode = GEODEPTR(pScrni);
 
     int newX = x, newY = y;
@@ -1527,7 +1521,7 @@ GeodePointerMoved(POINTER_MOVED_ARGS_DECL)
         break;
     }
 
-    (*pGeode->PointerMoved) (POINTER_MOVED_ARGS(newX, newY));
+    (*pGeode->PointerMoved) (pScrni, newX, newY);
 }
 
 int
@@ -1549,9 +1543,8 @@ GeodeFreeRec(ScrnInfoPtr pScrni)
 }
 
 void
-GeodeFreeScreen(FREE_SCREEN_ARGS_DECL)
+GeodeFreeScreen(ScrnInfoPtr pScrni)
 {
-    SCRN_INFO_PTR(arg);
     GeodeRec *pGeode = GEODEPTR(pScrni);
 
     if (pGeode == NULL)

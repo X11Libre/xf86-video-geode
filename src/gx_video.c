@@ -1314,14 +1314,13 @@ GeodeQueryImageAttributes(ScrnInfoPtr pScrni,
 static void
 GXBlockHandler(BLOCKHANDLER_ARGS_DECL)
 {
-    SCREEN_PTR(arg);
-    ScrnInfoPtr pScrni = xf86ScreenToScrn(pScrn);
+    ScrnInfoPtr pScrni = xf86ScreenToScrn(pScreen);
     GeodeRec *pGeode = GEODEPTR(pScrni);
     GeodePortPrivRec *pPriv = GET_PORT_PRIVATE(pScrni);
 
-    pScrn->BlockHandler = pGeode->BlockHandler;
-    (*pScrn->BlockHandler) (BLOCKHANDLER_ARGS);
-    pScrn->BlockHandler = GXBlockHandler;
+    pScreen->BlockHandler = pGeode->BlockHandler;
+    (*pScreen->BlockHandler) (BLOCKHANDLER_ARGS);
+    pScreen->BlockHandler = GXBlockHandler;
 
     if (pPriv->videoStatus & TIMER_MASK) {
         GXAccelSync(pScrni);
@@ -1350,7 +1349,7 @@ GXBlockHandler(BLOCKHANDLER_ARGS_DECL)
                 if (pPriv->area) {
 #ifdef XF86EXA
                     if (pGeode->useEXA)
-                        exaOffscreenFree(pScrn, pPriv->area);
+                        exaOffscreenFree(pScrni, pPriv->area);
 #endif
                     if (!pGeode->useEXA)
                         xf86FreeOffscreenArea(pPriv->area);

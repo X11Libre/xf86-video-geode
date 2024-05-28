@@ -1273,12 +1273,11 @@ Z4lGetPortAttribute(ScrnInfoPtr pScrni, Atom attribute, INT32 *value,
     return Success;
 }
 
-static void (*oldAdjustFrame) (ADJUST_FRAME_ARGS_DECL) = NULL;
+static void (*oldAdjustFrame) (ScrnInfoPtr pScrni, int x, int y) = NULL;
 
 static void
-Z4lAdjustFrame(ADJUST_FRAME_ARGS_DECL)
+Z4lAdjustFrame(ScrnInfoPtr pScrni, int x, int y)
 {
-    SCRN_INFO_PTR(arg);
     int i;
     XF86VideoAdaptorPtr adpt;
     Z4lPortPrivRec *pPriv;
@@ -1286,7 +1285,7 @@ Z4lAdjustFrame(ADJUST_FRAME_ARGS_DECL)
     DBLOG(3, "Z4lAdjustFrame(%d,%d)\n", x, y);
     z4l_x_offset = x;
     z4l_y_offset = y;
-    oldAdjustFrame(ADJUST_FRAME_ARGS(x, y));
+    oldAdjustFrame(pScrni, x, y);
 
     /* xv adjust does not handle putvideo case */
     for (i = 0; i < Z4l_nAdaptors; ++i) {

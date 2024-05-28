@@ -166,8 +166,7 @@ GXRandRSetMode(ScreenPtr pScreen,
 #endif
 
     if (pRoot)
-        (*pScrni->
-         EnableDisableFBAccess) (XF86_ENABLEDISABLEFB_ARG(pScrni, FALSE));
+        (*pScrni->EnableDisableFBAccess) (pScrni, FALSE);
 
     if (useVirtual) {
         pScrni->virtualX = pRandr->virtualX;
@@ -222,8 +221,7 @@ GXRandRSetMode(ScreenPtr pScreen,
     xf86SetViewport(pScreen, 0, 0);
 
     if (pRoot)
-        (*pScrni->
-         EnableDisableFBAccess) (XF86_ENABLEDISABLEFB_ARG(pScrni, TRUE));
+        (*pScrni->EnableDisableFBAccess) (pScrni, TRUE);
 
     return ret;
 }

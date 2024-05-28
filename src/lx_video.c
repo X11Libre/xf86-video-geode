@@ -643,14 +643,13 @@ LXResetVideo(ScrnInfoPtr pScrni)
 static void
 LXVidBlockHandler(BLOCKHANDLER_ARGS_DECL)
 {
-    SCREEN_PTR(arg);
-    ScrnInfoPtr pScrni = xf86ScreenToScrn(pScrn);
+    ScrnInfoPtr pScrni = xf86ScreenToScrn(pScreen);
     GeodeRec *pGeode = GEODEPTR(pScrni);
     GeodePortPrivRec *pPriv = GET_PORT_PRIVATE(pScrni);
 
-    pScrn->BlockHandler = pGeode->BlockHandler;
-    (*pScrn->BlockHandler) (BLOCKHANDLER_ARGS);
-    pScrn->BlockHandler = LXVidBlockHandler;
+    pScreen->BlockHandler = pGeode->BlockHandler;
+    (*pScreen->BlockHandler) (BLOCKHANDLER_ARGS);
+    pScreen->BlockHandler = LXVidBlockHandler;
 
     if (pPriv->videoStatus & TIMER_MASK) {
         Time now = currentTime.milliseconds;
@@ -685,9 +684,9 @@ LXVidBlockHandler(BLOCKHANDLER_ARGS_DECL)
 }
 
 static XF86VideoAdaptorPtr
-LXSetupImageVideo(ScreenPtr pScrn)
+LXSetupImageVideo(ScreenPtr pScreen)
 {
-    ScrnInfoPtr pScrni = xf86ScreenToScrn(pScrn);
+    ScrnInfoPtr pScrni = xf86ScreenToScrn(pScreen);
     GeodeRec *pGeode = GEODEPTR(pScrni);
     XF86VideoAdaptorPtr adapt;
     GeodePortPrivRec *pPriv;
@@ -741,8 +740,8 @@ LXSetupImageVideo(ScreenPtr pScrn)
 
     pGeode->adaptor = adapt;
 
-    pGeode->BlockHandler = pScrn->BlockHandler;
-    pScrn->BlockHandler = LXVidBlockHandler;
+    pGeode->BlockHandler = pScreen->BlockHandler;
+    pScreen->BlockHandler = LXVidBlockHandler;
 
     xvColorKey = MAKE_ATOM("XV_COLORKEY");
     xvColorKeyMode = MAKE_ATOM("XV_COLORKEYMODE");

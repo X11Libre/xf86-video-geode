@@ -228,7 +228,7 @@ typedef struct _geodeRec {
 
     /* Hooks */
 
-    void (*PointerMoved) (POINTER_MOVED_ARGS_DECL);
+    void (*PointerMoved) (ScrnInfoPtr pScrn, int x, int y);
     CloseScreenProcPtr CloseScreen;
     Bool (*CreateScreenResources) (ScreenPtr);
 
@@ -381,8 +381,8 @@ xf86MonPtr GeodeDoDDC(ScrnInfoPtr pScrni, int index);
 Bool GeodeI2CInit(ScrnInfoPtr pScrni, I2CBusPtr * ptr, char *name);
 
 int GeodeGetFPGeometry(const char *str, int *width, int *height);
-void GeodePointerMoved(POINTER_MOVED_ARGS_DECL);
-void GeodeFreeScreen(FREE_SCREEN_ARGS_DECL);
+void GeodePointerMoved(ScrnInfoPtr pScrn, int x, int y);
+void GeodeFreeScreen(ScrnInfoPtr pScrn);
 int GeodeCalculatePitchBytes(unsigned int width, unsigned int bpp);
 void GXSetupChipsetFPtr(ScrnInfoPtr pScrn);
 
@@ -438,7 +438,7 @@ void LXSetupOutput(ScrnInfoPtr);
 DisplayModePtr LXGetLegacyPanelMode(ScrnInfoPtr pScrni);
 DisplayModePtr LXGetManualPanelMode(char *modestr);
 
-void LXAdjustFrame(ADJUST_FRAME_ARGS_DECL);
+void LXAdjustFrame(ScrnInfoPtr pScrni, int x, int y);
 
 /* lx_display.c */
 void LXSetupCrtc(ScrnInfoPtr pScrni);

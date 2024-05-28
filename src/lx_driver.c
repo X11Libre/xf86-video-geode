@@ -648,9 +648,8 @@ LXUnmapMem(ScrnInfoPtr pScrni)
 /* These should be correctly accounted for rotation */
 
 void
-LXAdjustFrame(ADJUST_FRAME_ARGS_DECL)
+LXAdjustFrame(ScrnInfoPtr pScrni, int x, int y)
 {
-    SCRN_INFO_PTR(arg);
     GeodeRec *pGeode = GEODEPTR(pScrni);
 
     unsigned long offset;
@@ -662,9 +661,8 @@ LXAdjustFrame(ADJUST_FRAME_ARGS_DECL)
 }
 
 static Bool
-LXSwitchMode(SWITCH_MODE_ARGS_DECL)
+LXSwitchMode(ScrnInfoPtr pScrni, DisplayModePtr pMode)
 {
-    SCRN_INFO_PTR(arg);
     GeodeRec *pGeode = GEODEPTR(pScrni);
 
     /* Set the new mode */
@@ -714,7 +712,7 @@ LXLeaveGraphics(ScrnInfoPtr pScrni)
 }
 
 static Bool
-LXCloseScreen(CLOSE_SCREEN_ARGS_DECL)
+LXCloseScreen(ScreenPtr pScrn)
 {
     ScrnInfoPtr pScrni = xf86ScreenToScrn(pScrn);
     GeodeRec *pGeode = GEODEPTR(pScrni);
@@ -740,7 +738,7 @@ LXCloseScreen(CLOSE_SCREEN_ARGS_DECL)
     pScrn->CloseScreen = pGeode->CloseScreen;
 
     if (pScrn->CloseScreen)
-        return (*pScrn->CloseScreen) (CLOSE_SCREEN_ARGS);
+        return (*pScrn->CloseScreen) (pScrn);
 
     return TRUE;
 }
@@ -836,7 +834,7 @@ LXLoadPalette(ScrnInfoPtr pScrni,
 }
 
 static Bool
-LXScreenInit(SCREEN_INIT_ARGS_DECL)
+LXScreenInit(ScreenPtr pScrn, int argc, char **argv)
 {
     ScrnInfoPtr pScrni = xf86ScreenToScrn(pScrn);
     GeodeRec *pGeode = GEODEPTR(pScrni);
@@ -1006,22 +1004,20 @@ LXScreenInit(SCREEN_INIT_ARGS_DECL)
 }
 
 static int
-LXValidMode(VALID_MODE_ARGS_DECL)
+LXValidMode(ScrnInfoPtr pScrn, DisplayModePtr pMode, Bool Verbose, int flags)
 {
     return MODE_OK;
 }
 
 static Bool
-LXEnterVT(VT_FUNC_ARGS_DECL)
+LXEnterVT(ScrnInfoPtr pScrni)
 {
-    SCRN_INFO_PTR(arg);
     return LXEnterGraphics(NULL, pScrni);
 }
 
 static void
-LXLeaveVT(VT_FUNC_ARGS_DECL)
+LXLeaveVT(ScrnInfoPtr pScrni)
 {
-    SCRN_INFO_PTR(arg);
     GeodeRec *pGeode = GEODEPTR(pScrni);
 
     pGeode->PrevDisplayOffset = vg_get_display_offset();

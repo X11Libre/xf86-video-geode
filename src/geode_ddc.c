@@ -173,7 +173,7 @@ GeodeGetDDC(ScrnInfoPtr pScrni)
     if (!GeodeI2CInit(pScrni, &bus, "CS5536 DDC BUS"))
         return NULL;
 
-    mon = xf86DoEDID_DDC2(DDC_CALL(pScrni), bus);
+    mon = xf86DoEDID_DDC2(pScrni, bus);
 
     if (mon)
         xf86DDCApplyQuirks(pScrni->scrnIndex, mon);
