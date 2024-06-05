@@ -25,9 +25,6 @@
 
 void gu1_enable_compression(void);      /* private routine definition */
 void gu1_disable_compression(void);     /* private routine definition */
-void gfx_reset_video(void);     /* private routine definition */
-int gfx_set_display_control(int sync_polarities);       /* private routine
-                                                         * definition */
 int gu1_set_specified_mode(DISPLAYMODE * pMode, int bpp);
 
 /* VIDEO BUFFER SIZE */

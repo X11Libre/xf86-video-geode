@@ -77,12 +77,6 @@ unsigned long gu2_get_vip_register_base(void);
 
 #if GFX_MSR_REDCLOUD
 
-/* PRIVATE ROUTINES */
-
-void redcloud_build_mbus_tree(void);
-int redcloud_init_msr_devices(MSR aDev[], unsigned int array_size);
-DEV_STATUS redcloud_find_msr_device(MSR * pDev);
-
 /* DYNAMIC ROUTINES */
 
 #if GFX_MSR_DYNAMIC
@@ -239,11 +233,6 @@ int gfx_get_display_video_downscale_enable(void);
 /*----------------------------------*/
 
 #if GFX_DISPLAY_GU2
-
-/* PRIVATE ROUTINES */
-
-void gu2_enable_compression(void);
-void gu2_disable_compression(void);
 
 /* DYNAMIC ROUTINES */
 

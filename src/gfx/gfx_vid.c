@@ -145,8 +145,6 @@ unsigned short gfx_vid_height = 0;      /* copy from last gfx_set_video_window  
 
 int gfx_alpha_select = 0;       /* currently selected alpha region          */
 
-int gfx_set_screen_enable(int enable);  /* forward declaration                           */
-
 /* INCLUDE SUPPORT FOR CS5530, IF SPECIFIED. */
 
 #if GFX_VIDEO_CS5530

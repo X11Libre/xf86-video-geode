@@ -29,9 +29,6 @@
 
 void gu2_enable_compression(void);      /* private routine definition */
 void gu2_disable_compression(void);     /* private routine definition */
-int gfx_set_display_control(int sync_polarities);       /* private routine
-                                                         * definition */
-void gfx_reset_video(void);
 int gu2_set_specified_mode(DISPLAYMODE * pMode, int bpp);
 
  /*---------------------------------------------------------------------------

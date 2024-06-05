@@ -145,6 +145,14 @@
 
 /* #define CIMARRON_EXCLUDE_CUSTOM_MACROS */
 
+
+/* ROUTINE DEFINITIONS */
+/* All routines have a prototype, even those that are not included    */
+/* via #ifdefs.  This prevents the user from having to include the    */
+/* correct #defines anywhere he/she wants to call a Cimarron routine. */
+
+#include "cim_rtns.h"
+
 /*----------------------------------------------------------------------*/
 /* MODULE VARIABLES                                                     */
 /* The following #defines affect how global variables in each Cimarron  */
@@ -189,13 +197,6 @@ void (*cim_wrmsr) (unsigned long, unsigned long, unsigned long);
 /* HARDWARE REGISTER DEFINITIONS */
 
 #include "cim_regs.h"
-
-/* ROUTINE DEFINITIONS */
-/* All routines have a prototype, even those that are not included    */
-/* via #ifdefs.  This prevents the user from having to include the    */
-/* correct #defines anywhere he/she wants to call a Cimarron routine. */
-
-#include "cim_rtns.h"
 
 /* HARDWARE ACCESS MACROS */
 
