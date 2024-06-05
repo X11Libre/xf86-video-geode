@@ -99,7 +99,6 @@ extern unsigned char cim_inb(unsigned short port);
 extern void cim_outb(unsigned short port, unsigned char data);
 extern unsigned short cim_inw(unsigned short port);
 extern void cim_outw(unsigned short port, unsigned short data);
-extern unsigned long cim_ind(unsigned short port);
 extern void cim_outd(unsigned short port, unsigned long data);
 
 #include "cim_rtns.h"
@@ -381,8 +380,8 @@ int GeodeCalculatePitchBytes(unsigned int width, unsigned int bpp);
 void GXSetupChipsetFPtr(ScrnInfoPtr pScrn);
 
 /* geode_msr.c */
-int GeodeReadMSR(unsigned long addr, unsigned long *lo, unsigned long *hi);
-int GeodeWriteMSR(unsigned long addr, unsigned long lo, unsigned long hi);
+int GeodeReadMSR(uint32_t addr, uint32_t *lo, uint32_t *hi);
+int GeodeWriteMSR(uint32_t addr, uint32_t lo, uint32_t hi);
 
 /* gx_cursor.c */
 Bool GXHWCursorInit(ScreenPtr pScrn);

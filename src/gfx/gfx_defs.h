@@ -31,6 +31,8 @@
  * their own versions of these macros, which typically call a subroutine.
  * */
 
+#include <stdint.h>
+
 /* ACCESS TO THE CPU REGISTERS */
 
 #define WRITE_REG8(offset, value) 			\
@@ -111,10 +113,10 @@
 
 /* ACCESS TO MSRS */
 
-void gfx_msr_asm_write(unsigned short msrReg, unsigned long msrAddr,
-                       unsigned long *ptrHigh, unsigned long *ptrLow);
-void gfx_msr_asm_read(unsigned short msrReg, unsigned long msrAddr,
-                      unsigned long *ptrHigh, unsigned long *ptrLow);
+void gfx_msr_asm_write(unsigned short msrReg, uint32_t msrAddr,
+                       uint32_t *ptrHigh, uint32_t *ptrLow);
+void gfx_msr_asm_read(unsigned short msrReg, uint32_t msrAddr,
+                      uint32_t *ptrHigh, uint32_t *ptrLow);
 
 #define MSR_READ( MBD_MSR_CAP, address, valueHigh_ptr, valueLow_ptr ) 	\
 	gfx_msr_asm_read( ((unsigned short)(MBD_MSR_CAP)), address, 		\

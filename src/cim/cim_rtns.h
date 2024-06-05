@@ -31,6 +31,8 @@
 #ifndef _cim_rtns_h
 #define _cim_rtns_h
 
+#include <stdint.h>
+
 /* INCLUDE USER PARAMETER DEFINITIONS */
 
 #include "cim_parm.h"

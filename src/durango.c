@@ -161,8 +161,32 @@ gfx_outd(unsigned short port, unsigned long data)
         : "=a" (*(low)), "=d" (*(high))         \
         : "c" (msr | adr))
 
+#if __WORDSIZE == 64
+
 #define vsa_msr_write(msr,adr,high,low) \
-  { int d0, d1, d2, d3, d4;        \
+  { int32_t d0, d1, d2, d3, d4;        \
+  __asm__ __volatile__(            \
+    " push %%rbx\n"                \
+    " mov $0x0AC1C, %%edx\n"       \
+    " mov $0xFC530007, %%eax\n"    \
+    " out %%eax,%%dx\n"            \
+    " add $2,%%dl\n"               \
+    " mov %6, %%ebx\n"             \
+    " mov %7, %0\n"                \
+    " mov %5, %3\n"                \
+    " xor %2, %2\n"                \
+    " xor %1, %1\n"                \
+    " out %%ax, %%dx\n"            \
+    " pop %%rbx\n"                 \
+    : "=a"(d0),"=&D"(d1),"=&S"(d2), \
+      "=c"(d3),"=d"(d4)  \
+    : "1"(msr | adr),"2"(*(high)),"3"(*(low))); \
+  }
+
+#else
+
+#define vsa_msr_write(msr,adr,high,low) \
+  { int32_t d0, d1, d2, d3, d4;        \
   __asm__ __volatile__(            \
     " push %%ebx\n"                \
     " mov $0x0AC1C, %%edx\n"       \
@@ -181,12 +205,14 @@ gfx_outd(unsigned short port, unsigned long data)
     : "1"(msr | adr),"2"(*(high)),"3"(*(low))); \
   }
 
-extern int GeodeWriteMSR(unsigned long, unsigned long, unsigned long);
-extern int GeodeReadMSR(unsigned long, unsigned long *, unsigned long *);
+#endif
+
+extern int GeodeWriteMSR(uint32_t, uint32_t, uint32_t);
+extern int GeodeReadMSR(uint32_t, uint32_t *, uint32_t *);
 
 void
-gfx_msr_asm_write(unsigned short reg, unsigned long addr,
-                  unsigned long *hi, unsigned long *lo)
+gfx_msr_asm_write(unsigned short reg, uint32_t addr,
+                  uint32_t *hi, uint32_t *lo)
 {
     static int msr_method = 0;
 
@@ -202,8 +228,8 @@ gfx_msr_asm_write(unsigned short reg, unsigned long addr,
 }
 
 void
-gfx_msr_asm_read(unsigned short reg, unsigned long addr,
-                 unsigned long *hi, unsigned long *lo)
+gfx_msr_asm_read(unsigned short reg, uint32_t addr,
+                 uint32_t *hi, uint32_t *lo)
 {
     static int msr_method = 0;
 

@@ -113,9 +113,8 @@ typedef struct tagGeodeLinkNode {
 /*---------------------------------------------*/
 
 typedef struct tagQ_WORD {
-    unsigned long high;
-    unsigned long low;
-
+    uint32_t high;
+    uint32_t low;
 } Q_WORD;
 
 /*===================================================*/

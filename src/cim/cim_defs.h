@@ -31,6 +31,8 @@
 #ifndef _cim_defs_h
 #define _cim_defs_h
 
+#include <stdint.h>
+
 /*-----------------------------------------*/
 /*          MEMORY ACCESS MACROS           */
 /*-----------------------------------------*/
@@ -120,7 +122,7 @@
 {                                                                           \
 	unsigned long msr_add = (unsigned long)(msr_reg) |                      \
 							(unsigned long)(device_add);                    \
-	unsigned long data_high, data_low;                                      \
+	uint32_t data_high, data_low;                                      \
 	_asm { mov ecx, msr_add   }                                             \
 	_asm { rdmsr              }                                             \
 	_asm { mov data_high, edx }                                             \
@@ -257,7 +259,7 @@
 
 #define MSR_READ(msr_reg, device_add, data64_ptr)                  \
 {                                                                  \
-    unsigned long addr, val1, val2;                                \
+	uint32_t addr, val1, val2;                                 \
                                                                    \
 	addr = device_add | msr_reg;                                   \
 	rdmsr (addr, val1, val2);                                      \
@@ -273,7 +275,7 @@
 
 #define MSR_WRITE(msr_reg, device_add, data64_ptr)                 \
 {                                                                  \
-	unsigned long addr, val1, val2;                                \
+	uint32_t addr, val1, val2;                                 \
                                                                    \
 	val2 = ((Q_WORD *)(data64_ptr))->high;                         \
 	val1 = ((Q_WORD *)(data64_ptr))->low;                          \
@@ -286,7 +288,7 @@
 
 #define MSR_READ(msr_reg, device_add, data64_ptr)                  \
 {                                                                  \
-    unsigned long addr, val1, val2;                                \
+	uint32_t addr, val1, val2;                                \
                                                                    \
 	addr = device_add | msr_reg;                               \
 	if (cim_rdmsr) {                                           \
@@ -299,7 +301,7 @@
 
 #define MSR_WRITE(msr_reg, device_add, data64_ptr)                 \
 {                                                                  \
-	unsigned long addr, val1, val2;                                \
+	uint32_t addr, val1, val2;                                 \
                                                                    \
 	val2 = ((Q_WORD *)(data64_ptr))->high;                         \
 	val1 = ((Q_WORD *)(data64_ptr))->low;                          \
@@ -580,8 +582,8 @@
  *-------------------------------------------*/
 
 #define OUTD(port, data) cim_outd(port, data)
-void
-cim_outd(unsigned short port, unsigned long data)
+static inline void
+cim_outd(unsigned short port, uint32_t data)
 {
     _asm {
 pushf mov eax, data mov dx, port out dx, eax popf}}
@@ -590,7 +592,7 @@ pushf mov eax, data mov dx, port out dx, eax popf}}
  * Reads one DWORD from a single I/O address.
  *-------------------------------------------*/
 #define IND(port) cim_ind(port)
-unsigned long
+static inline uint32_t
 cim_ind(unsigned short port)
 {
     unsigned long data;
@@ -657,9 +659,8 @@ cim_inb(unsigned short port)
  *-------------------------------------------*/
 
 #define OUTD(port, data) cim_outd(port, data)
-void cim_outd(unsigned short port, unsigned long data);
-void
-cim_outd(unsigned short port, unsigned long data)
+static inline void
+cim_outd(unsigned short port, uint32_t data)
 {
     __asm__ __volatile__("outl %0,%w1"::"a"(data), "Nd"(port));
 }
@@ -670,11 +671,10 @@ cim_outd(unsigned short port, unsigned long data)
  *-------------------------------------------*/
 
 #define IND(port) cim_ind(port)
-unsigned long cim_ind(unsigned short port);
-unsigned long
+static inline uint32_t
 cim_ind(unsigned short port)
 {
-    unsigned long value;
+    uint32_t value;
     __asm__ __volatile__("inl %w1,%0":"=a"(value):"Nd"(port));
 
     return value;
@@ -742,7 +742,7 @@ cim_outb(unsigned short port, unsigned char data)
 
 #endif                          /* CIMARRON_INCLUDE_IO_MACROS */
 
-extern void (*cim_rdmsr) (unsigned long, unsigned long *, unsigned long *);
-extern void (*cim_wrmsr) (unsigned long, unsigned long, unsigned long);
+extern void (*cim_rdmsr) (uint32_t, uint32_t *, uint32_t *);
+extern void (*cim_wrmsr) (uint32_t, uint32_t, uint32_t);
 
 #endif

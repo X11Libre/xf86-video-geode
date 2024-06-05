@@ -31,6 +31,8 @@
 #ifndef _gfx_type_h
 #define _gfx_type_h
 
+#include <stdint.h>
+
 /* MSR DEFINITIONS */
 
 typedef enum DevStatus
@@ -44,8 +46,8 @@ typedef struct msr {
 } MSR;
 
 typedef struct mValue {
-    unsigned long high;
-    unsigned long low;
+    uint32_t high;
+    uint32_t low;
 } Q_WORD;
 
 typedef struct mbusNode {

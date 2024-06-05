@@ -33,6 +33,8 @@
 #include "config.h"
 #endif
 
+#include <stdint.h>
+
 /*----------------------------------------------------------------------*/
 /* MODULE SETTINGS                                                      */
 /* The following #defines affect which modules are included in the      */
@@ -186,8 +188,8 @@ unsigned char *cim_vg_ptr = (unsigned char *) 0;
  * to share the MSR code with the GX code */
 
 #ifdef CIMARRON_MSR_HOOKS
-void (*cim_rdmsr) (unsigned long, unsigned long *, unsigned long *);
-void (*cim_wrmsr) (unsigned long, unsigned long, unsigned long);
+void (*cim_rdmsr) (uint32_t, uint32_t*, uint32_t*);
+void (*cim_wrmsr) (uint32_t, uint32_t, uint32_t);
 #endif
 
 /*----------------------------------------------------------------------*/

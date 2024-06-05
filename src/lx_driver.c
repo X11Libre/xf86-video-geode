@@ -99,8 +99,32 @@ LXSaveScreen(ScreenPtr pScrn, int mode)
         : "=a" (lo), "=d" (hi)                  \
         : "c" (adr))
 
+#if __WORDSIZE == 64
+
 #define LX_MSR_WRITE(adr,low,high) \
-  { int d0, d1, d2, d3, d4;        \
+  { int32_t d0, d1, d2, d3, d4;        \
+  __asm__ __volatile__(            \
+    " push %%rbx\n"                \
+    " mov $0x0AC1C, %%edx\n"       \
+    " mov $0xFC530007, %%eax\n"    \
+    " out %%eax,%%dx\n"            \
+    " add $2,%%dl\n"               \
+    " mov %6, %%ebx\n"             \
+    " mov %7, %0\n"                \
+    " mov %5, %3\n"                \
+    " xor %2, %2\n"                \
+    " xor %1, %1\n"                \
+    " out %%ax, %%dx\n"            \
+    " pop %%rbx\n"                 \
+    : "=a"(d0),"=&D"(d1),"=&S"(d2), \
+      "=c"(d3),"=d"(d4)  \
+    : "1"(adr),"2"(high),"3"(low)); \
+  }
+
+#else
+
+#define LX_MSR_WRITE(adr,low,high) \
+  { int32_t d0, d1, d2, d3, d4;        \
   __asm__ __volatile__(            \
     " push %%ebx\n"                \
     " mov $0x0AC1C, %%edx\n"       \
@@ -119,8 +143,10 @@ LXSaveScreen(ScreenPtr pScrn, int mode)
     : "1"(adr),"2"(high),"3"(low)); \
   }
 
+#endif
+
 static void
-LXReadMSR(unsigned long addr, unsigned long *lo, unsigned long *hi)
+LXReadMSR(uint32_t addr, uint32_t *lo, uint32_t *hi)
 {
     if (GeodeReadMSR(addr, lo, hi) == -1) {
         unsigned int l, h;
@@ -132,7 +158,7 @@ LXReadMSR(unsigned long addr, unsigned long *lo, unsigned long *hi)
 }
 
 static void
-LXWriteMSR(unsigned long addr, unsigned long lo, unsigned long hi)
+LXWriteMSR(uint32_t addr, uint32_t lo, uint32_t hi)
 {
     if (GeodeWriteMSR(addr, lo, hi) == -1)
         LX_MSR_WRITE(addr, lo, hi);

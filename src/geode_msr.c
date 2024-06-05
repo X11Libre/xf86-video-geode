@@ -76,7 +76,7 @@ _msr_open(void)
 }
 
 int
-GeodeReadMSR(unsigned long addr, unsigned long *lo, unsigned long *hi)
+GeodeReadMSR(uint32_t addr, uint32_t *lo, uint32_t *hi)
 {
 #ifdef __OpenBSD__
     struct amdmsr_req req;
@@ -127,7 +127,7 @@ GeodeReadMSR(unsigned long addr, unsigned long *lo, unsigned long *hi)
 }
 
 int
-GeodeWriteMSR(unsigned long addr, unsigned long lo, unsigned long hi)
+GeodeWriteMSR(uint32_t addr, uint32_t lo, uint32_t hi)
 {
 #ifdef __OpenBSD__
     struct amdmsr_req req;
