@@ -256,14 +256,12 @@ gfx_set_clock_frequency(unsigned long frequency)
     Q_WORD msr_value, sys_value;
     unsigned long sys_low;
     unsigned int i, index = 0;
-    unsigned long value;
     long timeout = 1000;
     long min, diff;
 
     /* FIND THE REGISTER VALUES FOR THE DESIRED FREQUENCY */
     /* Search the table for the closest frequency (16.16 format). */
 
-    value = RCDF_PLLtable[0].pll_value;
     min = (long) RCDF_PLLtable[0].frequency - frequency;
     if (min < 0L)
         min = -min;
