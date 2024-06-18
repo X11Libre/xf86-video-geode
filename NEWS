@@ -1,3 +1,11 @@
+Geode 2.18.1 (2024-06-18)
+=========================
+Extensive driver cleanup by Enrico Weigelt:
+
+ * Conditionals that enabled building against older X server versions
+   were removed. The minimal X server version is 1.18 hereafter. This
+   Geode driver's version was bumped to 2.18.x to reflect this.
+
 Geode 2.11.16 (2014-07-17)
 ==========================
 No user-visible change:
