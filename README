@@ -1,6 +1,6 @@
 xf86-video-geode -- AMD Geode GX and LX graphics driver for X.org
 =================================================================
-README last updated: 2020-12-15
+README last updated: 2024-04-18
 
 1.INTRODUCTION
 
@@ -14,6 +14,8 @@ for the LX's video input port (VIP) feature is provided as "ztv".
 
 Since version 2.9.0, this driver depends on X server 1.3 or greater,
 because it utilizes the new common DDC probing libraries from X.Org.
+
+Since version 2.18.1, this driver depends on X server 1.18 or greater.
 
 3.ROADMAP
 
