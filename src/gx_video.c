@@ -1346,7 +1346,7 @@ GXBlockHandler(BLOCKHANDLER_ARGS_DECL)
                 if (pPriv->area) {
 #ifdef XF86EXA
                     if (pGeode->useEXA)
-                        exaOffscreenFree(pScrni, pPriv->area);
+                        exaOffscreenFree(pScrni->pScreen, pPriv->area);
 #endif
                     if (!pGeode->useEXA)
                         xf86FreeOffscreenArea(pPriv->area);
