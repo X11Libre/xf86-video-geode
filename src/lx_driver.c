@@ -306,7 +306,7 @@ LXPreInit(ScrnInfoPtr pScrni, int flags)
     EntityInfoPtr pEnt;
     OptionInfoRec *GeodeOptions = &LX_GeodeOptions[0];
     rgb defaultWeight = { 0, 0, 0 };
-    char *s;
+    const char *s;
 
     if (pScrni->numEntities != 1)
         return FALSE;
@@ -469,7 +469,7 @@ LXPreInit(ScrnInfoPtr pScrni, int flags)
         pGeode->Output = OUTPUT_PANEL | OUTPUT_DCON;
     }
     else if (pGeode->Output & OUTPUT_PANEL) {
-        char *pmode = xf86GetOptValString(GeodeOptions, LX_OPTION_PANEL_MODE);
+        const char *pmode = xf86GetOptValString(GeodeOptions, LX_OPTION_PANEL_MODE);
 
         if (pmode != NULL)
             pGeode->panelMode = LXGetManualPanelMode(pmode);

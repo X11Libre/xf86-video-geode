@@ -2642,7 +2642,7 @@ gp_masked_blt(unsigned long dstoffset, unsigned long width,
     unsigned long total_dwords, size_dwords;
     unsigned long dword_count, byte_count;
     unsigned long srcoffset, size;
-    unsigned long i, ch3_offset, base;
+    unsigned long j, ch3_offset, base;
     unsigned long flags = 0;
 
     if (gp3_blt_flags & CIMGP_BLTFLAGS_INVERTMONO)
@@ -2688,7 +2688,7 @@ gp_masked_blt(unsigned long dstoffset, unsigned long width,
     WRITE_GP32(GP3_CMD_WRITE, gp3_cmd_next);
     gp3_cmd_current = gp3_cmd_next;
 
-    for (i = 0; i < height; i++) {
+    for (j = 0; j < height; j++) {
         /* UPDATE THE COMMAND POINTER
          * The WRITE_COMMANDXX macros use a pointer to the current buffer
          * space.  This is created by adding gp3_cmd_current to the base
@@ -2880,7 +2880,7 @@ gp_screen_to_screen_masked(unsigned long dstoffset, unsigned long srcoffset,
     unsigned long total_dwords, size_dwords;
     unsigned long dword_count, byte_count;
     unsigned long srcoff, size;
-    unsigned long i, base;
+    unsigned long j, base;
     unsigned long flags = 0;
 
     if (gp3_blt_flags & CIMGP_BLTFLAGS_INVERTMONO)
@@ -2926,7 +2926,7 @@ gp_screen_to_screen_masked(unsigned long dstoffset, unsigned long srcoffset,
     WRITE_GP32(GP3_CMD_WRITE, gp3_cmd_next);
     gp3_cmd_current = gp3_cmd_next;
 
-    for (i = 0; i < height; i++) {
+    for (j = 0; j < height; j++) {
         /* UPDATE THE COMMAND POINTER
          * The WRITE_COMMANDXX macros use a pointer to the current buffer
          * space. This is created by adding gp3_cmd_current to the base

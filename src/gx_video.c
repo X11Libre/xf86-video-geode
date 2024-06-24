@@ -105,8 +105,6 @@ void GXSetVideoPosition(int x, int y, int width, int height,
                         short src_w, short src_h, short drw_w,
                         short drw_h, int id, int offset, ScrnInfoPtr pScrni);
 
-extern void GXAccelSync(ScrnInfoPtr pScrni);
-
 extern int DeltaX, DeltaY;
 
 unsigned long graphics_lut[256];
@@ -224,11 +222,11 @@ static XF86VideoFormatRec Formats[NUM_FORMATS] = {
 
 static XF86AttributeRec Attributes[NUM_ATTRIBUTES] = {
 #if DBUF
-    {XvSettable | XvGettable, 0, 1, "XV_DOUBLE_BUFFER"},
+    {XvSettable | XvGettable, 0, 1, (char *)"XV_DOUBLE_BUFFER"},
 #endif
-    {XvSettable | XvGettable, 0, (1 << 24) - 1, "XV_COLORKEY"},
-    {XvSettable | XvGettable, 0, 1, "XV_FILTER"},
-    {XvSettable | XvGettable, 0, 1, "XV_COLORKEYMODE"}
+    {XvSettable | XvGettable, 0, (1 << 24) - 1, (char *)"XV_COLORKEY"},
+    {XvSettable | XvGettable, 0, 1, (char *)"XV_FILTER"},
+    {XvSettable | XvGettable, 0, 1, (char *)"XV_COLORKEYMODE"}
 };
 
 #define NUM_IMAGES 8
@@ -759,11 +757,11 @@ GXAllocateMemory(ScrnInfoPtr pScrni, void **memp, int numlines)
     return 0;
 }
 
-static BoxRec dstBox;
+static BoxRec global_dstBox;
 static int srcPitch = 0, srcPitch2 = 0, dstPitch = 0, dstPitch2 = 0;
 static INT32 Bx1, Bx2, By1, By2;
 static int top, left, npixels, nlines;
-static int offset, s1offset = 0, s2offset = 0, s3offset = 0;
+static int global_offset, s1offset = 0, s2offset = 0, s3offset = 0;
 static unsigned char *dst_start;
 static int d2offset = 0, d3offset = 0;
 
@@ -1074,15 +1072,15 @@ GXPutImage(ScrnInfoPtr pScrni,
         if ((Bx1 >= Bx2) || (By1 >= By2))
             return Success;
 
-        dstBox.x1 = drw_x;
-        dstBox.x2 = drw_x + drw_w;
-        dstBox.y1 = drw_y;
-        dstBox.y2 = drw_y + drw_h;
+        global_dstBox.x1 = drw_x;
+        global_dstBox.x2 = drw_x + drw_w;
+        global_dstBox.y1 = drw_y;
+        global_dstBox.y2 = drw_y + drw_h;
 
-        dstBox.x1 -= pScrni->frameX0;
-        dstBox.x2 -= pScrni->frameX0;
-        dstBox.y1 -= pScrni->frameY0;
-        dstBox.y2 -= pScrni->frameY0;
+        global_dstBox.x1 -= pScrni->frameX0;
+        global_dstBox.x2 -= pScrni->frameX0;
+        global_dstBox.y1 -= pScrni->frameY0;
+        global_dstBox.y2 -= pScrni->frameY0;
 
         switch (id) {
         case FOURCC_YV12:
@@ -1138,13 +1136,13 @@ GXPutImage(ScrnInfoPtr pScrni,
 
             top &= ~1;
 
-            offset = pPriv->offset + (top * dstPitch);
+            global_offset = pPriv->offset + (top * dstPitch);
 
 #if DBUF
             if (pPriv->doubleBuffer && pPriv->currentBuffer)
-                offset += (new_h >> 1) * pGeode->Pitch;
+                global_offset += (new_h >> 1) * pGeode->Pitch;
 #endif
-            dst_start = pGeode->FBBase + offset + left;
+            dst_start = pGeode->FBBase + global_offset + left;
             tmp = ((top >> 1) * srcPitch2) + (left >> 1);
             s2offset += tmp;
             s3offset += tmp;
@@ -1164,13 +1162,13 @@ GXPutImage(ScrnInfoPtr pScrni,
             left <<= 1;
             buf += (top * srcPitch) + left;
             nlines = By2 - top;
-            offset = (pPriv->offset) + (top * dstPitch);
+            global_offset = (pPriv->offset) + (top * dstPitch);
 
 #if DBUF
             if (pPriv->doubleBuffer && pPriv->currentBuffer)
-                offset += (new_h >> 1) * pGeode->Pitch;
+                global_offset += (new_h >> 1) * pGeode->Pitch;
 #endif
-            dst_start = pGeode->FBBase + offset + left;
+            dst_start = pGeode->FBBase + global_offset + left;
             break;
         }
         s1offset = (top * srcPitch) + left;
@@ -1182,8 +1180,8 @@ GXPutImage(ScrnInfoPtr pScrni,
             xf86XVFillKeyHelper(pScrni->pScreen, pPriv->colorKey, clipBoxes);
         }
 
-        GXDisplayVideo(pScrni, id, offset, width, height, dstPitch,
-                       Bx1, By1, Bx2, By2, &dstBox, src_w, src_h, drw_w, drw_h);
+        GXDisplayVideo(pScrni, id, global_offset, width, height, dstPitch,
+                       Bx1, By1, Bx2, By2, &global_dstBox, src_w, src_h, drw_w, drw_h);
     }
 #endif
     switch (id) {
@@ -1216,8 +1214,8 @@ GXPutImage(ScrnInfoPtr pScrni,
                           REGION_NUM_RECTS(clipBoxes), REGION_RECTS(clipBoxes));
     }
 
-    GXDisplayVideo(pScrni, id, offset, width, height, dstPitch,
-                   Bx1, By1, Bx2, By2, &dstBox, src_w, src_h, drw_w, drw_h);
+    GXDisplayVideo(pScrni, id, global_offset, width, height, dstPitch,
+                   Bx1, By1, Bx2, By2, &global_dstBox, src_w, src_h, drw_w, drw_h);
 #endif
 
 #if XV_PROFILE
@@ -1400,7 +1398,7 @@ GXAllocateSurface(ScrnInfoPtr pScrni,
     fbpitch = pScrni->bitsPerPixel * pScrni->displayWidth >> 3;
     numlines = ((pitch * h) + fbpitch - 1) / fbpitch;
 
-    if (!(offset = GXAllocateMemory(pScrni, &area, numlines)))
+    if (!(global_offset = GXAllocateMemory(pScrni, &area, numlines)))
         return BadAlloc;
 
     surface->width = w;
@@ -1421,14 +1419,14 @@ GXAllocateSurface(ScrnInfoPtr pScrni,
     }
 
     pPriv->area = area;
-    pPriv->offset = offset;
+    pPriv->offset = global_offset;
 
     pPriv->isOn = FALSE;
 
     surface->pScrn = pScrni;
     surface->id = id;
     surface->pitches[0] = pitch;
-    surface->offsets[0] = offset;
+    surface->offsets[0] = global_offset;
     surface->devPrivate.ptr = (pointer) pPriv;
 
     return Success;

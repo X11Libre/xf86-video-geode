@@ -1381,8 +1381,6 @@ vg_get_current_display_mode(VG_DISPLAY_MODE * current_display, int *bpp)
     /* Cimarron when returning the current mode information.          */
 
     if (vg3_panel_enable) {
-        Q_WORD msr_value;
-
         flags |= VG_MODEFLAG_PANELOUT;
 
         current_display->panel_width = vg3_panel_width;
@@ -2736,7 +2734,7 @@ vg_save_state(VG_SAVE_RESTORE * vg_state)
 int
 vg_restore_state(VG_SAVE_RESTORE * vg_state)
 {
-    unsigned long irqfilt, i;
+    unsigned long irqfilt, j;
     unsigned long memoffset;
 
     /* TEMPORARILY UNLOCK ALL REGISTERS */
@@ -2801,27 +2799,27 @@ vg_restore_state(VG_SAVE_RESTORE * vg_state)
     /* RESTORE THE PALETTE */
 
     WRITE_REG32(DC3_PAL_ADDRESS, 0);
-    for (i = 0; i < 261; i++)
-        WRITE_REG32(DC3_PAL_DATA, vg_state->palette[i]);
+    for (j = 0; j < 261; j++)
+        WRITE_REG32(DC3_PAL_DATA, vg_state->palette[j]);
 
     /* RESTORE THE HORIZONTAL FILTER COEFFICIENTS */
 
     irqfilt = READ_REG32(DC3_IRQ_FILT_CTL);
     irqfilt |= DC3_IRQFILT_H_FILT_SEL;
 
-    for (i = 0; i < 256; i++) {
-        WRITE_REG32(DC3_IRQ_FILT_CTL, ((irqfilt & 0xFFFFFF00L) | i));
-        WRITE_REG32(DC3_FILT_COEFF1, vg_state->h_coeff[(i << 1)]);
-        WRITE_REG32(DC3_FILT_COEFF2, vg_state->h_coeff[(i << 1) + 1]);
+    for (j = 0; j < 256; j++) {
+        WRITE_REG32(DC3_IRQ_FILT_CTL, ((irqfilt & 0xFFFFFF00L) | j));
+        WRITE_REG32(DC3_FILT_COEFF1, vg_state->h_coeff[(j << 1)]);
+        WRITE_REG32(DC3_FILT_COEFF2, vg_state->h_coeff[(j << 1) + 1]);
     }
 
     /* RESTORE VERTICAL COEFFICIENTS */
 
     irqfilt &= ~DC3_IRQFILT_H_FILT_SEL;
 
-    for (i = 0; i < 256; i++) {
-        WRITE_REG32(DC3_IRQ_FILT_CTL, ((irqfilt & 0xFFFFFF00L) | i));
-        WRITE_REG32(DC3_FILT_COEFF1, vg_state->v_coeff[i]);
+    for (j = 0; j < 256; j++) {
+        WRITE_REG32(DC3_IRQ_FILT_CTL, ((irqfilt & 0xFFFFFF00L) | j));
+        WRITE_REG32(DC3_FILT_COEFF1, vg_state->v_coeff[j]);
     }
 
     /* RESTORE THE CURSOR DATA */

@@ -378,7 +378,7 @@ Bool RegionsEqual(RegionPtr A, RegionPtr B);
 
 void GeodeProbeDDC(ScrnInfoPtr pScrni, int index);
 xf86MonPtr GeodeDoDDC(ScrnInfoPtr pScrni, int index);
-Bool GeodeI2CInit(ScrnInfoPtr pScrni, I2CBusPtr * ptr, char *name);
+Bool GeodeI2CInit(ScrnInfoPtr pScrni, I2CBusPtr * ptr, const char *name);
 
 int GeodeGetFPGeometry(const char *str, int *width, int *height);
 void GeodePointerMoved(ScrnInfoPtr pScrn, int x, int y);
@@ -436,7 +436,7 @@ void LXSetupOutput(ScrnInfoPtr);
 
 /* lx_panel.c */
 DisplayModePtr LXGetLegacyPanelMode(ScrnInfoPtr pScrni);
-DisplayModePtr LXGetManualPanelMode(char *modestr);
+DisplayModePtr LXGetManualPanelMode(const char *modestr);
 
 void LXAdjustFrame(ScrnInfoPtr pScrni, int x, int y);
 

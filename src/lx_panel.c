@@ -110,7 +110,7 @@ LXGetLegacyPanelMode(ScrnInfoPtr pScrni)
 /* Construct a moderec from the specified panel mode */
 
 DisplayModePtr
-LXGetManualPanelMode(char *modestr)
+LXGetManualPanelMode(const char *modestr)
 {
     int clock;
     int hactive, hsstart, hsend, htotal;
@@ -133,8 +133,8 @@ LXGetManualPanelMode(char *modestr)
 
     sprintf(sname, "%dx%d", hactive, vactive);
 
-    mode->name = XNFalloc(strlen(sname) + 1);
-    strcpy(mode->name, sname);
+    mode->name = (char *)XNFalloc(strlen(sname) + 1);
+    strcpy((char *)mode->name, sname);
 
     mode->type = M_T_DRIVER | M_T_PREFERRED;
     mode->Clock = clock;

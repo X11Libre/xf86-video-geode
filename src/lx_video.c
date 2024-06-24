@@ -84,9 +84,9 @@ static XF86VideoFormatRec Formats[] = {
 };
 
 static XF86AttributeRec Attributes[] = {
-    {XvSettable | XvGettable, 0, (1 << 24) - 1, "XV_COLORKEY"},
-    {XvSettable | XvGettable, 0, 1, "XV_FILTER"},
-    {XvSettable | XvGettable, 0, 1, "XV_COLORKEYMODE"}
+    {XvSettable | XvGettable, 0, (1 << 24) - 1, (char *)"XV_COLORKEY"},
+    {XvSettable | XvGettable, 0, 1, (char *)"XV_FILTER"},
+    {XvSettable | XvGettable, 0, 1, (char *)"XV_COLORKEYMODE"}
 };
 
 static XF86ImageRec Images[] = {

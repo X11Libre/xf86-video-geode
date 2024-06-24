@@ -68,7 +68,7 @@ SYS_BOARD_INFO Sys_board_info_array[] = {
 
 static int Num_sys_board_type = NUM_SYS_BOARD_TYPES;
 SYS_BOARD_INFO *Sys_board_array_base = Sys_board_info_array;
-int FindStringInSeg(unsigned int, char *);
+int FindStringInSeg(unsigned int, const char *);
 static unsigned char get_sys_board_type(SYS_BOARD_INFO *, SYS_BOARD_INFO *);
 
 /* Detect the Platform */
@@ -81,7 +81,7 @@ Detect_Platform(void)
 }
 
 static int
-Strncmp(char *str1, char *str2, int len)
+Strncmp(const char *str1, char *str2, int len)
 {
     int i;
 
@@ -99,7 +99,7 @@ Strncmp(char *str1, char *str2, int len)
 }
 
 static char *
-Strcpy(char *dst, char *src)
+Strcpy(char *dst, const char *src)
 {
     int i;
 
@@ -113,7 +113,7 @@ Strcpy(char *dst, char *src)
 }
 
 static int
-Strlen(char *str)
+Strlen(const char *str)
 {
     int i;
 
@@ -135,7 +135,7 @@ Strlen(char *str)
  ************************************************************************
  */
 int
-FindStringInSeg(unsigned int segment_address, char *string_ptr)
+FindStringInSeg(unsigned int segment_address, const char *string_ptr)
 {
     int string_length = Strlen(string_ptr);
     char *psegment_buf;
@@ -186,7 +186,7 @@ get_sys_board_type(SYS_BOARD_INFO * sys_info,
                    SYS_BOARD_INFO * sys_board_array_base)
 {
     int index;
-    char *xpress_rom_string_ptr = "XpressStart";
+    const char *xpress_rom_string_ptr = "XpressStart";
     unsigned int segment = LINUX_ROM_SEGMENT;
 
     /* See if XpressStart is present in the BIOS area. 

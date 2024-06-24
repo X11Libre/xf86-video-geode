@@ -35,7 +35,7 @@
 /* as well as a lookup table for easy device addressing.        */
 /*--------------------------------------------------------------*/
 
-GEODELINK_NODE gliu_nodes[24];
+GEODELINK_NODE gliu_node_list[24];
 GEODELINK_NODE msr_dev_lookup[MSR_DEVICE_EMPTY];
 
 #define GET_DEVICE_ID(macrohigh, macrolow) ((macrolow >> 12) & 0xFF)
@@ -79,7 +79,7 @@ msr_init_table(void)
     if (return_value == CIM_STATUS_OK) {
         /* BUILD LOCAL COPY OF THE GEODELINK BUS */
 
-        msr_create_geodelink_table(gliu_nodes);
+        msr_create_geodelink_table(gliu_node_list);
 
         /* CLEAR TABLE STATUS */
 
@@ -107,7 +107,7 @@ msr_init_table(void)
         for (i = 0; i < MSR_DEVICE_EMPTY; i++) {
             if (msr_dev_lookup[i].device_id == MSR_DEVICE_NOTFOUND) {
                 for (j = 0; j < 24; j++) {
-                    if (gliu_nodes[j].device_id == i)
+                    if (gliu_node_list[j].device_id == i)
                         break;
                 }
 
@@ -116,7 +116,7 @@ msr_init_table(void)
                 else {
                     msr_dev_lookup[i].device_id = MSR_DEVICE_PRESENT;
                     msr_dev_lookup[i].address_from_cpu =
-                        gliu_nodes[j].address_from_cpu;
+                        gliu_node_list[j].address_from_cpu;
                 }
             }
         }
@@ -125,8 +125,8 @@ msr_init_table(void)
         /* ERROR OUT THE GEODELINK TABLES */
 
         for (i = 0; i < 24; i++) {
-            gliu_nodes[i].address_from_cpu = 0xFFFFFFFF;
-            gliu_nodes[i].device_id = MSR_DEVICE_EMPTY;
+            gliu_node_list[i].address_from_cpu = 0xFFFFFFFF;
+            gliu_node_list[i].device_id = MSR_DEVICE_EMPTY;
         }
 
         for (i = 0; i < MSR_DEVICE_EMPTY; i++) {

@@ -47,7 +47,7 @@ static void
 lx_create_resources(xf86OutputPtr output)
 {
     int ret;
-    char *s;
+    const char *s;
     ScrnInfoPtr pScrni = output->scrn;
     GeodeRec *pGeode = GEODEPTR(pScrni);
 

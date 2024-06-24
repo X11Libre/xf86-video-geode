@@ -83,7 +83,7 @@ int debuglvl = 0;
 #define MAX_OVLY_WIDTH  2048
 #define MAX_OVLY_HEIGHT 2048
 
-static char *z4l_dev_paths[] = {
+static const char *z4l_dev_paths[] = {
     "/dev/videox", NULL
 };
 
@@ -579,7 +579,7 @@ static int
 z4l_ovly_set_encoding(Z4lPortPrivRec * pPriv, int id)
 {
     int l, n, inp;
-    char *cp;
+    const char *cp;
     t_std_data *sp;
     XF86VideoEncodingPtr enc;
     XF86VideoAdaptorPtr adpt;
@@ -992,7 +992,7 @@ Z4lEncodingName(char *ename, int l, char *inp_name, char *std_name, char *fmt)
 }
 
 static int
-Z4lAddEncoding(XF86VideoEncodingPtr enc, char *name, int id, int width,
+Z4lAddEncoding(XF86VideoEncodingPtr enc, const char *name, int id, int width,
                int height, int numer, int denom, int inp, v4l2_std_id std,
                unsigned int fmt)
 {
@@ -1314,7 +1314,8 @@ Z4lInit(ScrnInfoPtr pScrni, XF86VideoAdaptorPtr ** adaptors)
     XF86VideoEncodingPtr encs, enc;
     XF86ImagePtr ip, img, imgs;
     Z4lPortPrivRec *pPriv;
-    char *dp, *msg;
+    char *dp;
+    const char *msg;
     char enc_name[256], attr_name[256];
     int attrIds[V4L2_CID_LASTP1 - V4L2_CID_BASE + ATTR_MAX_ID];
     struct v4l2_capability capability;
@@ -1499,7 +1500,7 @@ Z4lInit(ScrnInfoPtr pScrni, XF86VideoAdaptorPtr ** adaptors)
             if ((attr = Z4lNewAttribute(&attrs, &nattrs)) == NULL)
                 goto fail;
             Z4lAttributeName(&attr_name[0], sizeof(attr_name),
-                             (char *) &queryctrl.name[0]);
+                             (char *)&queryctrl.name[0]);
             if (Z4lAddAttribute(attr, &attr_name[0],
                                 queryctrl.minimum, queryctrl.maximum,
                                 XvSettable | XvGettable) == 0)
@@ -1508,7 +1509,7 @@ Z4lInit(ScrnInfoPtr pScrni, XF86VideoAdaptorPtr ** adaptors)
         attrIds[nattrs] = ATTR_ENCODING_ID;
         if ((attr = Z4lNewAttribute(&attrs, &nattrs)) == NULL)
             goto fail;
-        Z4lAttributeName(&attr_name[0], sizeof(attr_name), ATTR_ENCODING);
+        Z4lAttributeName(&attr_name[0], sizeof(attr_name), (char *)ATTR_ENCODING);
         if (Z4lAddAttribute(attr, &attr_name[0], 0, nencs - 1,
                             XvSettable | XvGettable) == 0)
             goto fail;
@@ -1521,14 +1522,14 @@ Z4lInit(ScrnInfoPtr pScrni, XF86VideoAdaptorPtr ** adaptors)
             attrIds[nattrs] = ATTR_KEYMODE_ID;
             if ((attr = Z4lNewAttribute(&attrs, &nattrs)) == NULL)
                 goto fail;
-            Z4lAttributeName(&attr_name[0], sizeof(attr_name), ATTR_KEYMODE);
+            Z4lAttributeName(&attr_name[0], sizeof(attr_name), (char *)ATTR_KEYMODE);
             if (Z4lAddAttribute(attr, &attr_name[0], 0, 1,
                                 XvSettable | XvGettable) == 0)
                 goto fail;
             attrIds[nattrs] = ATTR_COLORKEY_ID;
             if ((attr = Z4lNewAttribute(&attrs, &nattrs)) == NULL)
                 goto fail;
-            Z4lAttributeName(&attr_name[0], sizeof(attr_name), ATTR_COLORKEY);
+            Z4lAttributeName(&attr_name[0], sizeof(attr_name), (char *)ATTR_COLORKEY);
             if (Z4lAddAttribute(attr, &attr_name[0], 0, 0xffffff,
                                 XvSettable | XvGettable) == 0)
                 goto fail;
@@ -1613,7 +1614,7 @@ Z4lInit(ScrnInfoPtr pScrni, XF86VideoAdaptorPtr ** adaptors)
     if (encs != NULL) {
         for (i = 0; i < nencs; ++i) {
             if (encs[i].name != NULL)
-                free(encs[i].name);
+                free((char *)encs[i].name);
         }
         free(encs);
     }
@@ -1625,7 +1626,7 @@ Z4lInit(ScrnInfoPtr pScrni, XF86VideoAdaptorPtr ** adaptors)
         for (i = 0; i < nadpts; ++i) {
             if ((adpt = adpts[i]) != NULL) {
                 if (adpt->name != NULL)
-                    free(adpt->name);
+                    free((char *)adpt->name);
                 if ((attrs = adpt->pAttributes) != NULL) {
                     for (i = 0; i < adpt->nAttributes; ++i)
                         if (attrs[i].name != NULL)
@@ -1635,7 +1636,7 @@ Z4lInit(ScrnInfoPtr pScrni, XF86VideoAdaptorPtr ** adaptors)
                 if ((encs = adpt->pEncodings) != NULL) {
                     for (i = 0; i < adpt->nEncodings; ++i, ++enc)
                         if (encs[i].name != NULL)
-                            free(encs[i].name);
+                            free((char *)encs[i].name);
                     free(encs);
                 }
                 if ((imgs = adpt->pImages) != NULL)

@@ -730,11 +730,9 @@ CentaurusProgramFRMload(void)
     };
 
     unsigned char i;
-    unsigned short index;
     unsigned long data;
 
     Centaurus_write_gpio(FOUR_BYTES, CS92xx_FRM_MEMORY_INDEX, 0);
-    index = CS92xx_FRM_MEMORY_DATA;
     for (i = 0; i < 64; i += 2) {
         data = CentaurusFRMtable[i];
         Centaurus_write_gpio(FOUR_BYTES, CS92xx_FRM_MEMORY_DATA, data);

@@ -1482,7 +1482,7 @@ amd_gx_exa_UploadToScreen(PixmapPtr pDst, int x, int y, int w, int h,
                           char *src, int src_pitch)
 {
     GeodeRec *pGeode = GEODEPTR_FROM_PIXMAP(pDst);
-    char *dst = pGeode->pExa->memoryBase + exaGetPixmapOffset(pDst);
+    unsigned char *dst = pGeode->pExa->memoryBase + exaGetPixmapOffset(pDst);
     int dst_pitch = exaGetPixmapPitch(pDst);
     int bpp = pDst->drawable.bitsPerPixel;
 
@@ -1498,7 +1498,7 @@ amd_gx_exa_DownloadFromScreen(PixmapPtr pSrc, int x, int y, int w, int h,
                               char *dst, int dst_pitch)
 {
     GeodeRec *pGeode = GEODEPTR_FROM_PIXMAP(pSrc);
-    char *src = pGeode->pExa->memoryBase + exaGetPixmapOffset(pSrc);
+    unsigned char *src = pGeode->pExa->memoryBase + exaGetPixmapOffset(pSrc);
     int src_pitch = exaGetPixmapPitch(pSrc);
     int bpp = pSrc->drawable.bitsPerPixel;
 
@@ -1734,10 +1734,9 @@ amd_gx_exa_PrepareComposite(int op, PicturePtr pSrc, PicturePtr pMsk,
                             PixmapPtr pxDst)
 {
     int srcPitch;
-    if (!pxSrc || !pSrc->pDrawable) return FALSE;
-
-    GeodeRec *pGeode = GEODEPTR_FROM_PIXMAP(pxDst);
     amd_gx_exa_fmt_t *sfp, *dfp;
+    GeodeRec *pGeode = GEODEPTR_FROM_PIXMAP(pxDst);
+    if (!pxSrc || !pSrc->pDrawable) return FALSE;
 
     //ErrorF("amd_gx_exa_PrepareComposite()\n");
 
