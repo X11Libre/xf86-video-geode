@@ -72,6 +72,20 @@ AC_ARG_ENABLE(geodegx-panel,
 	      [ PANEL_CPPFLAGS=-DPNL_SUP ])
 AC_SUBST(PANEL_CPPFLAGS)
 
+# Define a configure option to disable GX altogether
+AC_ARG_ENABLE(geodegx,
+	      AS_HELP_STRING([--disable-geodegx],
+	                     [Disable support for the Geode GX and only build LX]),
+	      [geodegx=no],
+	      [geodegx=yes])
+
+if test "x$geodegx" != "xno" ; then
+    BUILD_GX=yes
+    DEVICE_CPPFLAGS=-DHAVE_GX
+fi
+AM_CONDITIONAL(BUILD_GX, [test "x$BUILD_GX" = xyes])
+AC_SUBST(DEVICE_CPPFLAGS)
+
 # Define a configure option to enable/disable ztv
 AC_ARG_ENABLE(ztv,
 	AS_HELP_STRING([--enable-ztv],

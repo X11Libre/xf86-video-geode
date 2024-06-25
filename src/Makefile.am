@@ -29,7 +29,7 @@ AM_CPPFLAGS = 				\
 	-I$(top_srcdir)/src/gfx 	\
 	-I$(top_srcdir)/src/panel	\
 	$(PANEL_CPPFLAGS)		\
-	-DHAVE_GX			\
+	$(DEVICE_CPPFLAGS)		\
 	-DHAVE_LX			\
 	-DOPT_ACCEL
 
@@ -53,13 +53,6 @@ geode_drv_la_SOURCES =		\
 	geode.h			\
 	geode_msr.c		\
 	geode_pcirename.h	\
-	gx_accel.c		\
-	gx_cursor.c		\
-	gx_driver.c		\
-	gx_randr.c		\
-	gx_regacc.c		\
-	gx_rotate.c		\
-	gx_video.c		\
 	lx_cursor.c		\
 	lx_display.c		\
 	lx_driver.c		\
@@ -143,6 +136,19 @@ EXTRA_DIST =			\
 				\
         gx_vga.c		\
         lx_vga.c
+
+if BUILD_GX
+
+geode_drv_la_SOURCES +=         \
+	gx_accel.c		\
+	gx_cursor.c		\
+	gx_driver.c		\
+	gx_randr.c		\
+	gx_regacc.c		\
+	gx_rotate.c		\
+	gx_video.c
+
+endif BUILD_GX
 
 if BUILD_ZTV
 

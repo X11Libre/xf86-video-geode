@@ -112,7 +112,6 @@ typedef struct _CIM_DISPLAYTIMING {
 
 #endif
 
-#ifdef HAVE_GX
 extern void gfx_write_reg32(int offset, int data);
 extern void gfx_write_reg16(int offset, short data);
 extern void gfx_write_reg8(int offset, char data);
@@ -150,8 +149,6 @@ typedef struct tag_GFX_DISPLAYTIMING {
     unsigned short wVBlankEnd;
     unsigned short wPolarity;
 } GFX_DISPLAYTIMING;
-
-#endif
 
 typedef struct _VESARec {
     xf86Int10InfoPtr pInt;
@@ -255,6 +252,7 @@ typedef struct _geodeRec {
 
     /* ===== GX specific items ===== */
 
+#ifdef HAVE_GX
     /* Flags */
     Bool Panel;
 
@@ -310,6 +308,7 @@ typedef struct _geodeRec {
     int video_offset;
     ScrnInfoPtr video_scrnptr;
     BOOL OverlayON;
+#endif
 } GeodeRec, *GeodePtr;
 
 /* option flags are self-explanatory */
