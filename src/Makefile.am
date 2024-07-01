@@ -140,9 +140,9 @@ EXTRA_DIST =			\
 if BUILD_GX
 
 geode_drv_la_SOURCES +=         \
-	gx_accel.c		\
 	gx_cursor.c		\
 	gx_driver.c		\
+	gx_exa.c		\
 	gx_randr.c		\
 	gx_regacc.c		\
 	gx_rotate.c		\

@@ -404,7 +404,7 @@ extern _X_EXPORT Bool GXRandRSetConfig(ScreenPtr pScreen, Rotation rotation,
 /* gx_rotate.c */
 Bool GXRotate(ScrnInfoPtr pScrni, DisplayModePtr mode);
 
-/* gx_accel.c */
+/* gx_exa.c */
 Bool GXAccelInit(ScreenPtr pScrn);
 void GXAccelSync(ScrnInfoPtr pScrni);
 
