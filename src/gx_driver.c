@@ -70,9 +70,6 @@
 #define GX_GP_REG_SIZE  0x4000
 #define GX_VID_REG_SIZE 0x4000
 
-#define DEFAULT_IMG_LINE_BUFS 20
-#define DEFAULT_CLR_LINE_BUFS 20
-
 extern OptionInfoRec GX_GeodeOptions[];
 
 extern unsigned char *XpressROMPtr;
@@ -101,54 +98,6 @@ GXInitEXAMemory(ScrnInfoPtr pScrni, unsigned int *offset, unsigned int *avail)
         pGeode->exaBfrOffset = *offset;
         *offset += pGeode->exaBfrOffset;
         *avail -= pGeode->exaBfrOffset;
-    }
-}
-
-static void
-GXInitXAAMemory(ScrnInfoPtr pScrni, unsigned int *offset, unsigned int *avail)
-{
-    GeodePtr pGeode = GEODEPTR(pScrni);
-    unsigned int size, i, pitch;
-
-    /* XXX - FIXME - What if we are out of room?  Then what? */
-    /* For now, we NULL them all out.                        */
-
-    if (pGeode->NoOfImgBuffers > 0) {
-        size = pGeode->displayPitch * pGeode->NoOfImgBuffers;
-        if (size <= *avail) {
-            for (i = 0; i < pGeode->NoOfImgBuffers; i++) {
-                pGeode->AccelImageWriteBuffers[i] = pGeode->FBBase + *offset;
-                *offset += pGeode->displayPitch;
-                *avail -= pGeode->displayPitch;
-            }
-        }
-        else {
-            xf86DrvMsg(pScrni->scrnIndex, X_ERROR,
-                       "Not enough memory for image write buffers.\n");
-
-            for (i = 0; i < pGeode->NoOfImgBuffers; i++)
-                pGeode->AccelImageWriteBuffers[i] = NULL;
-        }
-    }
-
-    if (pGeode->NoOfColorExpandLines > 0) {
-        pitch = ((pGeode->displayPitch + 31) >> 5) << 2;
-        size = pitch * pGeode->NoOfColorExpandLines;
-
-        if (size <= *avail) {
-            for (i = 0; i < pGeode->NoOfColorExpandLines; i++) {
-                pGeode->AccelColorExpandBuffers[i] = pGeode->FBBase + *offset;
-                *offset += pitch;
-                *avail -= pitch;
-            }
-        }
-        else {
-            xf86DrvMsg(pScrni->scrnIndex, X_ERROR,
-                       "Not enough memory for color expansion buffers.\n");
-
-            for (i = 0; i < pGeode->NoOfImgBuffers; i++)
-                pGeode->AccelColorExpandBuffers[i] = NULL;
-        }
     }
 }
 
@@ -214,12 +163,8 @@ GXAllocateMemory(ScreenPtr pScrn, ScrnInfoPtr pScrni, int rotate)
         }
     }
 
-    if (!pGeode->NoAccel) {
-        if (pGeode->useEXA)
-            GXInitEXAMemory(pScrni, &fboffset, &fbavail);
-        else
-            GXInitXAAMemory(pScrni, &fboffset, &fbavail);
-    }
+    if (!pGeode->NoAccel && pGeode->useEXA)
+        GXInitEXAMemory(pScrni, &fboffset, &fbavail);
 
     pGeode->shadowSize = 0;
 
@@ -507,8 +452,6 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
 
     pGeode->Panel = (pGeode->Output & OUTPUT_PANEL) ? TRUE : FALSE;
 
-    pGeode->NoOfImgBuffers = DEFAULT_IMG_LINE_BUFS;
-    pGeode->NoOfColorExpandLines = DEFAULT_CLR_LINE_BUFS;
     pGeode->exaBfrSz = DEFAULT_EXA_SCRATCH_BFRSZ;
 
     xf86GetOptValBool(GeodeOptions, GX_OPTION_HW_CURSOR, &pGeode->tryHWCursor);
@@ -542,17 +485,8 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
             xf86DrvMsg(pScrni->scrnIndex, X_ERROR, "Invalid rotation %s.\n", s);
     }
 
-    xf86GetOptValInteger(GeodeOptions, GX_OPTION_OSM_IMG_BUFS,
-                         &(pGeode->NoOfImgBuffers));
-
-    if (pGeode->NoOfImgBuffers <= 0)
-        pGeode->NoOfImgBuffers = 0;
-
-    xf86GetOptValInteger(GeodeOptions, GX_OPTION_OSM_CLR_BUFS,
-                         &(pGeode->NoOfColorExpandLines));
-
-    if (pGeode->NoOfColorExpandLines <= 0)
-        pGeode->NoOfColorExpandLines = 0;
+    if ((s = xf86GetOptValString(GeodeOptions, GX_OPTION_OSM_IMG_BUFS)))
+        xf86DrvMsg(pScrni->scrnIndex, X_WARNING, "XAA not present so OSMImageBuffers is ignored");
 
     xf86GetOptValInteger(GeodeOptions, GX_OPTION_OSM_CLR_BUFS,
                          (int *) &(pGeode->exaBfrSz));
@@ -572,6 +506,7 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
         pGeode->useEXA = TRUE;
 #else
         pGeode->useEXA = FALSE;
+        pGeode->NoAccel = TRUE;
 #endif
     }
 
@@ -958,17 +893,6 @@ GXCloseScreen(ScreenPtr pScrn)
     if (pScrni->vtSema)
         GXLeaveGraphics(pScrni);
 
-    if (pGeode->AccelImageWriteBuffers) {
-        free(pGeode->AccelImageWriteBuffers[0]);
-        free(pGeode->AccelImageWriteBuffers);
-        pGeode->AccelImageWriteBuffers = NULL;
-    }
-
-    if (pGeode->AccelColorExpandBuffers) {
-        free(pGeode->AccelColorExpandBuffers);
-        pGeode->AccelColorExpandBuffers = NULL;
-    }
-
     if (pGeode->pExa) {
         exaDriverFini(pScrn);
         free(pGeode->pExa);
@@ -1233,38 +1157,26 @@ GXScreenInit(ScreenPtr pScrn, int argc, char **argv)
         vgaHWGetIOBase(VGAHWPTR(pScrni));
     }
 
-    if (!pGeode->NoAccel) {
-
-        if (pGeode->useEXA) {
-
-            if (!(pGeode->pExa = exaDriverAlloc())) {
-                xf86DrvMsg(pScrni->scrnIndex, X_ERROR,
-                           "Couldn't allocate the EXA structure.\n");
-                pGeode->NoAccel = TRUE;
-            }
-            else {
-                ExaDriverPtr pExa = pGeode->pExa;
-
-                /* THis is set in GXAllocMem */
-                pExa->memoryBase = 0;
-
-                /* This is set in GXAllocateMemory */
-                pExa->memorySize = 0;
-
-                pExa->pixmapOffsetAlign = 32;
-                pExa->pixmapPitchAlign = 32;
-                pExa->flags = EXA_OFFSCREEN_PIXMAPS;
-                pExa->maxX = GX_MAX_WIDTH - 1;
-                pExa->maxY = GX_MAX_HEIGHT - 1;
-            }
+    if (!pGeode->NoAccel && pGeode->useEXA) {
+        if (!(pGeode->pExa = exaDriverAlloc())) {
+            xf86DrvMsg(pScrni->scrnIndex, X_ERROR,
+                       "Couldn't allocate the EXA structure.\n");
+            pGeode->NoAccel = TRUE;
         }
         else {
-            pGeode->AccelImageWriteBuffers =
-                calloc(pGeode->NoOfImgBuffers,
-                       sizeof(pGeode->AccelImageWriteBuffers[0]));
-            pGeode->AccelColorExpandBuffers =
-                calloc(pGeode->NoOfColorExpandLines,
-                       sizeof(pGeode->AccelColorExpandBuffers[0]));
+            ExaDriverPtr pExa = pGeode->pExa;
+
+            /* THis is set in GXAllocMem */
+            pExa->memoryBase = 0;
+
+            /* This is set in GXAllocateMemory */
+            pExa->memorySize = 0;
+
+            pExa->pixmapOffsetAlign = 32;
+            pExa->pixmapPitchAlign = 32;
+            pExa->flags = EXA_OFFSCREEN_PIXMAPS;
+            pExa->maxX = GX_MAX_WIDTH - 1;
+            pExa->maxY = GX_MAX_HEIGHT - 1;
         }
     }
 

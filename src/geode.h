@@ -279,11 +279,6 @@ typedef struct _geodeRec {
     unsigned int cmpSrcFmt, cmpDstFmt;
     int cmpOp;
 
-    unsigned char **AccelImageWriteBuffers;
-    int NoOfImgBuffers;
-    unsigned char **AccelColorExpandBuffers;
-    int NoOfColorExpandLines;
-
     /* Save state */
     unsigned long FBCompressionOffset;
     unsigned short FBCompressionPitch;
