@@ -183,7 +183,7 @@ restore_Centaurus_97317_SIOC2(void)
  *------------------------------------------------------------------------*/
 
 unsigned char
-set_Centaurus_92xx_mode(Pnl_PanelStat * pstat)
+set_Centaurus_92xx_mode(Pnl_PanelStat *pstat)
 {
     int mode;
 
@@ -551,7 +551,7 @@ read_Centaurus_CX9211_DWdata(void)
 }                               /* end read_Centaurus_CX9211_DWdata() */
 
 void
-Centaurus_Get_9211_Details(unsigned long flags, Pnl_PanelParams * pParam)
+Centaurus_Get_9211_Details(unsigned long flags, Pnl_PanelParams *pParam)
 {
     unsigned long PanelType;
     int i;
@@ -792,7 +792,7 @@ Centaurus_Power_Down(void)
 }                               /* Centaurus_Disable_Power */
 
 void
-Centaurus_9211init(Pnl_PanelStat * pstat)
+Centaurus_9211init(Pnl_PanelStat *pstat)
 {
     init_Centaurus_GPIO();
     init_Centaurus_9211();

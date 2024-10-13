@@ -257,7 +257,7 @@ gfx_set_display_bpp(unsigned short bpp)
  *----------------------------------------------------------------------------
  */
 int
-gu1_set_specified_mode(DISPLAYMODE * pMode, int bpp)
+gu1_set_specified_mode(DISPLAYMODE *pMode, int bpp)
 {
     unsigned long unlock, value;
     unsigned long gcfg, tcfg, ocfg;

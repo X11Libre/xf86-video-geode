@@ -381,7 +381,7 @@ redcloud_init_msr_devices(MSR aDev[], unsigned int array_size)
  *------------------------------------------------------------------
  */
 DEV_STATUS
-redcloud_find_msr_device(MSR * pDev)
+redcloud_find_msr_device(MSR *pDev)
 {
     unsigned int i;
 
@@ -454,10 +454,10 @@ redcloud_find_msr_device(MSR * pDev)
  */
 #if GFX_MSR_DYNAMIC
 DEV_STATUS
-redcloud_id_msr_device(MSR * pDev, unsigned long address)
+redcloud_id_msr_device(MSR *pDev, unsigned long address)
 #else
 DEV_STATUS
-gfx_id_msr_device(MSR * pDev, unsigned long address)
+gfx_id_msr_device(MSR *pDev, unsigned long address)
 #endif
 {
     Q_WORD msrValue;
@@ -579,10 +579,10 @@ gfx_get_glink_id_at_address(unsigned int *device, unsigned long address)
 #if GFX_MSR_DYNAMIC
 DEV_STATUS
 redcloud_msr_read(unsigned int device, unsigned int msrRegister,
-                  Q_WORD * msrValue)
+                  Q_WORD *msrValue)
 #else
 DEV_STATUS
-gfx_msr_read(unsigned int device, unsigned int msrRegister, Q_WORD * msrValue)
+gfx_msr_read(unsigned int device, unsigned int msrRegister, Q_WORD *msrValue)
 #endif
 {
     if (device < NUM_DEVS) {
@@ -616,10 +616,10 @@ gfx_msr_read(unsigned int device, unsigned int msrRegister, Q_WORD * msrValue)
 #if GFX_MSR_DYNAMIC
 DEV_STATUS
 redcloud_msr_write(unsigned int device, unsigned int msrRegister,
-                   Q_WORD * msrValue)
+                   Q_WORD *msrValue)
 #else
 DEV_STATUS
-gfx_msr_write(unsigned int device, unsigned int msrRegister, Q_WORD * msrValue)
+gfx_msr_write(unsigned int device, unsigned int msrRegister, Q_WORD *msrValue)
 #endif
 {
     if (device < NUM_DEVS) {

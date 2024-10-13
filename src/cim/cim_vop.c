@@ -36,7 +36,7 @@
  *--------------------------------------------------------------------------*/
 
 int
-vop_set_vbi_window(VOPVBIWINDOWBUFFER * buffer)
+vop_set_vbi_window(VOPVBIWINDOWBUFFER *buffer)
 {
     unsigned long unlock, temp;
     unsigned long hstart, hstop;
@@ -172,7 +172,7 @@ vop_enable_vbi_output(int enable)
  *--------------------------------------------------------------------------*/
 
 int
-vop_set_configuration(VOPCONFIGURATIONBUFFER * config)
+vop_set_configuration(VOPCONFIGURATIONBUFFER *config)
 {
     unsigned long vop_config = 0;
     unsigned long alpha, control2;
@@ -309,7 +309,7 @@ vop_set_configuration(VOPCONFIGURATIONBUFFER * config)
  *--------------------------------------------------------------------------*/
 
 int
-vop_save_state(VOPSTATEBUFFER * save_buffer)
+vop_save_state(VOPSTATEBUFFER *save_buffer)
 {
     if (!save_buffer)
         return CIM_STATUS_INVALIDPARAMS;
@@ -327,7 +327,7 @@ vop_save_state(VOPSTATEBUFFER * save_buffer)
  *--------------------------------------------------------------------------*/
 
 int
-vop_restore_state(VOPSTATEBUFFER * restore_buffer)
+vop_restore_state(VOPSTATEBUFFER *restore_buffer)
 {
     if (!restore_buffer)
         return CIM_STATUS_INVALIDPARAMS;
@@ -353,7 +353,7 @@ vop_restore_state(VOPSTATEBUFFER * restore_buffer)
  *--------------------------------------------------------------------------*/
 
 int
-vop_get_current_mode(VOPCONFIGURATIONBUFFER * config)
+vop_get_current_mode(VOPCONFIGURATIONBUFFER *config)
 {
     unsigned long vop_config = 0;
     unsigned long alpha;
@@ -442,7 +442,7 @@ vop_get_current_mode(VOPCONFIGURATIONBUFFER * config)
  *--------------------------------------------------------------------------*/
 
 int
-vop_get_vbi_configuration(VOPVBIWINDOWBUFFER * buffer)
+vop_get_vbi_configuration(VOPVBIWINDOWBUFFER *buffer)
 {
     unsigned long temp;
     unsigned long hstart, hstop;

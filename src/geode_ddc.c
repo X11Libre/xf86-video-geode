@@ -117,7 +117,7 @@ geode_ddc_getbits(I2CBusPtr b, int *scl, int *sda)
 }
 
 Bool
-GeodeI2CInit(ScrnInfoPtr pScrni, I2CBusPtr * ptr, const char *name)
+GeodeI2CInit(ScrnInfoPtr pScrni, I2CBusPtr *ptr, const char *name)
 {
     I2CBusPtr bus;
     unsigned int ddciobase;
@@ -150,7 +150,7 @@ GeodeI2CInit(ScrnInfoPtr pScrni, I2CBusPtr * ptr, const char *name)
     if (!bus)
         return FALSE;
 
-    bus->BusName = (char *)name;
+    bus->BusName = (char *) name;
     bus->scrnIndex = pScrni->scrnIndex;
 
     bus->I2CGetBits = geode_ddc_getbits;

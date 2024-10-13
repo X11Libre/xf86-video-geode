@@ -33,7 +33,7 @@
 #include "dora9211.h"
 
 void
-Dorado_Get_9211_Details(unsigned long flags, Pnl_PanelParams * pParam)
+Dorado_Get_9211_Details(unsigned long flags, Pnl_PanelParams *pParam)
 {
     unsigned long DPanelType;
     int i;
@@ -167,7 +167,7 @@ Dorado_Get_9211_Details(unsigned long flags, Pnl_PanelParams * pParam)
 }
 
 void
-Dorado9211Init(Pnl_PanelStat * pstat)
+Dorado9211Init(Pnl_PanelStat *pstat)
 {
     int mode;
     unsigned long orig_value, pm_value;

@@ -52,7 +52,7 @@ static unsigned char Draco9210ReadDataIn(void);
 static void Draco9210ToggleClock(void);
 
 void
-Draco9210Init(Pnl_PanelStat * pstat)
+Draco9210Init(Pnl_PanelStat *pstat)
 {
     unsigned char panelvalues[] = {
         0x2, 0x80,

@@ -224,9 +224,9 @@ typedef struct _geodeRec {
 
     /* Hooks */
 
-    void (*PointerMoved) (ScrnInfoPtr pScrn, int x, int y);
+    void (*PointerMoved)(ScrnInfoPtr pScrn, int x, int y);
     CloseScreenProcPtr CloseScreen;
-    Bool (*CreateScreenResources) (ScreenPtr);
+    Bool (*CreateScreenResources)(ScreenPtr);
 
     /* ===== LX specific items ===== */
 
@@ -285,9 +285,9 @@ typedef struct _geodeRec {
     GFX_DISPLAYTIMING FBgfxdisplaytiming;
 
     /* Hooks */
-    void (*WritePixmap) (ScrnInfoPtr pScrni, int x, int y, int w, int h,
-                         unsigned char *src, int srcwidth, int rop,
-                         unsigned int planemask, int trans, int bpp, int depth);
+    void (*WritePixmap)(ScrnInfoPtr pScrni, int x, int y, int w, int h,
+                        unsigned char *src, int srcwidth, int rop,
+                        unsigned int planemask, int trans, int bpp, int depth);
 
     /* Video information */
     int video_x;
@@ -361,7 +361,6 @@ int GeodeGetSizeFromFB(unsigned int *);
 
 int
 
-
 GeodeQueryImageAttributes(ScrnInfoPtr, int id, unsigned short *w,
                           unsigned short *h, int *pitches, int *offsets);
 
@@ -380,7 +379,7 @@ int GeodeCalculatePitchBytes(unsigned int width, unsigned int bpp);
 void GXSetupChipsetFPtr(ScrnInfoPtr pScrn);
 
 /* geode_msr.c */
-int GeodeReadMSR(uint32_t addr, uint32_t *lo, uint32_t *hi);
+int GeodeReadMSR(uint32_t addr, uint32_t * lo, uint32_t * hi);
 int GeodeWriteMSR(uint32_t addr, uint32_t lo, uint32_t hi);
 
 /* gx_cursor.c */

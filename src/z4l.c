@@ -185,7 +185,7 @@ IoCtl(int fd, unsigned int fn, void *arg, int flag)
 }
 
 static void
-z4l_ovly_unmap(Z4lPortPrivRec * pPriv)
+z4l_ovly_unmap(Z4lPortPrivRec *pPriv)
 {
     int i, nbfrs;
 
@@ -202,7 +202,7 @@ z4l_ovly_unmap(Z4lPortPrivRec * pPriv)
 }
 
 static void
-z4l_ovly_map(Z4lPortPrivRec * pPriv, int dir)
+z4l_ovly_map(Z4lPortPrivRec *pPriv, int dir)
 {
     long offset, bsz;
     int i, fd;
@@ -269,7 +269,7 @@ z4l_ovly_map(Z4lPortPrivRec * pPriv, int dir)
 }
 
 static int
-z4l_ovly_dqbuf(Z4lPortPrivRec * pPriv)
+z4l_ovly_dqbuf(Z4lPortPrivRec *pPriv)
 {
     int stat;
     struct v4l2_buffer bfr;
@@ -295,7 +295,7 @@ z4l_ovly_dqbuf(Z4lPortPrivRec * pPriv)
 }
 
 static int
-z4l_open_device(Z4lPortPrivRec * pPriv)
+z4l_open_device(Z4lPortPrivRec *pPriv)
 {
     int enable;
 
@@ -315,7 +315,7 @@ z4l_open_device(Z4lPortPrivRec * pPriv)
 }
 
 static int
-z4l_close_device(Z4lPortPrivRec * pPriv)
+z4l_close_device(Z4lPortPrivRec *pPriv)
 {
     int ret = 0;
 
@@ -333,7 +333,7 @@ z4l_close_device(Z4lPortPrivRec * pPriv)
 }
 
 static int
-z4l_ovly_reset(Z4lPortPrivRec * pPriv)
+z4l_ovly_reset(Z4lPortPrivRec *pPriv)
 {
     int ret = 0;
 
@@ -370,7 +370,7 @@ z4l_fourcc_pixfmt(int fourcc)
 }
 
 static void
-z4l_ovly_pixfmt(Z4lPortPrivRec * pPriv, unsigned int pixfmt)
+z4l_ovly_pixfmt(Z4lPortPrivRec *pPriv, unsigned int pixfmt)
 {
     struct v4l2_framebuffer fbuf;
 
@@ -384,7 +384,7 @@ z4l_ovly_pixfmt(Z4lPortPrivRec * pPriv, unsigned int pixfmt)
 }
 
 static void
-z4l_ovly_bfr(Z4lPortPrivRec * pPriv, int width, int height)
+z4l_ovly_bfr(Z4lPortPrivRec *pPriv, int width, int height)
 {
     struct v4l2_format fmt;
 
@@ -399,7 +399,7 @@ z4l_ovly_bfr(Z4lPortPrivRec * pPriv, int width, int height)
 }
 
 static void
-z4l_ovly_rect(Z4lPortPrivRec * pPriv,
+z4l_ovly_rect(Z4lPortPrivRec *pPriv,
               int src_x, int src_y, int src_w, int src_h,
               int drw_x, int drw_y, int drw_w, int drw_h)
 {
@@ -510,7 +510,7 @@ z4l_ovly_pitch(unsigned int pixfmt, int w, int h, int *py_pitch,
 }
 
 static int
-z4l_ovly_set_colorkey(Z4lPortPrivRec * pPriv, int key)
+z4l_ovly_set_colorkey(Z4lPortPrivRec *pPriv, int key)
 {
     struct v4l2_format fmt;
 
@@ -527,7 +527,7 @@ z4l_ovly_set_colorkey(Z4lPortPrivRec * pPriv, int key)
 }
 
 static int
-z4l_ovly_get_colorkey(Z4lPortPrivRec * pPriv, int *key)
+z4l_ovly_get_colorkey(Z4lPortPrivRec *pPriv, int *key)
 {
     struct v4l2_format fmt;
 
@@ -541,7 +541,7 @@ z4l_ovly_get_colorkey(Z4lPortPrivRec * pPriv, int *key)
 }
 
 static int
-z4l_ovly_set_keymode(Z4lPortPrivRec * pPriv, int enable)
+z4l_ovly_set_keymode(Z4lPortPrivRec *pPriv, int enable)
 {
     struct v4l2_framebuffer fbuf;
 
@@ -563,7 +563,7 @@ z4l_ovly_set_keymode(Z4lPortPrivRec * pPriv, int enable)
 }
 
 static int
-z4l_ovly_get_keymode(Z4lPortPrivRec * pPriv, int *enable)
+z4l_ovly_get_keymode(Z4lPortPrivRec *pPriv, int *enable)
 {
     struct v4l2_framebuffer fbuf;
 
@@ -576,7 +576,7 @@ z4l_ovly_get_keymode(Z4lPortPrivRec * pPriv, int *enable)
 }
 
 static int
-z4l_ovly_set_encoding(Z4lPortPrivRec * pPriv, int id)
+z4l_ovly_set_encoding(Z4lPortPrivRec *pPriv, int id)
 {
     int l, n, inp;
     const char *cp;
@@ -634,7 +634,7 @@ z4l_ovly_set_encoding(Z4lPortPrivRec * pPriv, int id)
 }
 
 static int
-z4l_ovly_get_encoding(Z4lPortPrivRec * pPriv, int *id)
+z4l_ovly_get_encoding(Z4lPortPrivRec *pPriv, int *id)
 {
     XF86VideoEncodingPtr enc = pPriv->enc;
 
@@ -643,7 +643,7 @@ z4l_ovly_get_encoding(Z4lPortPrivRec * pPriv, int *id)
 }
 
 static void
-z4l_ovly_stop(Z4lPortPrivRec * pPriv)
+z4l_ovly_stop(Z4lPortPrivRec *pPriv)
 {
     int type, enable, fd;
 
@@ -669,7 +669,7 @@ z4l_ovly_stop(Z4lPortPrivRec * pPriv)
 }
 
 static void
-z4l_ovly_start(Z4lPortPrivRec * pPriv, int dir)
+z4l_ovly_start(Z4lPortPrivRec *pPriv, int dir)
 {
     int enable;
 
@@ -721,7 +721,7 @@ z4l_region_equal(RegionPtr ap, RegionPtr bp)
 }
 
 static void
-z4l_setup_colorkey(Z4lPortPrivRec * pPriv, ScreenPtr pScrn, RegionPtr clipBoxes)
+z4l_setup_colorkey(Z4lPortPrivRec *pPriv, ScreenPtr pScrn, RegionPtr clipBoxes)
 {
     if (pPriv->run > 0 && pPriv->dir <= 0 && pPriv->keymode != 0 &&
         z4l_region_equal(&pPriv->clips, clipBoxes) == 0) {
@@ -930,7 +930,7 @@ Z4lPutVideo(ScrnInfoPtr pScrni, short src_x, short src_y, short drw_x,
 }
 
 static XF86VideoEncodingPtr
-Z4lNewEncoding(XF86VideoEncodingPtr * encs, int *nencs)
+Z4lNewEncoding(XF86VideoEncodingPtr *encs, int *nencs)
 {
     XF86VideoEncodingPtr enc;
     XF86VideoEncodingPtr tencs =
@@ -1026,7 +1026,7 @@ Z4lAddEncoding(XF86VideoEncodingPtr enc, const char *name, int id, int width,
 }
 
 static XF86ImagePtr
-Z4lNewImage(XF86ImagePtr * imgs, int *nimgs)
+Z4lNewImage(XF86ImagePtr *imgs, int *nimgs)
 {
     XF86ImagePtr img;
     XF86ImagePtr timgs =
@@ -1052,7 +1052,7 @@ Z4lAddImage(XF86ImagePtr img, XF86ImagePtr ip)
 }
 
 static XF86AttributePtr
-Z4lNewAttribute(XF86AttributePtr * attrs, int *nattrs)
+Z4lNewAttribute(XF86AttributePtr *attrs, int *nattrs)
 {
     XF86AttributePtr attr;
     XF86AttributePtr tattrs =
@@ -1117,7 +1117,7 @@ Z4lAddAttribute(XF86AttributePtr attr, char *name, int min, int max, int flags)
 }
 
 static XF86VideoAdaptorPtr
-Z4lNewAdaptor(XF86VideoAdaptorPtr ** adpts, int *nadpts, int nattrs)
+Z4lNewAdaptor(XF86VideoAdaptorPtr **adpts, int *nadpts, int nattrs)
 {
     int n;
     Z4lPortPrivRec *pPriv;
@@ -1273,7 +1273,7 @@ Z4lGetPortAttribute(ScrnInfoPtr pScrni, Atom attribute, INT32 *value,
     return Success;
 }
 
-static void (*oldAdjustFrame) (ScrnInfoPtr pScrni, int x, int y) = NULL;
+static void (*oldAdjustFrame)(ScrnInfoPtr pScrni, int x, int y) = NULL;
 
 static void
 Z4lAdjustFrame(ScrnInfoPtr pScrni, int x, int y)
@@ -1302,7 +1302,7 @@ Z4lAdjustFrame(ScrnInfoPtr pScrni, int x, int y)
 }
 
 static int
-Z4lInit(ScrnInfoPtr pScrni, XF86VideoAdaptorPtr ** adaptors)
+Z4lInit(ScrnInfoPtr pScrni, XF86VideoAdaptorPtr **adaptors)
 {
     int i, id, fd, dev, enable, has_video, has_colorkey;
     int ctl, cinp, inp, std, fmt, has_image;
@@ -1500,7 +1500,7 @@ Z4lInit(ScrnInfoPtr pScrni, XF86VideoAdaptorPtr ** adaptors)
             if ((attr = Z4lNewAttribute(&attrs, &nattrs)) == NULL)
                 goto fail;
             Z4lAttributeName(&attr_name[0], sizeof(attr_name),
-                             (char *)&queryctrl.name[0]);
+                             (char *) &queryctrl.name[0]);
             if (Z4lAddAttribute(attr, &attr_name[0],
                                 queryctrl.minimum, queryctrl.maximum,
                                 XvSettable | XvGettable) == 0)
@@ -1509,9 +1509,10 @@ Z4lInit(ScrnInfoPtr pScrni, XF86VideoAdaptorPtr ** adaptors)
         attrIds[nattrs] = ATTR_ENCODING_ID;
         if ((attr = Z4lNewAttribute(&attrs, &nattrs)) == NULL)
             goto fail;
-        Z4lAttributeName(&attr_name[0], sizeof(attr_name), (char *)ATTR_ENCODING);
-        if (Z4lAddAttribute(attr, &attr_name[0], 0, nencs - 1,
-                            XvSettable | XvGettable) == 0)
+        Z4lAttributeName(&attr_name[0], sizeof(attr_name),
+                         (char *) ATTR_ENCODING);
+        if (Z4lAddAttribute
+            (attr, &attr_name[0], 0, nencs - 1, XvSettable | XvGettable) == 0)
             goto fail;
         memset(&fbuf, 0, sizeof(fbuf));
         if (IoCtl(fd, VIDIOC_G_FBUF, &fbuf, 1) < 0)
@@ -1522,16 +1523,19 @@ Z4lInit(ScrnInfoPtr pScrni, XF86VideoAdaptorPtr ** adaptors)
             attrIds[nattrs] = ATTR_KEYMODE_ID;
             if ((attr = Z4lNewAttribute(&attrs, &nattrs)) == NULL)
                 goto fail;
-            Z4lAttributeName(&attr_name[0], sizeof(attr_name), (char *)ATTR_KEYMODE);
-            if (Z4lAddAttribute(attr, &attr_name[0], 0, 1,
-                                XvSettable | XvGettable) == 0)
+            Z4lAttributeName(&attr_name[0], sizeof(attr_name),
+                             (char *) ATTR_KEYMODE);
+            if (Z4lAddAttribute
+                (attr, &attr_name[0], 0, 1, XvSettable | XvGettable) == 0)
                 goto fail;
             attrIds[nattrs] = ATTR_COLORKEY_ID;
             if ((attr = Z4lNewAttribute(&attrs, &nattrs)) == NULL)
                 goto fail;
-            Z4lAttributeName(&attr_name[0], sizeof(attr_name), (char *)ATTR_COLORKEY);
-            if (Z4lAddAttribute(attr, &attr_name[0], 0, 0xffffff,
-                                XvSettable | XvGettable) == 0)
+            Z4lAttributeName(&attr_name[0], sizeof(attr_name),
+                             (char *) ATTR_COLORKEY);
+            if (Z4lAddAttribute
+                (attr, &attr_name[0], 0, 0xffffff,
+                 XvSettable | XvGettable) == 0)
                 goto fail;
             has_colorkey = 1;
         }
@@ -1614,7 +1618,7 @@ Z4lInit(ScrnInfoPtr pScrni, XF86VideoAdaptorPtr ** adaptors)
     if (encs != NULL) {
         for (i = 0; i < nencs; ++i) {
             if (encs[i].name != NULL)
-                free((char *)encs[i].name);
+                free((char *) encs[i].name);
         }
         free(encs);
     }
@@ -1626,7 +1630,7 @@ Z4lInit(ScrnInfoPtr pScrni, XF86VideoAdaptorPtr ** adaptors)
         for (i = 0; i < nadpts; ++i) {
             if ((adpt = adpts[i]) != NULL) {
                 if (adpt->name != NULL)
-                    free((char *)adpt->name);
+                    free((char *) adpt->name);
                 if ((attrs = adpt->pAttributes) != NULL) {
                     for (i = 0; i < adpt->nAttributes; ++i)
                         if (attrs[i].name != NULL)
@@ -1636,7 +1640,7 @@ Z4lInit(ScrnInfoPtr pScrni, XF86VideoAdaptorPtr ** adaptors)
                 if ((encs = adpt->pEncodings) != NULL) {
                     for (i = 0; i < adpt->nEncodings; ++i, ++enc)
                         if (encs[i].name != NULL)
-                            free((char *)encs[i].name);
+                            free((char *) encs[i].name);
                     free(encs);
                 }
                 if ((imgs = adpt->pImages) != NULL)

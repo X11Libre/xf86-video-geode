@@ -284,11 +284,14 @@ GXMapMem(ScrnInfoPtr pScrni)
 #else
     {
         int fd = open("/dev/mem", O_RDWR);
+
         if (fd < 0) {
             xf86DrvMsg(index, X_ERROR, "Failed to open /dev/mem: %m\n");
             return FALSE;
         }
-        XpressROMPtr = mmap(NULL, 0x10000, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0xF0000);
+        XpressROMPtr =
+            mmap(NULL, 0x10000, PROT_READ | PROT_WRITE, MAP_SHARED, fd,
+                 0xF0000);
         close(fd);
     }
 #endif
@@ -486,7 +489,8 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
     }
 
     if ((s = xf86GetOptValString(GeodeOptions, GX_OPTION_OSM_IMG_BUFS)))
-        xf86DrvMsg(pScrni->scrnIndex, X_WARNING, "XAA not present so OSMImageBuffers is ignored");
+        xf86DrvMsg(pScrni->scrnIndex, X_WARNING,
+                   "XAA not present so OSMImageBuffers is ignored");
 
     xf86GetOptValInteger(GeodeOptions, GX_OPTION_OSM_CLR_BUFS,
                          (int *) &(pGeode->exaBfrSz));
@@ -1013,7 +1017,7 @@ GXEnterGraphics(ScreenPtr pScrn, ScrnInfoPtr pScrni)
 
 static void
 GXLoadPalette(ScrnInfoPtr pScrni,
-              int numColors, int *indizes, LOCO * colors, VisualPtr pVisual)
+              int numColors, int *indizes, LOCO *colors, VisualPtr pVisual)
 {
     int i, index, color;
 

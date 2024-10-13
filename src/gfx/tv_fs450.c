@@ -404,91 +404,91 @@ static const struct {
 } tvsetup = {
     /*     ntsc,    pal,                ntsc-eij,   pal-m,      pal-n */
     {
-    0x1f7cf021, 0xcb8a092a, 0x1f7cf021, 0xe3efe621, 0xcb8a092a},
-        /* chroma_freq                  */
+     0x1f7cf021, 0xcb8a092a, 0x1f7cf021, 0xe3efe621, 0xcb8a092a},
+    /* chroma_freq                  */
     {
-    0, 0, 0, 0, 0},
-        /* chroma_phase                 */
+     0, 0, 0, 0, 0},
+    /* chroma_phase                 */
     {
-    2, 0, 2, 0, 0},
-        /* cphase_rst                   */
+     2, 0, 2, 0, 0},
+    /* cphase_rst                   */
     {
-    54, 43, 54, 43, 43},
-        /* color                                */
+     54, 43, 54, 43, 43},
+    /* color                                */
     {
-    0, 31, 0, 29, 29},
-        /* cr_burst_level               */
+     0, 31, 0, 29, 29},
+    /* cr_burst_level               */
     {
-    59, 44, 59, 41, 41},
-        /* cb_burst_level               */
+     59, 44, 59, 41, 41},
+    /* cb_burst_level               */
     {
-    0, 1, 0, 0, 1},
-        /* sys625_50                    */
+     0, 1, 0, 0, 1},
+    /* sys625_50                    */
     {
-    0, 1, 0, 0, 0},
-        /* vsync5                               */
+     0, 1, 0, 0, 0},
+    /* vsync5                               */
     {
-    0, 1, 0, 1, 1},
-        /* pal_mode                     */
+     0, 1, 0, 1, 1},
+    /* pal_mode                     */
     {
-    0x7a, 0x7a, 0x7a, 0x7a, 0x7a},
-        /* hsync_width                  */
+     0x7a, 0x7a, 0x7a, 0x7a, 0x7a},
+    /* hsync_width                  */
     {
-    0x40, 0x3c, 0x40, 0x40, 0x3c},
-        /* burst_width                  */
+     0x40, 0x3c, 0x40, 0x40, 0x3c},
+    /* burst_width                  */
     {
-    0x80, 0x9a, 0x80, 0x80, 0x9a},
-        /* back_porch                   */
+     0x80, 0x9a, 0x80, 0x80, 0x9a},
+    /* back_porch                   */
     {
-    0x24, 0x1e, 0x24, 0x24, 0x1e},
-        /* front_porch                  */
+     0x24, 0x1e, 0x24, 0x24, 0x1e},
+    /* front_porch                  */
     {
-    0x19, 0x1a, 0x19, 0x12, 0x1a},
-        /* breeze_way                   */
+     0x19, 0x1a, 0x19, 0x12, 0x1a},
+    /* breeze_way                   */
     {
-    0xb4, 0xb4, 0xb4, 0xb4, 0xb4},
-        /* active_line                  */
+     0xb4, 0xb4, 0xb4, 0xb4, 0xb4},
+    /* active_line                  */
     {
-    240, 251, 240, 240, 240},
-        /* blank_level                  */
+     240, 251, 240, 240, 240},
+    /* blank_level                  */
     {
-    240, 251, 240, 240, 240},
-        /* vbi_blank_level              */
+     240, 251, 240, 240, 240},
+    /* vbi_blank_level              */
     {
-    284, 252, 240, 252, 252},
-        /* black_level                  */
+     284, 252, 240, 252, 252},
+    /* black_level                  */
     {
-    823, 821, 823, 821, 821},
-        /* white_level                  */
+     823, 821, 823, 821, 821},
+    /* white_level                  */
     {
-    60, 48, 60, 48, 48},
-        /* hamp_offset                  */
+     60, 48, 60, 48, 48},
+    /* hamp_offset                  */
     {
-    0x08, 0x08, 0x08, 0x08, 0x08},
-        /* sync_level                   */
+     0x08, 0x08, 0x08, 0x08, 0x08},
+    /* sync_level                   */
     {
-    525, 625, 525, 525, 625},
-        /* tv_lines                     */
+     525, 625, 525, 525, 625},
+    /* tv_lines                     */
     {
-    858, 864, 858, 858, 864},
-        /* tv_width                     */
+     858, 864, 858, 858, 864},
+    /* tv_width                     */
     {
-    487, 576, 487, 487, 576},
-        /* tv_active_lines              */
+     487, 576, 487, 487, 576},
+    /* tv_active_lines              */
     {
-    800, 800, 800, 800, 800},
-        /* tv_active_width              */
+     800, 800, 800, 800, 800},
+    /* tv_active_width              */
     {
-    0x1a, 0x1d, 0x1a, 0x1d, 0x1d},
-        /* notch filter enabled */
+     0x1a, 0x1d, 0x1a, 0x1d, 0x1d},
+    /* notch filter enabled */
     {
-    0x0000, 0x0100, 0x0000, 0x0000, 0x0100},
-        /* houston cr pal               */
+     0x0000, 0x0100, 0x0000, 0x0000, 0x0100},
+    /* houston cr pal               */
     {
-    0x7e48, 0xf580, 0x7e48, 0x7e48, 0xf580},
-        /* houston ncodl                */
+     0x7e48, 0xf580, 0x7e48, 0x7e48, 0xf580},
+    /* houston ncodl                */
     {
-    0x001b, 0x0020, 0x001b, 0x001b, 0x0020}
+     0x001b, 0x0020, 0x001b, 0x001b, 0x0020}
     /* houston ncodh                */
 };
 
@@ -818,7 +818,6 @@ FS450_init(void)
     int err;
 
     TRACE(("FS450_Init()\n"))
-
         err = houston_init();
     if (err)
         return err;
@@ -1650,7 +1649,7 @@ gfx_set_tv_cc_data(unsigned char data1, unsigned char data2)
 /*==========================================================================*/
 
 int
-FS450_ReadRegister(S_REG_INFO * p_reg)
+FS450_ReadRegister(S_REG_INFO *p_reg)
 {
     unsigned long tmp;
 
@@ -1682,7 +1681,7 @@ FS450_ReadRegister(S_REG_INFO * p_reg)
 }
 
 int
-FS450_WriteRegister(S_REG_INFO * p_reg)
+FS450_WriteRegister(S_REG_INFO *p_reg)
 {
     if (PLAL_WriteRegister(p_reg))
         return 0;
@@ -1709,7 +1708,6 @@ houston_init(void)
     unsigned long write, read;
 
     TRACE(("houston_init()\n"))
-
         /*Before we begin, we must enable power to the TFT */
         read = READ_VID32(CS5530_DISPLAY_CONFIG);
     read |= CS5530_DCFG_FP_PWR_EN | CS5530_DCFG_FP_DATA_EN;
@@ -1762,7 +1760,6 @@ config_init(void)
     int err;
 
     TRACE(("config_init()\n"))
-
         err = houston_init();
     if (err)
         return err;
@@ -1795,15 +1792,22 @@ static const struct {
     int tvsetup_index;
 } g_tv_standards[] = {
     {
-    GFX_TV_STANDARD_NTSC_M, 0}, {
-    GFX_TV_STANDARD_NTSC_M_J, 2}, {
-    GFX_TV_STANDARD_PAL_B, 1}, {
-    GFX_TV_STANDARD_PAL_D, 1}, {
-    GFX_TV_STANDARD_PAL_H, 1}, {
-    GFX_TV_STANDARD_PAL_I, 1}, {
-    GFX_TV_STANDARD_PAL_M, 3}, {
-    GFX_TV_STANDARD_PAL_N, 4}, {
-GFX_TV_STANDARD_PAL_G, 1},};
+     GFX_TV_STANDARD_NTSC_M, 0}, {
+                                  GFX_TV_STANDARD_NTSC_M_J, 2}, {
+                                                                 GFX_TV_STANDARD_PAL_B,
+                                                                 1}, {
+                                                                      GFX_TV_STANDARD_PAL_D,
+                                                                      1}, {
+                                                                           GFX_TV_STANDARD_PAL_H,
+                                                                           1}, {
+                                                                                GFX_TV_STANDARD_PAL_I,
+                                                                                1},
+    {
+     GFX_TV_STANDARD_PAL_M, 3}, {
+                                 GFX_TV_STANDARD_PAL_N, 4}, {
+                                                             GFX_TV_STANDARD_PAL_G,
+                                                             1},
+};
 
 static int
 map_tvstd_to_index(unsigned long tv_std)
@@ -1904,11 +1908,18 @@ config_vga_mode(unsigned long vga_mode)
         int h_total;
     } vgaparams[] = {
         {
-        GFX_VGA_MODE_640X480, 640, 480, 1056}, {
-        GFX_VGA_MODE_720X487, 720, 487, 1056}, {
-        GFX_VGA_MODE_720X576, 720, 576, 1056}, {
-        GFX_VGA_MODE_800X600, 800, 600, 1056}, {
-    GFX_VGA_MODE_1024X768, 1024, 768, 1344},};
+         GFX_VGA_MODE_640X480, 640, 480, 1056}, {
+                                                 GFX_VGA_MODE_720X487, 720, 487,
+                                                 1056}, {
+                                                         GFX_VGA_MODE_720X576,
+                                                         720, 576, 1056}, {
+                                                                           GFX_VGA_MODE_800X600,
+                                                                           800,
+                                                                           600,
+                                                                           1056},
+        {
+         GFX_VGA_MODE_1024X768, 1024, 768, 1344},
+    };
 
     unsigned long cr, misc, byp;
     unsigned int i;
@@ -2270,11 +2281,9 @@ config_overscan_xy(unsigned long tv_std,
         base_v_total = scantable[vga_index].v_total[k];
     range = fsmax(base_v_total - v_total_min, v_total_max - base_v_total);
     TRACE(("v_total range = %d\n", range))
-
         /*map +/-1000 overscan y into +/-range. */
         v_offset = (int) ((((float) overscan_y * range) / 1000.f) + .5f);
     TRACE(("v_offset = %d\n", v_offset))
-
         /*range limit v_total. */
         g_specs.v_total =
         range_limit(base_v_total + v_offset, v_total_min, v_total_max);
@@ -2283,7 +2292,6 @@ config_overscan_xy(unsigned long tv_std,
     v_offset = (g_specs.v_total - v_total_min + (v_step / 2)) / v_step;
     g_specs.v_total = v_total_min + v_offset * v_step;
     TRACE(("desired v_total=%d\n", g_specs.v_total))
-
         /*vertical positioning (vsync setup). */
         get_ffolat_ivo(vga_mode, tv_std, v_offset, &ffolat, &ivo);
     houston_WriteReg(HOUSTON_IVO, ivo, 2);
@@ -2314,7 +2322,6 @@ config_overscan_xy(unsigned long tv_std,
             g_specs.v_sync = g_specs.v_total - 10;
     }
     TRACE(("v_total=%d v_sync=%d\n", g_specs.v_total, g_specs.v_sync))
-
         /* FFOLAT. */
         houston_WriteReg(HOUSTON_FFO_LAT, ffolat, 2);
 
@@ -2344,14 +2351,12 @@ config_overscan_xy(unsigned long tv_std,
            (int) hscale_min,
            (int) ((hscale_min - (int) hscale_min) * 1000),
            (int) hscale_max, (int) ((hscale_max - (int) hscale_max) * 1000)))
-
         /* map overscan_x into min to max. */
         hscale =
         hscale_min + ((overscan_x + 1000.0f) / 2000.0f) * (hscale_max -
                                                            hscale_min);
     TRACE(("hscale = %u.%u\n", (int) hscale,
            (int) ((hscale - (int) hscale) * 1000)))
-
         /* determine hsc where hscale = (1 + hsc/128) */
         if (hscale >= 1.0f)
         hsc = (int) (128.f * (hscale - 1.0f) + .5f);
@@ -2368,7 +2373,6 @@ config_overscan_xy(unsigned long tv_std,
     hscale = 1.0f + (hsc / 128.0f);
     TRACE(("recalculated hscale = %u.%u\n", (int) hscale,
            (int) ((hscale - (int) hscale) * 1000)))
-
         /* horizontal offset. */
         /* place hsync 40 before halfway from vga_width to htotal */
         /* but not less than vga_width + 10 */
@@ -2378,7 +2382,6 @@ config_overscan_xy(unsigned long tv_std,
     /* also, make it even */
     g_specs.h_sync &= ~1;
     TRACE(("hsync = %u\n", g_specs.h_sync))
-
         /* iho range is 0 to iho_max. */
         /* iho_max is 2 * iho_center. */
         /* iho_center is pre_pixels - (tvwidth / hscale - vga pixels) / 2. */
@@ -2793,55 +2796,55 @@ config_macrovision(unsigned long tv_std, unsigned int trigger_bits)
         /*    off.    only    2-line  4-line  off.    on. */
         /*    CS.             CS. */
         {
-        0x00, 0x36, 0x3e, 0x3e, 0x00, 0x3e},    /*n0 */
+         0x00, 0x36, 0x3e, 0x3e, 0x00, 0x3e},   /*n0 */
         {
-        0x1d, 0x1d, 0x1d, 0x17, 0x1a, 0x1a},    /*n1 */
+         0x1d, 0x1d, 0x1d, 0x17, 0x1a, 0x1a},   /*n1 */
         {
-        0x11, 0x11, 0x11, 0x15, 0x22, 0x22},    /*n2 */
+         0x11, 0x11, 0x11, 0x15, 0x22, 0x22},   /*n2 */
         {
-        0x25, 0x25, 0x25, 0x21, 0x2a, 0x2a},    /*n3 */
+         0x25, 0x25, 0x25, 0x21, 0x2a, 0x2a},   /*n3 */
         {
-        0x11, 0x11, 0x11, 0x15, 0x22, 0x22},    /*n4 */
+         0x11, 0x11, 0x11, 0x15, 0x22, 0x22},   /*n4 */
         {
-        0x01, 0x01, 0x01, 0x05, 0x05, 0x05},    /*n5 */
+         0x01, 0x01, 0x01, 0x05, 0x05, 0x05},   /*n5 */
         {
-        0x07, 0x07, 0x07, 0x05, 0x02, 0x02},    /*n6 */
+         0x07, 0x07, 0x07, 0x05, 0x02, 0x02},   /*n6 */
         {
-        0x00, 0x00, 0x00, 0x02, 0x00, 0x00},    /*n7 */
+         0x00, 0x00, 0x00, 0x02, 0x00, 0x00},   /*n7 */
         {
-        0x1b, 0x1b, 0x1b, 0x1b, 0x1c, 0x1c},    /*n8 */
+         0x1b, 0x1b, 0x1b, 0x1b, 0x1c, 0x1c},   /*n8 */
         {
-        0x1b, 0x1b, 0x1b, 0x1b, 0x3d, 0x3d},    /*n9 */
+         0x1b, 0x1b, 0x1b, 0x1b, 0x3d, 0x3d},   /*n9 */
         {
-        0x24, 0x24, 0x24, 0x24, 0x14, 0x14},    /*n10 */
+         0x24, 0x24, 0x24, 0x24, 0x14, 0x14},   /*n10 */
         {
-        0x780f, 0x780f, 0x780f, 0x780f, 0x7e07, 0x7e07},        /*n11 */
+         0x780f, 0x780f, 0x780f, 0x780f, 0x7e07, 0x7e07},       /*n11 */
         {
-        0x0000, 0x0000, 0x0000, 0x0000, 0x5402, 0x5402},        /*n12 */
+         0x0000, 0x0000, 0x0000, 0x0000, 0x5402, 0x5402},       /*n12 */
         {
-        0x0f, 0x0f, 0x0f, 0x0f, 0xfe, 0xfe},    /*n13 */
+         0x0f, 0x0f, 0x0f, 0x0f, 0xfe, 0xfe},   /*n13 */
         {
-        0x0f, 0x0f, 0x0f, 0x0f, 0x7e, 0x7e},    /*n14 */
+         0x0f, 0x0f, 0x0f, 0x0f, 0x7e, 0x7e},   /*n14 */
         {
-        0x60, 0x60, 0x60, 0x60, 0x60, 0x60},    /*n15 */
+         0x60, 0x60, 0x60, 0x60, 0x60, 0x60},   /*n15 */
         {
-        0x01, 0x01, 0x01, 0x01, 0x00, 0x00},    /*n16 */
+         0x01, 0x01, 0x01, 0x01, 0x00, 0x00},   /*n16 */
         {
-        0x0a, 0x0a, 0x0a, 0x0a, 0x08, 0x08},    /*n17 */
+         0x0a, 0x0a, 0x0a, 0x0a, 0x08, 0x08},   /*n17 */
         {
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00},    /*n18 */
+         0x00, 0x00, 0x00, 0x00, 0x00, 0x00},   /*n18 */
         {
-        0x05, 0x05, 0x05, 0x05, 0x04, 0x04},    /*n19 */
+         0x05, 0x05, 0x05, 0x05, 0x04, 0x04},   /*n19 */
         {
-        0x04, 0x04, 0x04, 0x04, 0x07, 0x07},    /*n20 */
+         0x04, 0x04, 0x04, 0x04, 0x07, 0x07},   /*n20 */
         {
-        0x03ff, 0x03ff, 0x03ff, 0x03ff, 0x0155, 0x0155},        /*n21 */
+         0x03ff, 0x03ff, 0x03ff, 0x03ff, 0x0155, 0x0155},       /*n21 */
         {
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00},    /*n22 */
+         0x00, 0x00, 0x00, 0x00, 0x00, 0x00},   /*n22 */
         {
-        0xa3, 0xa3, 0xa3, 0xa3, 0xa3, 0xa3},    /*agc_pulse_level */
+         0xa3, 0xa3, 0xa3, 0xa3, 0xa3, 0xa3},   /*agc_pulse_level */
         {
-        0xc8, 0xc8, 0xc8, 0xc8, 0xc8, 0xc8},    /*bp_pulse_level */
+         0xc8, 0xc8, 0xc8, 0xc8, 0xc8, 0xc8},   /*bp_pulse_level */
     };
 
     int nMode;
@@ -3098,7 +3101,7 @@ WriteGx(unsigned long inRegAddr, unsigned long inData)
 /*==========================================================================*/
 
 static int
-PLAL_ReadRegister(S_REG_INFO * p_reg)
+PLAL_ReadRegister(S_REG_INFO *p_reg)
 {
     if (!p_reg)
         return 0;
@@ -3113,7 +3116,7 @@ PLAL_ReadRegister(S_REG_INFO * p_reg)
 }
 
 static int
-PLAL_WriteRegister(const S_REG_INFO * p_reg)
+PLAL_WriteRegister(const S_REG_INFO *p_reg)
 {
     if (!p_reg)
         return 0;
@@ -3199,7 +3202,7 @@ PLAL_PrepForTVout(void)
 }
 
 static int
-PLAL_SetTVTimingRegisters(const S_TIMING_SPECS * p_specs)
+PLAL_SetTVTimingRegisters(const S_TIMING_SPECS *p_specs)
 {
     unsigned long reg;
 

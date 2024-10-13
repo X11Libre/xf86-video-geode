@@ -72,7 +72,7 @@ gfx_msr_init()
  *----------------------------------------------------------------------------
  */
 DEV_STATUS
-gfx_id_msr_device(MSR * pDev, unsigned long address)
+gfx_id_msr_device(MSR *pDev, unsigned long address)
 {
     DEV_STATUS ret_value = NOT_KNOWN;
 
@@ -123,7 +123,7 @@ gfx_get_glink_id_at_address(unsigned int *device, unsigned long address)
  *----------------------------------------------------------------------------
  */
 DEV_STATUS
-gfx_msr_read(unsigned int device, unsigned int msrRegister, Q_WORD * msrValue)
+gfx_msr_read(unsigned int device, unsigned int msrRegister, Q_WORD *msrValue)
 {
     DEV_STATUS ret_value = NOT_KNOWN;
 
@@ -140,7 +140,7 @@ gfx_msr_read(unsigned int device, unsigned int msrRegister, Q_WORD * msrValue)
  *----------------------------------------------------------------------------
  */
 DEV_STATUS
-gfx_msr_write(unsigned int device, unsigned int msrRegister, Q_WORD * msrValue)
+gfx_msr_write(unsigned int device, unsigned int msrRegister, Q_WORD *msrValue)
 {
     DEV_STATUS ret_value = NOT_KNOWN;
 

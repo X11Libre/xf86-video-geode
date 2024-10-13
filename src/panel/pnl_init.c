@@ -154,7 +154,7 @@ Pnl_SetPanelPresent(int present)
  * return:	none.
  *-----------------------------------------------------------------*/
 void
-Pnl_SetPanelParam(Pnl_PanelParams * pParam)
+Pnl_SetPanelParam(Pnl_PanelParams *pParam)
 {
     if (pParam->Flags & PNL_PANELPRESENT) {
         Pnl_SetPanelPresent(pParam->PanelPresent);
@@ -396,7 +396,7 @@ Pnl_RestorePanelState(void)
  * return:			none.
  *-----------------------------------------------------------------*/
 void
-Pnl_GetPanelParam(Pnl_PanelParams * pParam)
+Pnl_GetPanelParam(Pnl_PanelParams *pParam)
 {
     if (pParam->Flags & PNL_PANELPRESENT) {
         pParam->PanelPresent = Pnl_IsPanelPresent();
@@ -488,7 +488,7 @@ Pnl_GetPanelChip(void)
  * return:			none.
  *-----------------------------------------------------------------*/
 int
-Pnl_InitPanel(Pnl_PanelParams * pParam)
+Pnl_InitPanel(Pnl_PanelParams *pParam)
 {
     Pnl_PanelParams *pPtr;
 

@@ -2417,10 +2417,10 @@ gfx_get_video_request(short *x, short *y)
  */
 #if GFX_VIDEO_DYNAMIC
 int
-sc1200_get_video_source(VideoSourceType * source)
+sc1200_get_video_source(VideoSourceType *source)
 #else
 int
-gfx_get_video_source(VideoSourceType * source)
+gfx_get_video_source(VideoSourceType *source)
 #endif
 {
     switch (READ_VID32(SC1200_VIDEO_DISPLAY_MODE) & SC1200_VIDEO_SOURCE_MASK) {
@@ -2444,10 +2444,10 @@ gfx_get_video_source(VideoSourceType * source)
  */
 #if GFX_VIDEO_DYNAMIC
 int
-sc1200_get_vbi_source(VbiSourceType * source)
+sc1200_get_vbi_source(VbiSourceType *source)
 #else
 int
-gfx_get_vbi_source(VbiSourceType * source)
+gfx_get_vbi_source(VbiSourceType *source)
 #endif
 {
     switch (READ_VID32(SC1200_VIDEO_DISPLAY_MODE) & SC1200_VBI_SOURCE_MASK) {

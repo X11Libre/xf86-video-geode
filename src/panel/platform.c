@@ -182,8 +182,8 @@ FindStringInSeg(unsigned int segment_address, const char *string_ptr)
  ***********************************************************************
  */
 static unsigned char
-get_sys_board_type(SYS_BOARD_INFO * sys_info,
-                   SYS_BOARD_INFO * sys_board_array_base)
+get_sys_board_type(SYS_BOARD_INFO *sys_info,
+                   SYS_BOARD_INFO *sys_board_array_base)
 {
     int index;
     const char *xpress_rom_string_ptr = "XpressStart";

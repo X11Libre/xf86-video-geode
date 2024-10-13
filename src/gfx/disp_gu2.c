@@ -135,7 +135,7 @@ gfx_set_display_bpp(unsigned short bpp)
  *----------------------------------------------------------------------------
  */
 int
-gu2_set_specified_mode(DISPLAYMODE * pMode, int bpp)
+gu2_set_specified_mode(DISPLAYMODE *pMode, int bpp)
 {
     unsigned long unlock, value;
     unsigned long gcfg, dcfg;
@@ -1753,7 +1753,6 @@ gfx_mode_frequency_supported(int xres, int yres, int bpp,
     unsigned long bpp_flag = 0;
 
     gfx_mode_bpp_conversion_def(bpp)
-
         for (index = 0; index < NUM_RC_DISPLAY_MODES; index++) {
         if ((DisplayParams[index].hactive == (unsigned int) xres) &&
             (DisplayParams[index].vactive == (unsigned int) yres) &&
@@ -1810,7 +1809,6 @@ gfx_get_refreshrate_from_frequency(int xres, int yres, int bpp, int *hz,
     *hz = 60;
 
     gfx_mode_bpp_conversion_def(bpp)
-
         /* FIND THE REGISTER VALUES FOR THE DESIRED FREQUENCY */
         /* Search the table for the closest frequency (16.16 format). */
         min = 0x7fffffff;
@@ -1877,7 +1875,6 @@ gfx_get_refreshrate_from_mode(int xres, int yres, int bpp, int *hz,
     *hz = 60;
 
     gfx_mode_bpp_conversion_def(bpp)
-
         /* FIND THE REGISTER VALUES FOR THE DESIRED FREQUENCY */
         /* Search the table for the closest frequency (16.16 format). */
         min = 0x7fffffff;
@@ -1942,7 +1939,6 @@ gfx_get_frequency_from_refreshrate(int xres, int yres, int bpp, int hz,
     *frequency = 0;
 
     gfx_mode_hz_conversion gfx_mode_bpp_conversion_def(bpp)
-
         /* FIND THE REGISTER VALUES FOR THE DESIRED FREQUENCY */
         /* Search the table for the closest frequency (16.16 format). */
     for (index = 0; index < NUM_RC_DISPLAY_MODES; index++) {
@@ -2002,7 +1998,6 @@ gfx_get_display_mode(int *xres, int *yres, int *bpp, int *hz)
 
     /* SET BPP FLAGS TO LIMIT MODE SELECTION */
     gfx_mode_bpp_conversion_def(*bpp)
-
         for (mode = 0; mode < NUM_RC_DISPLAY_MODES; mode++) {
         if ((DisplayParams[mode].hactive == (unsigned int) *xres) &&
             (DisplayParams[mode].vactive == (unsigned int) *yres) &&

@@ -222,11 +222,11 @@ static XF86VideoFormatRec Formats[NUM_FORMATS] = {
 
 static XF86AttributeRec Attributes[NUM_ATTRIBUTES] = {
 #if DBUF
-    {XvSettable | XvGettable, 0, 1, (char *)"XV_DOUBLE_BUFFER"},
+    {XvSettable | XvGettable, 0, 1, (char *) "XV_DOUBLE_BUFFER"},
 #endif
-    {XvSettable | XvGettable, 0, (1 << 24) - 1, (char *)"XV_COLORKEY"},
-    {XvSettable | XvGettable, 0, 1, (char *)"XV_FILTER"},
-    {XvSettable | XvGettable, 0, 1, (char *)"XV_COLORKEYMODE"}
+    {XvSettable | XvGettable, 0, (1 << 24) - 1, (char *) "XV_COLORKEY"},
+    {XvSettable | XvGettable, 0, 1, (char *) "XV_FILTER"},
+    {XvSettable | XvGettable, 0, 1, (char *) "XV_COLORKEYMODE"}
 };
 
 #define NUM_IMAGES 8
@@ -279,7 +279,7 @@ typedef struct {
  *----------------------------------------------------------------------------
  */
 static INT32
-GXSetColorkey(ScrnInfoPtr pScrni, GeodePortPrivRec * pPriv)
+GXSetColorkey(ScrnInfoPtr pScrni, GeodePortPrivRec *pPriv)
 {
     int red, green, blue;
     unsigned long key;
@@ -677,7 +677,7 @@ GXCopyData422(unsigned char *src, unsigned char *dst,
 
 #ifdef XF86EXA
 static void
-GXVideoSave(ScreenPtr pScreen, ExaOffscreenArea * area)
+GXVideoSave(ScreenPtr pScreen, ExaOffscreenArea *area)
 {
     ScrnInfoPtr pScrni = xf86ScreenToScrn(pScreen);
     GeodePortPrivRec *pPriv = GET_PORT_PRIVATE(pScrni);
@@ -1181,7 +1181,8 @@ GXPutImage(ScrnInfoPtr pScrni,
         }
 
         GXDisplayVideo(pScrni, id, global_offset, width, height, dstPitch,
-                       Bx1, By1, Bx2, By2, &global_dstBox, src_w, src_h, drw_w, drw_h);
+                       Bx1, By1, Bx2, By2, &global_dstBox, src_w, src_h, drw_w,
+                       drw_h);
     }
 #endif
     switch (id) {
@@ -1215,7 +1216,8 @@ GXPutImage(ScrnInfoPtr pScrni,
     }
 
     GXDisplayVideo(pScrni, id, global_offset, width, height, dstPitch,
-                   Bx1, By1, Bx2, By2, &global_dstBox, src_w, src_h, drw_w, drw_h);
+                   Bx1, By1, Bx2, By2, &global_dstBox, src_w, src_h, drw_w,
+                   drw_h);
 #endif
 
 #if XV_PROFILE

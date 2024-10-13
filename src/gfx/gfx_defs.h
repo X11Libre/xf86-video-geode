@@ -114,9 +114,9 @@
 /* ACCESS TO MSRS */
 
 void gfx_msr_asm_write(unsigned short msrReg, uint32_t msrAddr,
-                       uint32_t *ptrHigh, uint32_t *ptrLow);
+                       uint32_t * ptrHigh, uint32_t * ptrLow);
 void gfx_msr_asm_read(unsigned short msrReg, uint32_t msrAddr,
-                      uint32_t *ptrHigh, uint32_t *ptrLow);
+                      uint32_t * ptrHigh, uint32_t * ptrLow);
 
 #define MSR_READ( MBD_MSR_CAP, address, valueHigh_ptr, valueLow_ptr ) 	\
 	gfx_msr_asm_read( ((unsigned short)(MBD_MSR_CAP)), address, 		\

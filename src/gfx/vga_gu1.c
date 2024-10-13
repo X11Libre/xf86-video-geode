@@ -394,7 +394,7 @@ gfx_vga_set_graphics_bits(void)
  *----------------------------------------------------------------------------
  */
 int
-gfx_vga_mode(gfx_vga_struct * vga, int xres, int yres, int bpp, int hz)
+gfx_vga_mode(gfx_vga_struct *vga, int xres, int yres, int bpp, int hz)
 {
     unsigned int i;
     unsigned short pitch;
@@ -447,7 +447,7 @@ gfx_vga_mode(gfx_vga_struct * vga, int xres, int yres, int bpp, int hz)
  *----------------------------------------------------------------------------
  */
 int
-gfx_vga_pitch(gfx_vga_struct * vga, unsigned short pitch)
+gfx_vga_pitch(gfx_vga_struct *vga, unsigned short pitch)
 {
     pitch >>= 3;
     vga->stdCRTCregs[0x13] = (unsigned char) pitch;
@@ -464,7 +464,7 @@ gfx_vga_pitch(gfx_vga_struct * vga, unsigned short pitch)
  *----------------------------------------------------------------------------
  */
 int
-gfx_vga_save(gfx_vga_struct * vga, int flags)
+gfx_vga_save(gfx_vga_struct *vga, int flags)
 {
     int i;
     unsigned short crtcindex, crtcdata;
@@ -540,7 +540,7 @@ gfx_vga_clear_extended(void)
  *----------------------------------------------------------------------------
  */
 int
-gfx_vga_restore(gfx_vga_struct * vga, int flags)
+gfx_vga_restore(gfx_vga_struct *vga, int flags)
 {
     int i;
     unsigned short crtcindex, crtcdata;

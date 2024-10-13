@@ -68,17 +68,40 @@ static const struct exa_format_t {
     int alphabits;
 } lx_exa_formats[] = {
     {
-    PICT_a8r8g8b8, 32, CIMGP_SOURCE_FMT_8_8_8_8, 8}, {
-    PICT_x8r8g8b8, 32, CIMGP_SOURCE_FMT_8_8_8_8, 0}, {
-    PICT_x8b8g8r8, 32, CIMGP_SOURCE_FMT_32BPP_BGR, 0}, {
-    PICT_a4r4g4b4, 16, CIMGP_SOURCE_FMT_4_4_4_4, 4}, {
-    PICT_a1r5g5b5, 16, CIMGP_SOURCE_FMT_1_5_5_5, 1}, {
-    PICT_r5g6b5, 16, CIMGP_SOURCE_FMT_0_5_6_5, 0}, {
-    PICT_b5g6r5, 16, CIMGP_SOURCE_FMT_16BPP_BGR, 0}, {
-    PICT_x1r5g5b5, 16, CIMGP_SOURCE_FMT_1_5_5_5, 0}, {
-    PICT_x1b5g5r5, 16, CIMGP_SOURCE_FMT_15BPP_BGR, 0}, {
-    PICT_r3g3b2, 8, CIMGP_SOURCE_FMT_3_3_2, 0}, {
-    PICT_a8, 32, CIMGP_SOURCE_FMT_8_8_8_8, 8}
+     PICT_a8r8g8b8, 32, CIMGP_SOURCE_FMT_8_8_8_8, 8}, {
+                                                       PICT_x8r8g8b8, 32,
+                                                       CIMGP_SOURCE_FMT_8_8_8_8,
+                                                       0}, {
+                                                            PICT_x8b8g8r8, 32,
+                                                            CIMGP_SOURCE_FMT_32BPP_BGR,
+                                                            0}, {
+                                                                 PICT_a4r4g4b4,
+                                                                 16,
+                                                                 CIMGP_SOURCE_FMT_4_4_4_4,
+                                                                 4}, {
+                                                                      PICT_a1r5g5b5,
+                                                                      16,
+                                                                      CIMGP_SOURCE_FMT_1_5_5_5,
+                                                                      1}, {
+                                                                           PICT_r5g6b5,
+                                                                           16,
+                                                                           CIMGP_SOURCE_FMT_0_5_6_5,
+                                                                           0}, {
+                                                                                PICT_b5g6r5,
+                                                                                16,
+                                                                                CIMGP_SOURCE_FMT_16BPP_BGR,
+                                                                                0},
+    {
+     PICT_x1r5g5b5, 16, CIMGP_SOURCE_FMT_1_5_5_5, 0}, {
+                                                       PICT_x1b5g5r5, 16,
+                                                       CIMGP_SOURCE_FMT_15BPP_BGR,
+                                                       0}, {
+                                                            PICT_r3g3b2, 8,
+                                                            CIMGP_SOURCE_FMT_3_3_2,
+                                                            0}, {
+                                                                 PICT_a8, 32,
+                                                                 CIMGP_SOURCE_FMT_8_8_8_8,
+                                                                 8}
 };
 
 /* This is a chunk of memory we use for scratch space */
@@ -409,56 +432,74 @@ struct blend_ops_t {
 } lx_alpha_ops[] = {
     /* PictOpClear */
     {
-    CIMGP_ALPHA_TIMES_A, CIMGP_CONSTANT_ALPHA, CIMGP_CHANNEL_A_SOURCE}, {
-    },
-        /* PictOpSrc */
+     CIMGP_ALPHA_TIMES_A, CIMGP_CONSTANT_ALPHA, CIMGP_CHANNEL_A_SOURCE}, {
+                                                                          },
+    /* PictOpSrc */
     {
-    CIMGP_ALPHA_TIMES_A, CIMGP_ALPHA_EQUALS_ONE, CIMGP_CHANNEL_A_SOURCE}, {
-    },
-        /* PictOpDst */
+     CIMGP_ALPHA_TIMES_A, CIMGP_ALPHA_EQUALS_ONE, CIMGP_CHANNEL_A_SOURCE}, {
+                                                                            },
+    /* PictOpDst */
     {
-    CIMGP_ALPHA_TIMES_A, CIMGP_ALPHA_EQUALS_ONE, CIMGP_CHANNEL_A_DEST}, {
-    },
-        /* PictOpOver */
+     CIMGP_ALPHA_TIMES_A, CIMGP_ALPHA_EQUALS_ONE, CIMGP_CHANNEL_A_DEST}, {
+                                                                          },
+    /* PictOpOver */
     {
-    CIMGP_A_PLUS_BETA_B, CIMGP_CHANNEL_A_ALPHA, CIMGP_CHANNEL_A_SOURCE}, {
-    CIMGP_ALPHA_TIMES_A, CIMGP_CONVERTED_ALPHA, CIMGP_CHANNEL_A_SOURCE},
-        /* PictOpOverReverse */
+     CIMGP_A_PLUS_BETA_B, CIMGP_CHANNEL_A_ALPHA, CIMGP_CHANNEL_A_SOURCE}, {
+                                                                           CIMGP_ALPHA_TIMES_A,
+                                                                           CIMGP_CONVERTED_ALPHA,
+                                                                           CIMGP_CHANNEL_A_SOURCE},
+    /* PictOpOverReverse */
     {
-    CIMGP_A_PLUS_BETA_B, CIMGP_CHANNEL_A_ALPHA, CIMGP_CHANNEL_A_DEST}, {
-    CIMGP_ALPHA_TIMES_A, CIMGP_CONVERTED_ALPHA, CIMGP_CHANNEL_A_SOURCE},
-        /* PictOpIn */
+     CIMGP_A_PLUS_BETA_B, CIMGP_CHANNEL_A_ALPHA, CIMGP_CHANNEL_A_DEST}, {
+                                                                         CIMGP_ALPHA_TIMES_A,
+                                                                         CIMGP_CONVERTED_ALPHA,
+                                                                         CIMGP_CHANNEL_A_SOURCE},
+    /* PictOpIn */
     {
-    CIMGP_ALPHA_TIMES_A, CIMGP_CHANNEL_B_ALPHA, CIMGP_CHANNEL_A_SOURCE}, {
-    CIMGP_ALPHA_TIMES_A, CIMGP_CONVERTED_ALPHA, CIMGP_CHANNEL_A_SOURCE},
-        /* PictOpInReverse */
+     CIMGP_ALPHA_TIMES_A, CIMGP_CHANNEL_B_ALPHA, CIMGP_CHANNEL_A_SOURCE}, {
+                                                                           CIMGP_ALPHA_TIMES_A,
+                                                                           CIMGP_CONVERTED_ALPHA,
+                                                                           CIMGP_CHANNEL_A_SOURCE},
+    /* PictOpInReverse */
     {
-    CIMGP_ALPHA_TIMES_A, CIMGP_CHANNEL_B_ALPHA, CIMGP_CHANNEL_A_DEST}, {
-    CIMGP_ALPHA_TIMES_A, CIMGP_CONVERTED_ALPHA, CIMGP_CHANNEL_A_SOURCE},
-        /* PictOpOut */
+     CIMGP_ALPHA_TIMES_A, CIMGP_CHANNEL_B_ALPHA, CIMGP_CHANNEL_A_DEST}, {
+                                                                         CIMGP_ALPHA_TIMES_A,
+                                                                         CIMGP_CONVERTED_ALPHA,
+                                                                         CIMGP_CHANNEL_A_SOURCE},
+    /* PictOpOut */
     {
-    CIMGP_BETA_TIMES_B, CIMGP_CHANNEL_A_ALPHA, CIMGP_CHANNEL_A_DEST}, {
-    CIMGP_ALPHA_TIMES_A, CIMGP_CONVERTED_ALPHA, CIMGP_CHANNEL_A_SOURCE},
-        /* PictOpOutReverse */
+     CIMGP_BETA_TIMES_B, CIMGP_CHANNEL_A_ALPHA, CIMGP_CHANNEL_A_DEST}, {
+                                                                        CIMGP_ALPHA_TIMES_A,
+                                                                        CIMGP_CONVERTED_ALPHA,
+                                                                        CIMGP_CHANNEL_A_SOURCE},
+    /* PictOpOutReverse */
     {
-    CIMGP_BETA_TIMES_B, CIMGP_CHANNEL_A_ALPHA, CIMGP_CHANNEL_A_SOURCE}, {
-    CIMGP_ALPHA_TIMES_A, CIMGP_CONVERTED_ALPHA, CIMGP_CHANNEL_A_SOURCE},
-        /* SrcAtop */
+     CIMGP_BETA_TIMES_B, CIMGP_CHANNEL_A_ALPHA, CIMGP_CHANNEL_A_SOURCE}, {
+                                                                          CIMGP_ALPHA_TIMES_A,
+                                                                          CIMGP_CONVERTED_ALPHA,
+                                                                          CIMGP_CHANNEL_A_SOURCE},
+    /* SrcAtop */
     {
-    CIMGP_ALPHA_TIMES_A, CIMGP_CHANNEL_B_ALPHA, CIMGP_CHANNEL_A_DEST}, {
-    CIMGP_BETA_TIMES_B, CIMGP_CHANNEL_A_ALPHA, CIMGP_CHANNEL_A_SOURCE},
-        /* SrcAtopReverse */
+     CIMGP_ALPHA_TIMES_A, CIMGP_CHANNEL_B_ALPHA, CIMGP_CHANNEL_A_DEST}, {
+                                                                         CIMGP_BETA_TIMES_B,
+                                                                         CIMGP_CHANNEL_A_ALPHA,
+                                                                         CIMGP_CHANNEL_A_SOURCE},
+    /* SrcAtopReverse */
     {
-    CIMGP_ALPHA_TIMES_A, CIMGP_CHANNEL_B_ALPHA, CIMGP_CHANNEL_A_SOURCE}, {
-    CIMGP_BETA_TIMES_B, CIMGP_CHANNEL_A_ALPHA, CIMGP_CHANNEL_A_DEST},
-        /* Xor */
+     CIMGP_ALPHA_TIMES_A, CIMGP_CHANNEL_B_ALPHA, CIMGP_CHANNEL_A_SOURCE}, {
+                                                                           CIMGP_BETA_TIMES_B,
+                                                                           CIMGP_CHANNEL_A_ALPHA,
+                                                                           CIMGP_CHANNEL_A_DEST},
+    /* Xor */
     {
-    CIMGP_BETA_TIMES_B, CIMGP_CHANNEL_A_ALPHA, CIMGP_CHANNEL_A_SOURCE}, {
-    CIMGP_BETA_TIMES_B, CIMGP_CHANNEL_A_ALPHA, CIMGP_CHANNEL_A_SOURCE},
-        /* PictOpAdd */
+     CIMGP_BETA_TIMES_B, CIMGP_CHANNEL_A_ALPHA, CIMGP_CHANNEL_A_SOURCE}, {
+                                                                          CIMGP_BETA_TIMES_B,
+                                                                          CIMGP_CHANNEL_A_ALPHA,
+                                                                          CIMGP_CHANNEL_A_SOURCE},
+    /* PictOpAdd */
     {
-    CIMGP_A_PLUS_BETA_B, CIMGP_CONSTANT_ALPHA, CIMGP_CHANNEL_A_SOURCE}, {
-    }
+     CIMGP_A_PLUS_BETA_B, CIMGP_CONSTANT_ALPHA, CIMGP_CHANNEL_A_SOURCE}, {
+                                                                          }
 };
 
 #ifndef ARRAY_SIZE
@@ -1201,7 +1242,7 @@ lx_do_composite_mask_two_pass(PixmapPtr pxDst, unsigned long dstOffset,
 }
 
 static void
-transformPoint(PictTransform * t, xPointFixed * point)
+transformPoint(PictTransform *t, xPointFixed *point)
 {
     PictVector v;
 

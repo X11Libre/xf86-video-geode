@@ -382,7 +382,7 @@ vg_set_tv_mode(unsigned long *src_width, unsigned long *src_height,
  *--------------------------------------------------------------------------*/
 
 int
-vg_set_custom_mode(VG_DISPLAY_MODE * mode_params, int bpp)
+vg_set_custom_mode(VG_DISPLAY_MODE *mode_params, int bpp)
 {
     unsigned long config, misc, temp;
     unsigned long irq_ctl, genlk_ctl;
@@ -1095,7 +1095,7 @@ vg_set_display_bpp(int bpp)
  *--------------------------------------------------------------------------*/
 
 int
-vg_get_display_mode_index(VG_QUERY_MODE * query)
+vg_get_display_mode_index(VG_QUERY_MODE *query)
 {
     unsigned int mode;
     unsigned long hz_flag = 0xFFFFFFFF;
@@ -1281,7 +1281,7 @@ vg_get_display_mode_index(VG_QUERY_MODE * query)
  *--------------------------------------------------------------------------*/
 
 int
-vg_get_display_mode_information(unsigned int index, VG_DISPLAY_MODE * vg_mode)
+vg_get_display_mode_information(unsigned int index, VG_DISPLAY_MODE *vg_mode)
 {
     if (index > NUM_CIMARRON_DISPLAY_MODES)
         return CIM_STATUS_INVALIDPARAMS;
@@ -1310,7 +1310,7 @@ vg_get_display_mode_count(void)
  *--------------------------------------------------------------------------*/
 
 int
-vg_get_current_display_mode(VG_DISPLAY_MODE * current_display, int *bpp)
+vg_get_current_display_mode(VG_DISPLAY_MODE *current_display, int *bpp)
 {
     Q_WORD msr_value;
     unsigned long active, blank, sync;
@@ -1860,7 +1860,7 @@ vg_set_mono_cursor_colors(unsigned long bkcolor, unsigned long fgcolor)
  *--------------------------------------------------------------------------*/
 
 int
-vg_set_cursor_position(long xpos, long ypos, VG_PANNING_COORDINATES * panning)
+vg_set_cursor_position(long xpos, long ypos, VG_PANNING_COORDINATES *panning)
 {
     unsigned long unlock, memoffset;
     unsigned long gcfg;
@@ -2103,7 +2103,7 @@ vg_set_color_cursor_shape(unsigned long memoffset, unsigned char *data,
 
 int
 vg_pan_desktop(unsigned long x, unsigned long y,
-               VG_PANNING_COORDINATES * panning)
+               VG_PANNING_COORDINATES *panning)
 {
     unsigned long modeShiftPerPixel;
     unsigned long modeBytesPerScanline;
@@ -2384,7 +2384,7 @@ vg_set_compression_enable(int enable)
  *--------------------------------------------------------------------------*/
 
 int
-vg_configure_compression(VG_COMPRESSION_DATA * comp_data)
+vg_configure_compression(VG_COMPRESSION_DATA *comp_data)
 {
     unsigned long delta, size;
     unsigned long comp_size, unlock;
@@ -2499,7 +2499,7 @@ vg_test_even_field(void)
  *--------------------------------------------------------------------------*/
 
 int
-vg_configure_line_interrupt(VG_INTERRUPT_PARAMS * interrupt_info)
+vg_configure_line_interrupt(VG_INTERRUPT_PARAMS *interrupt_info)
 {
     unsigned long irq_line, irq_enable;
     unsigned long lock;
@@ -2580,7 +2580,7 @@ vg_test_flip_status(void)
  *--------------------------------------------------------------------------*/
 
 int
-vg_save_state(VG_SAVE_RESTORE * vg_state)
+vg_save_state(VG_SAVE_RESTORE *vg_state)
 {
     Q_WORD msr_value;
     unsigned long irqfilt;
@@ -2732,7 +2732,7 @@ vg_save_state(VG_SAVE_RESTORE * vg_state)
  *--------------------------------------------------------------------------*/
 
 int
-vg_restore_state(VG_SAVE_RESTORE * vg_state)
+vg_restore_state(VG_SAVE_RESTORE *vg_state)
 {
     unsigned long irqfilt, j;
     unsigned long memoffset;
@@ -3582,7 +3582,7 @@ vg_get_display_offset(void)
  *--------------------------------------------------------------------------*/
 
 int
-vg_get_cursor_info(VG_CURSOR_DATA * cursor_data)
+vg_get_cursor_info(VG_CURSOR_DATA *cursor_data)
 {
     unsigned long temp;
 
@@ -3683,7 +3683,7 @@ vg_get_display_palette(unsigned long *palette)
  *--------------------------------------------------------------------------*/
 
 int
-vg_get_compression_info(VG_COMPRESSION_DATA * comp_data)
+vg_get_compression_info(VG_COMPRESSION_DATA *comp_data)
 {
     comp_data->compression_offset = READ_REG32(DC3_CB_ST_OFFSET) & 0x0FFFFFFF;
     comp_data->pitch = (READ_REG32(DC3_GFX_PITCH) >> 13) & 0x7FFF8;

@@ -208,7 +208,7 @@ gu2_vga_seq_reset(int reset)
  *----------------------------------------------------------------------------
  */
 int
-gu2_vga_save(gfx_vga_struct * vga, int flags)
+gu2_vga_save(gfx_vga_struct *vga, int flags)
 {
     int i;
     unsigned short crtcindex, crtcdata;
@@ -342,7 +342,7 @@ gu2_vga_extcrtc(char offset, int reset)
  *----------------------------------------------------------------------------
  */
 int
-gu2_vga_restore(gfx_vga_struct * vga, int flags)
+gu2_vga_restore(gfx_vga_struct *vga, int flags)
 {
     int i;
     unsigned short crtcindex, crtcdata;

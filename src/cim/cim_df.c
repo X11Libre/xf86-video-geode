@@ -120,8 +120,8 @@ df_set_panel_enable(int enable)
  *--------------------------------------------------------------------------*/
 
 int
-df_configure_video_source(DF_VIDEO_SOURCE_PARAMS * video_source_odd,
-                          DF_VIDEO_SOURCE_PARAMS * video_source_even)
+df_configure_video_source(DF_VIDEO_SOURCE_PARAMS *video_source_odd,
+                          DF_VIDEO_SOURCE_PARAMS *video_source_even)
 {
     unsigned long pitch, ctrl, vcfg;
     unsigned long lock, vg_line, gcfg;
@@ -449,7 +449,7 @@ df_set_video_scale(unsigned long src_width, unsigned long src_height,
  *--------------------------------------------------------------------------*/
 
 int
-df_set_video_position(DF_VIDEO_POSITION * video_window)
+df_set_video_position(DF_VIDEO_POSITION *video_window)
 {
     unsigned long vblankstart_even, vblankend_even, vsyncend_even,
         vtotal_even, vactive_even;
@@ -1022,7 +1022,7 @@ df_set_video_palette_entry(unsigned long index, unsigned long palette)
  *--------------------------------------------------------------------------*/
 
 int
-df_configure_video_cursor_color_key(DF_VIDEO_CURSOR_PARAMS * cursor_color_key)
+df_configure_video_cursor_color_key(DF_VIDEO_CURSOR_PARAMS *cursor_color_key)
 {
     unsigned long key;
 
@@ -1031,8 +1031,8 @@ df_configure_video_cursor_color_key(DF_VIDEO_CURSOR_PARAMS * cursor_color_key)
 
     key = READ_VID32(DF_CURSOR_COLOR_KEY) & DF_CURSOR_COLOR_KEY_ENABLE;
     key =
-        key | (cursor_color_key->key & 0xFFFFFF) | (cursor_color_key->
-                                                    select_color2 << 24);
+        key | (cursor_color_key->
+               key & 0xFFFFFF) | (cursor_color_key->select_color2 << 24);
 
     WRITE_VID32(DF_CURSOR_COLOR_KEY, key);
     WRITE_VID32(DF_CURSOR_COLOR_MASK, (cursor_color_key->mask & 0xFFFFFF));
@@ -1070,7 +1070,7 @@ df_set_video_cursor_color_key_enable(int enable)
  *--------------------------------------------------------------------------*/
 
 int
-df_configure_alpha_window(int window, DF_ALPHA_REGION_PARAMS * alpha_data)
+df_configure_alpha_window(int window, DF_ALPHA_REGION_PARAMS *alpha_data)
 {
     unsigned long vsyncend_even, vtotal_even, vactive_even;
     unsigned long hsyncend, htotal, hactive;
@@ -1443,7 +1443,7 @@ df_test_video_flip_status(void)
  *--------------------------------------------------------------------------*/
 
 int
-df_save_state(DF_SAVE_RESTORE * df_state)
+df_save_state(DF_SAVE_RESTORE *df_state)
 {
     unsigned long i;
 
@@ -1523,7 +1523,7 @@ df_save_state(DF_SAVE_RESTORE * df_state)
  *--------------------------------------------------------------------------*/
 
 int
-df_restore_state(DF_SAVE_RESTORE * df_state)
+df_restore_state(DF_SAVE_RESTORE *df_state)
 {
     unsigned long i;
 
@@ -2089,8 +2089,8 @@ df_get_video_enable(int *enable, unsigned long *flags)
  *--------------------------------------------------------------------------*/
 
 int
-df_get_video_source_configuration(DF_VIDEO_SOURCE_PARAMS * video_source_odd,
-                                  DF_VIDEO_SOURCE_PARAMS * video_source_even)
+df_get_video_source_configuration(DF_VIDEO_SOURCE_PARAMS *video_source_odd,
+                                  DF_VIDEO_SOURCE_PARAMS *video_source_even)
 {
     unsigned long format, temp;
     unsigned long size;
@@ -2161,7 +2161,7 @@ df_get_video_source_configuration(DF_VIDEO_SOURCE_PARAMS * video_source_odd,
  *--------------------------------------------------------------------------*/
 
 int
-df_get_video_position(DF_VIDEO_POSITION * video_window)
+df_get_video_position(DF_VIDEO_POSITION *video_window)
 {
     unsigned long xreg, yreg, dst_clip, clip;
     unsigned long height;
@@ -2398,7 +2398,7 @@ df_get_video_palette(unsigned long *palette)
  *--------------------------------------------------------------------------*/
 
 int
-df_get_video_cursor_color_key(DF_VIDEO_CURSOR_PARAMS * cursor_color_key)
+df_get_video_cursor_color_key(DF_VIDEO_CURSOR_PARAMS *cursor_color_key)
 {
     unsigned long key;
 
@@ -2439,7 +2439,7 @@ df_get_video_cursor_color_key_enable(void)
 
 int
 df_get_alpha_window_configuration(int window,
-                                  DF_ALPHA_REGION_PARAMS * alpha_data)
+                                  DF_ALPHA_REGION_PARAMS *alpha_data)
 {
     unsigned long pos, color, alpha_ctl;
     unsigned long hsyncend, htotal;

@@ -265,11 +265,14 @@ LXMapMem(ScrnInfoPtr pScrni)
 #else
     {
         int fd = open("/dev/mem", O_RDWR);
+
         if (fd < 0) {
             xf86DrvMsg(index, X_ERROR, "Failed to open /dev/mem: %m\n");
             return FALSE;
         }
-        XpressROMPtr = mmap(NULL, 0x10000, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0xF0000);
+        XpressROMPtr =
+            mmap(NULL, 0x10000, PROT_READ | PROT_WRITE, MAP_SHARED, fd,
+                 0xF0000);
         close(fd);
     }
 #endif
@@ -495,7 +498,8 @@ LXPreInit(ScrnInfoPtr pScrni, int flags)
         pGeode->Output = OUTPUT_PANEL | OUTPUT_DCON;
     }
     else if (pGeode->Output & OUTPUT_PANEL) {
-        const char *pmode = xf86GetOptValString(GeodeOptions, LX_OPTION_PANEL_MODE);
+        const char *pmode =
+            xf86GetOptValString(GeodeOptions, LX_OPTION_PANEL_MODE);
 
         if (pmode != NULL)
             pGeode->panelMode = LXGetManualPanelMode(pmode);
@@ -845,7 +849,7 @@ LXEnterGraphics(ScreenPtr pScrn, ScrnInfoPtr pScrni)
 
 static void
 LXLoadPalette(ScrnInfoPtr pScrni,
-              int numColors, int *indizes, LOCO * colors, VisualPtr pVisual)
+              int numColors, int *indizes, LOCO *colors, VisualPtr pVisual)
 {
     int i, index, color;
 

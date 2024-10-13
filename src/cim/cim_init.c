@@ -175,7 +175,7 @@ init_read_pci(unsigned long address)
  *---------------------------------------------------------------------------*/
 
 int
-init_read_base_addresses(INIT_BASE_ADDRESSES * base_addresses)
+init_read_base_addresses(INIT_BASE_ADDRESSES *base_addresses)
 {
     unsigned long value;
 

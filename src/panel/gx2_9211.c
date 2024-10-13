@@ -264,7 +264,7 @@ set_Redcloud_92xx_mode_params(int mode)
  *------------------------------------------------------------------------*/
 
 unsigned char
-set_Redcloud_92xx_mode(Pnl_PanelStat * pstat)
+set_Redcloud_92xx_mode(Pnl_PanelStat *pstat)
 {
     int mode;
 
@@ -287,7 +287,7 @@ set_Redcloud_92xx_mode(Pnl_PanelStat * pstat)
 }                               /* end set_Centaurus_92xx_mode() */
 
 void
-Redcloud_9211init(Pnl_PanelStat * pstat)
+Redcloud_9211init(Pnl_PanelStat *pstat)
 {
 
     set_Redcloud_92xx_mode(pstat);

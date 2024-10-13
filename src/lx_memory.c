@@ -43,7 +43,7 @@
 /* Return the number of free bytes */
 
 unsigned int
-GeodeOffscreenFreeSize(GeodeRec * pGeode)
+GeodeOffscreenFreeSize(GeodeRec *pGeode)
 {
     GeodeMemPtr ptr = pGeode->offscreenList;
 
@@ -56,7 +56,7 @@ GeodeOffscreenFreeSize(GeodeRec * pGeode)
 }
 
 void
-GeodeFreeOffscreen(GeodeRec * pGeode, GeodeMemPtr ptr)
+GeodeFreeOffscreen(GeodeRec *pGeode, GeodeMemPtr ptr)
 {
     /* There is a clear memory leak here, but
      * but it is unlikely that the first block of
@@ -81,7 +81,7 @@ GeodeFreeOffscreen(GeodeRec * pGeode, GeodeMemPtr ptr)
 */
 
 static GeodeMemPtr
-GeodeAllocRemainder(GeodeRec * pGeode)
+GeodeAllocRemainder(GeodeRec *pGeode)
 {
     GeodeMemPtr nptr, ptr = pGeode->offscreenList;
 
@@ -114,7 +114,7 @@ GeodeAllocRemainder(GeodeRec * pGeode)
 */
 
 GeodeMemPtr
-GeodeAllocOffscreen(GeodeRec * pGeode, int size, int align)
+GeodeAllocOffscreen(GeodeRec *pGeode, int size, int align)
 {
     GeodeMemPtr ptr = pGeode->offscreenList;
     GeodeMemPtr nptr;

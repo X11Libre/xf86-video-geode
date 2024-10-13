@@ -75,7 +75,7 @@ GXRandRModeRefresh(DisplayModePtr mode)
 }
 
 static Bool
-GXRandRGetInfo(ScreenPtr pScreen, Rotation * rotations)
+GXRandRGetInfo(ScreenPtr pScreen, Rotation *rotations)
 {
     RRScreenSizePtr pSize;
     ScrnInfoPtr pScrni = XF86SCRNINFO(pScreen);
@@ -287,15 +287,15 @@ GXRandRSetConfig(ScreenPtr pScreen, Rotation rotation,
     }
 
 /* FIXME: we don't have a new video ABI yet */
-    if (pScreen == miPointerGetScreen(inputInfo.pointer))
-    {
+    if (pScreen == miPointerGetScreen(inputInfo.pointer)) {
         px = (px >= pScreen->width ? (pScreen->width - 1) : px);
         py = (py >= pScreen->height ? (pScreen->height - 1) : py);
 
         xf86SetViewport(pScreen, px, py);
 
 /* FIXME: we don't have a new video ABI yet */
-        (*pScreen->SetCursorPosition) (inputInfo.pointer, pScreen, px, py, FALSE);
+        (*pScreen->SetCursorPosition) (inputInfo.pointer, pScreen, px, py,
+                                       FALSE);
     }
 
     return TRUE;

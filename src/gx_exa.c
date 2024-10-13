@@ -438,7 +438,9 @@ amd_gx_exa_PrepareComposite(int op, PicturePtr pSrc, PicturePtr pMsk,
     int srcPitch;
     amd_gx_exa_fmt_t *sfp, *dfp;
     GeodeRec *pGeode = GEODEPTR_FROM_PIXMAP(pxDst);
-    if (!pxSrc || !pSrc->pDrawable) return FALSE;
+
+    if (!pxSrc || !pSrc->pDrawable)
+        return FALSE;
 
     //ErrorF("amd_gx_exa_PrepareComposite()\n");
 

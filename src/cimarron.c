@@ -147,7 +147,6 @@
 
 /* #define CIMARRON_EXCLUDE_CUSTOM_MACROS */
 
-
 /* ROUTINE DEFINITIONS */
 /* All routines have a prototype, even those that are not included    */
 /* via #ifdefs.  This prevents the user from having to include the    */
@@ -188,8 +187,8 @@ unsigned char *cim_vg_ptr = (unsigned char *) 0;
  * to share the MSR code with the GX code */
 
 #ifdef CIMARRON_MSR_HOOKS
-void (*cim_rdmsr) (uint32_t, uint32_t*, uint32_t*);
-void (*cim_wrmsr) (uint32_t, uint32_t, uint32_t);
+void (*cim_rdmsr)(uint32_t, uint32_t *, uint32_t *);
+void (*cim_wrmsr)(uint32_t, uint32_t, uint32_t);
 #endif
 
 /*----------------------------------------------------------------------*/

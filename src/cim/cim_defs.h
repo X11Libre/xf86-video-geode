@@ -742,7 +742,7 @@ cim_outb(unsigned short port, unsigned char data)
 
 #endif                          /* CIMARRON_INCLUDE_IO_MACROS */
 
-extern void (*cim_rdmsr) (uint32_t, uint32_t *, uint32_t *);
-extern void (*cim_wrmsr) (uint32_t, uint32_t, uint32_t);
+extern void (*cim_rdmsr)(uint32_t, uint32_t *, uint32_t *);
+extern void (*cim_wrmsr)(uint32_t, uint32_t, uint32_t);
 
 #endif

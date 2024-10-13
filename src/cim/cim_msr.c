@@ -147,7 +147,7 @@ msr_init_table(void)
  *--------------------------------------------------------------------------*/
 
 int
-msr_create_geodelink_table(GEODELINK_NODE * gliu_nodes)
+msr_create_geodelink_table(GEODELINK_NODE *gliu_nodes)
 {
     unsigned long mbiu_port_count, reflective;
     unsigned long port, index;
@@ -370,7 +370,7 @@ msr_create_geodelink_table(GEODELINK_NODE * gliu_nodes)
  *--------------------------------------------------------------------------*/
 
 int
-msr_create_device_list(GEODELINK_NODE * gliu_nodes, int max_devices)
+msr_create_device_list(GEODELINK_NODE *gliu_nodes, int max_devices)
 {
     int i, count;
 
@@ -395,7 +395,7 @@ msr_create_device_list(GEODELINK_NODE * gliu_nodes, int max_devices)
  *-------------------------------------------------------------------*/
 
 int
-msr_read64(unsigned long device, unsigned long msr_register, Q_WORD * msr_value)
+msr_read64(unsigned long device, unsigned long msr_register, Q_WORD *msr_value)
 {
     if (device < MSR_DEVICE_EMPTY) {
         if (msr_dev_lookup[device].device_id == MSR_DEVICE_PRESENT) {
@@ -417,8 +417,7 @@ msr_read64(unsigned long device, unsigned long msr_register, Q_WORD * msr_value)
  *-------------------------------------------------------------------*/
 
 int
-msr_write64(unsigned long device, unsigned long msr_register,
-            Q_WORD * msr_value)
+msr_write64(unsigned long device, unsigned long msr_register, Q_WORD *msr_value)
 {
     if (device < MSR_DEVICE_EMPTY) {
         if (msr_dev_lookup[device].device_id == MSR_DEVICE_PRESENT) {

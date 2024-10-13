@@ -69,7 +69,7 @@ _msr_open(void)
 #endif
         if (msrfd == -1)
             FatalError("Unable to open %s: %s\n", _PATH_MSRDEV,
-                strerror(errno));
+                       strerror(errno));
     }
 
     return msrfd;
@@ -85,8 +85,8 @@ GeodeReadMSR(uint32_t addr, uint32_t *lo, uint32_t *hi)
     req.addr = addr;
 
     if (ioctl(fd, RDMSR, &req) == -1)
-	FatalError("Unable to read MSR at address %0x06x: %s\n", addr,
-	    strerror(errno));
+        FatalError("Unable to read MSR at address %0x06x: %s\n", addr,
+                   strerror(errno));
 
     *hi = req.val >> 32;
     *lo = req.val & 0xffffffff;
@@ -97,8 +97,8 @@ GeodeReadMSR(uint32_t addr, uint32_t *lo, uint32_t *hi)
     args.msr = addr;
 
     if (ioctl(fd, CPUCTL_RDMSR, &args) == -1)
-	FatalError("Unable to read MSR at address %0x06x: %s\n", addr,
-	    strerror(errno));
+        FatalError("Unable to read MSR at address %0x06x: %s\n", addr,
+                   strerror(errno));
 
     *hi = args.data >> 32;
     *lo = args.data & 0xffffffff;
@@ -134,21 +134,21 @@ GeodeWriteMSR(uint32_t addr, uint32_t lo, uint32_t hi)
     int fd = _msr_open();
 
     req.addr = addr;
-    req.val = (u_int64_t) hi << 32 | (u_int64_t)lo;
+    req.val = (u_int64_t) hi << 32 | (u_int64_t) lo;
 
     if (ioctl(fd, WRMSR, &req) == -1)
         FatalError("Unable to write MSR at address 0x%06x: %s\n", addr,
-            strerror(errno));
+                   strerror(errno));
 #elif defined __FreeBSD__
     cpuctl_msr_args_t args;
     int fd = _msr_open();
 
     args.msr = addr;
-    args.data = (u_int64_t) hi << 32 | (u_int64_t)lo;
+    args.data = (u_int64_t) hi << 32 | (u_int64_t) lo;
 
     if (ioctl(fd, CPUCTL_WRMSR, &args) == -1)
         FatalError("Unable to write MSR at address 0x%06x: %s\n", addr,
-            strerror(errno));
+                   strerror(errno));
 #else
     unsigned int data[2];
     int fd = _msr_open();

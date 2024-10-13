@@ -36,7 +36,7 @@
  *--------------------------------------------------------------------------*/
 
 int
-vip_initialize(VIPSETMODEBUFFER * buffer)
+vip_initialize(VIPSETMODEBUFFER *buffer)
 {
     unsigned long vip_control1, vip_control2, vip_control3;
 
@@ -151,7 +151,7 @@ vip_initialize(VIPSETMODEBUFFER * buffer)
  *--------------------------------------------------------------------------*/
 
 int
-vip_update_601_params(VIP_601PARAMS * buffer)
+vip_update_601_params(VIP_601PARAMS *buffer)
 {
     unsigned long vip_control3, vip_control1;
 
@@ -214,7 +214,7 @@ vip_update_601_params(VIP_601PARAMS * buffer)
  *--------------------------------------------------------------------------*/
 
 int
-vip_configure_capture_buffers(int buffer_type, VIPINPUTBUFFER * buffer)
+vip_configure_capture_buffers(int buffer_type, VIPINPUTBUFFER *buffer)
 {
     VIPINPUTBUFFER_ADDR *offsets;
     unsigned long cur_buffer = buffer->current_buffer;
@@ -316,7 +316,7 @@ vip_configure_capture_buffers(int buffer_type, VIPINPUTBUFFER * buffer)
  *--------------------------------------------------------------------------*/
 
 int
-vip_toggle_video_offsets(int buffer_type, VIPINPUTBUFFER * buffer)
+vip_toggle_video_offsets(int buffer_type, VIPINPUTBUFFER *buffer)
 {
     unsigned long cur_buffer = buffer->current_buffer;
     VIPINPUTBUFFER_ADDR *offsets;
@@ -663,7 +663,7 @@ vip_set_loopback_enable(int enable)
  *---------------------------------------------------------------------------*/
 
 int
-vip_configure_genlock(VIPGENLOCKBUFFER * buffer)
+vip_configure_genlock(VIPGENLOCKBUFFER *buffer)
 {
     unsigned long vip_control1, vip_control2;
     unsigned long unlock, genlk_ctl;
@@ -748,7 +748,7 @@ vip_set_genlock_enable(int enable)
  *--------------------------------------------------------------------------*/
 
 int
-vip_set_power_characteristics(VIPPOWERBUFFER * buffer)
+vip_set_power_characteristics(VIPPOWERBUFFER *buffer)
 {
     Q_WORD q_word;
 
@@ -781,7 +781,7 @@ vip_set_power_characteristics(VIPPOWERBUFFER * buffer)
  *--------------------------------------------------------------------------*/
 
 int
-vip_set_priority_characteristics(VIPPRIORITYBUFFER * buffer)
+vip_set_priority_characteristics(VIPPRIORITYBUFFER *buffer)
 {
     Q_WORD q_word;
 
@@ -810,7 +810,7 @@ vip_set_priority_characteristics(VIPPRIORITYBUFFER * buffer)
  *--------------------------------------------------------------------------*/
 
 int
-vip_set_debug_characteristics(VIPDEBUGBUFFER * buffer)
+vip_set_debug_characteristics(VIPDEBUGBUFFER *buffer)
 {
     Q_WORD q_word;
 
@@ -907,7 +907,7 @@ vip_reset(void)
  *--------------------------------------------------------------------------*/
 
 int
-vip_set_subwindow_enable(VIPSUBWINDOWBUFFER * buffer)
+vip_set_subwindow_enable(VIPSUBWINDOWBUFFER *buffer)
 {
     unsigned long vip_control2;
 
@@ -965,7 +965,7 @@ vip_reset_interrupt_state(unsigned long interrupt_mask)
  *--------------------------------------------------------------------------*/
 
 int
-vip_save_state(VIPSTATEBUFFER * save_buffer)
+vip_save_state(VIPSTATEBUFFER *save_buffer)
 {
     if (!save_buffer)
         return CIM_STATUS_INVALIDPARAMS;
@@ -1027,7 +1027,7 @@ vip_save_state(VIPSTATEBUFFER * save_buffer)
  *--------------------------------------------------------------------------*/
 
 int
-vip_restore_state(VIPSTATEBUFFER * restore_buffer)
+vip_restore_state(VIPSTATEBUFFER *restore_buffer)
 {
     if (!restore_buffer)
         return CIM_STATUS_OK;
@@ -1157,7 +1157,7 @@ vip_get_current_field(void)
  *--------------------------------------------------------------------------*/
 
 int
-vip_get_current_mode(VIPSETMODEBUFFER * buffer)
+vip_get_current_mode(VIPSETMODEBUFFER *buffer)
 {
     unsigned long vip_control1, vip_control2, vip_control3;
 
@@ -1222,7 +1222,7 @@ vip_get_current_mode(VIPSETMODEBUFFER * buffer)
  *--------------------------------------------------------------------------*/
 
 int
-vip_get_601_configuration(VIP_601PARAMS * buffer)
+vip_get_601_configuration(VIP_601PARAMS *buffer)
 {
     unsigned long vip_control3, vip_control1;
 
@@ -1273,7 +1273,7 @@ vip_get_601_configuration(VIP_601PARAMS * buffer)
  *--------------------------------------------------------------------------*/
 
 int
-vip_get_buffer_configuration(int buffer_type, VIPINPUTBUFFER * buffer)
+vip_get_buffer_configuration(int buffer_type, VIPINPUTBUFFER *buffer)
 {
     unsigned long cur_buffer = buffer->current_buffer;
     VIPINPUTBUFFER_ADDR *offsets;
@@ -1376,7 +1376,7 @@ vip_get_buffer_configuration(int buffer_type, VIPINPUTBUFFER * buffer)
  *--------------------------------------------------------------------------*/
 
 int
-vip_get_genlock_configuration(VIPGENLOCKBUFFER * buffer)
+vip_get_genlock_configuration(VIPGENLOCKBUFFER *buffer)
 {
     unsigned long vip_control1, vip_control2;
     unsigned long genlk_ctl;
@@ -1554,7 +1554,7 @@ vip_enable_fifo_access(int enable)
  *--------------------------------------------------------------------------*/
 
 int
-vip_get_power_characteristics(VIPPOWERBUFFER * buffer)
+vip_get_power_characteristics(VIPPOWERBUFFER *buffer)
 {
     Q_WORD q_word;
 
@@ -1581,7 +1581,7 @@ vip_get_power_characteristics(VIPPOWERBUFFER * buffer)
  *--------------------------------------------------------------------------*/
 
 int
-vip_get_priority_characteristics(VIPPRIORITYBUFFER * buffer)
+vip_get_priority_characteristics(VIPPRIORITYBUFFER *buffer)
 {
     Q_WORD q_word;
 
@@ -1610,7 +1610,7 @@ vip_get_priority_characteristics(VIPPRIORITYBUFFER * buffer)
  *--------------------------------------------------------------------------*/
 
 int
-vip_get_capability_characteristics(VIPCAPABILITIESBUFFER * buffer)
+vip_get_capability_characteristics(VIPCAPABILITIESBUFFER *buffer)
 {
     Q_WORD q_word;
 

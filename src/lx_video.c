@@ -69,7 +69,6 @@ static void LXStopVideo(ScrnInfoPtr pScrni, pointer data, Bool exit);
 
 static void
 
-
 LXDisplayVideo(ScrnInfoPtr pScrni, int id, short width, short height,
                BoxPtr dstBox, short srcW, short srcH, short drawW, short drawH);
 
@@ -84,9 +83,9 @@ static XF86VideoFormatRec Formats[] = {
 };
 
 static XF86AttributeRec Attributes[] = {
-    {XvSettable | XvGettable, 0, (1 << 24) - 1, (char *)"XV_COLORKEY"},
-    {XvSettable | XvGettable, 0, 1, (char *)"XV_FILTER"},
-    {XvSettable | XvGettable, 0, 1, (char *)"XV_COLORKEYMODE"}
+    {XvSettable | XvGettable, 0, (1 << 24) - 1, (char *) "XV_COLORKEY"},
+    {XvSettable | XvGettable, 0, 1, (char *) "XV_FILTER"},
+    {XvSettable | XvGettable, 0, 1, (char *) "XV_COLORKEYMODE"}
 };
 
 static XF86ImageRec Images[] = {
@@ -116,7 +115,7 @@ typedef struct {
    (GeodePortPrivRec *)((GEODEPTR(pScrni))->adaptor->pPortPrivates[0].ptr)
 
 static void
-LXCopyFromSys(GeodeRec * pGeode, unsigned char *src, unsigned int dst,
+LXCopyFromSys(GeodeRec *pGeode, unsigned char *src, unsigned int dst,
               int dstPitch, int srcPitch, int h, int w)
 {
 
@@ -131,7 +130,7 @@ LXCopyFromSys(GeodeRec * pGeode, unsigned char *src, unsigned int dst,
 }
 
 static void
-LXSetColorkey(ScrnInfoPtr pScrni, GeodePortPrivRec * pPriv)
+LXSetColorkey(ScrnInfoPtr pScrni, GeodePortPrivRec *pPriv)
 {
     int red, green, blue;
     unsigned long key;
@@ -189,7 +188,7 @@ struct {
 /* Copy planar YUV data */
 
 static Bool
-LXAllocateVidMem(ScrnInfoPtr pScrni, GeodePortPrivRec * pPriv, int size)
+LXAllocateVidMem(ScrnInfoPtr pScrni, GeodePortPrivRec *pPriv, int size)
 {
     if (!pPriv->vidmem || pPriv->vidmem->size < size) {
         if (pPriv->vidmem) {

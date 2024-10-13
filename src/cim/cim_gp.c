@@ -3423,7 +3423,7 @@ gp_wait_blt_pending(void)
  *-------------------------------------------------------------------------*/
 
 void
-gp_save_state(GP_SAVE_RESTORE * gp_state)
+gp_save_state(GP_SAVE_RESTORE *gp_state)
 {
     Q_WORD msr_value;
 
@@ -3448,7 +3448,7 @@ gp_save_state(GP_SAVE_RESTORE * gp_state)
  *-------------------------------------------------------------------------*/
 
 void
-gp_restore_state(GP_SAVE_RESTORE * gp_state)
+gp_restore_state(GP_SAVE_RESTORE *gp_state)
 {
     gp_wait_until_idle();
 

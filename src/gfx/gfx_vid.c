@@ -1768,7 +1768,7 @@ gfx_get_video_request(short *x, short *y)
  *---------------------------------------------------------------------------
  */
 int
-gfx_get_video_source(VideoSourceType * source)
+gfx_get_video_source(VideoSourceType *source)
 {
     int status = GFX_STATUS_UNSUPPORTED;
 
@@ -1784,7 +1784,7 @@ gfx_get_video_source(VideoSourceType * source)
  *---------------------------------------------------------------------------
  */
 int
-gfx_get_vbi_source(VbiSourceType * source)
+gfx_get_vbi_source(VbiSourceType *source)
 {
     int status = GFX_STATUS_UNSUPPORTED;
 

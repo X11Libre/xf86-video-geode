@@ -133,8 +133,8 @@ LXGetManualPanelMode(const char *modestr)
 
     sprintf(sname, "%dx%d", hactive, vactive);
 
-    mode->name = (char *)XNFalloc(strlen(sname) + 1);
-    strcpy((char *)mode->name, sname);
+    mode->name = (char *) XNFalloc(strlen(sname) + 1);
+    strcpy((char *) mode->name, sname);
 
     mode->type = M_T_DRIVER | M_T_PREFERRED;
     mode->Clock = clock;

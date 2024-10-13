@@ -211,8 +211,7 @@ extern int GeodeWriteMSR(uint32_t, uint32_t, uint32_t);
 extern int GeodeReadMSR(uint32_t, uint32_t *, uint32_t *);
 
 void
-gfx_msr_asm_write(unsigned short reg, uint32_t addr,
-                  uint32_t *hi, uint32_t *lo)
+gfx_msr_asm_write(unsigned short reg, uint32_t addr, uint32_t *hi, uint32_t *lo)
 {
     static int msr_method = 0;
 
@@ -228,8 +227,7 @@ gfx_msr_asm_write(unsigned short reg, uint32_t addr,
 }
 
 void
-gfx_msr_asm_read(unsigned short reg, uint32_t addr,
-                 uint32_t *hi, uint32_t *lo)
+gfx_msr_asm_read(unsigned short reg, uint32_t addr, uint32_t *hi, uint32_t *lo)
 {
     static int msr_method = 0;
 

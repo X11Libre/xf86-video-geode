@@ -78,7 +78,7 @@ lx_disable_dac_power(ScrnInfoPtr pScrni, int option)
 }
 
 static void
-lx_set_panel_mode(VG_DISPLAY_MODE * mode, DisplayModePtr pMode)
+lx_set_panel_mode(VG_DISPLAY_MODE *mode, DisplayModePtr pMode)
 {
     int hsync, vsync;
 
@@ -119,7 +119,7 @@ lx_set_panel_mode(VG_DISPLAY_MODE * mode, DisplayModePtr pMode)
 }
 
 static void
-lx_set_crt_mode(VG_DISPLAY_MODE * mode, DisplayModePtr pMode)
+lx_set_crt_mode(VG_DISPLAY_MODE *mode, DisplayModePtr pMode)
 {
     int hsync, vsync;
 
