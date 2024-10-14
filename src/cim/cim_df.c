@@ -1705,7 +1705,7 @@ df_read_composite_window_crc(unsigned long x, unsigned long y,
     unsigned long line, field;
     unsigned long crc = 0;
     unsigned long hsyncend, htotal, hsyncstart;
-    unsigned long vsyncend, vtotal, vsyncstart;
+    unsigned long vsyncend, vtotal;
     unsigned long hblankstart, hactive;
     unsigned long vblankstart, vactive;
 
@@ -1718,14 +1718,12 @@ df_read_composite_window_crc(unsigned long x, unsigned long y,
         !(source & DF_CRC_SOURCE_EVEN)) {
         vsyncend = ((READ_REG32(DC3_V_SYNC_EVEN) >> 16) & 0xFFF) + 1;
         vtotal = ((READ_REG32(DC3_V_ACTIVE_EVEN) >> 16) & 0xFFF) + 1;
-        vsyncstart = (READ_REG32(DC3_V_SYNC_EVEN) & 0xFFF) + 1;
         vactive = (READ_REG32(DC3_V_ACTIVE_EVEN) & 0xFFF) + 1;
         vblankstart = (READ_REG32(DC3_V_BLANK_EVEN) & 0xFFF) + 1;
     }
     else {
         vsyncend = ((READ_REG32(DC3_V_SYNC_TIMING) >> 16) & 0xFFF) + 1;
         vtotal = ((READ_REG32(DC3_V_ACTIVE_TIMING) >> 16) & 0xFFF) + 1;
-        vsyncstart = (READ_REG32(DC3_V_SYNC_TIMING) & 0xFFF) + 1;
         vactive = (READ_REG32(DC3_V_ACTIVE_TIMING) & 0xFFF) + 1;
         vblankstart = (READ_REG32(DC3_V_BLANK_TIMING) & 0xFFF) + 1;
     }
