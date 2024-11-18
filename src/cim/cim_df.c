@@ -1367,7 +1367,7 @@ df_set_output_path(int format)
 {
     unsigned long panel_tim2, panel_pm;
     unsigned long output = 0;
-    Q_WORD msr_value;
+    Q_WORD msr_value = { 0, 0 };
 
     msr_read64(MSR_DEVICE_GEODELX_DF, MSR_GEODELINK_CONFIG, &msr_value);
     msr_value.low &= ~(DF_SIMULTANEOUS_CRT_FP | DF_CONFIG_OUTPUT_MASK);
@@ -1623,7 +1623,7 @@ df_restore_state(DF_SAVE_RESTORE *df_state)
 unsigned long
 df_read_composite_crc(int crc_source)
 {
-    Q_WORD msr_value;
+    Q_WORD msr_value = { 0, 0 };
     unsigned long crc;
     unsigned long interlaced;
     unsigned long line, field;
@@ -1700,7 +1700,7 @@ df_read_composite_window_crc(unsigned long x, unsigned long y,
                              unsigned long width, unsigned long height,
                              int source)
 {
-    Q_WORD msr_value;
+    Q_WORD msr_value = { 0, 0 };
     unsigned long interlaced;
     unsigned long line, field;
     unsigned long crc = 0;
@@ -2022,7 +2022,7 @@ df_read_composite_window_crc(unsigned long x, unsigned long y,
 unsigned long
 df_read_panel_crc(void)
 {
-    Q_WORD msr_value;
+    Q_WORD msr_value = { 0, 0 };
     unsigned long timeout = 1000;
 
     if (!(READ_REG32(DC3_DISPLAY_CFG) & DC3_DCFG_TGEN))

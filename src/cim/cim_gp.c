@@ -91,7 +91,7 @@ void
 gp_set_command_buffer_base(unsigned long address, unsigned long start,
                            unsigned long stop)
 {
-    Q_WORD msr_value;
+    Q_WORD msr_value = { 0, 0 };
 
     /* WAIT FOR IDLE */
     /* Obviously, we cannot change the command buffer pointer while the GP */
@@ -3425,7 +3425,7 @@ gp_wait_blt_pending(void)
 void
 gp_save_state(GP_SAVE_RESTORE *gp_state)
 {
-    Q_WORD msr_value;
+    Q_WORD msr_value = { 0, 0 };
 
     gp_wait_until_idle();
 

@@ -178,7 +178,7 @@ vop_set_configuration(VOPCONFIGURATIONBUFFER *config)
     unsigned long alpha, control2;
     unsigned long unlock;
     unsigned long delta;
-    Q_WORD msr_value;
+    Q_WORD msr_value = { 0, 0 };
     int rgb = 0;
 
     if (!config)

@@ -392,7 +392,7 @@ vg_set_custom_mode(VG_DISPLAY_MODE *mode_params, int bpp)
     unsigned long bpp_mask, dv_size;
     unsigned long hscale, vscale, starting_width;
     unsigned long starting_height, output_height;
-    Q_WORD msr_value;
+    Q_WORD msr_value = { 0, 0 };
 
     /* DETERMINE DIMENSIONS FOR SCALING */
     /* Scaling is performed before flicker filtering and interlacing */
@@ -1312,7 +1312,7 @@ vg_get_display_mode_count(void)
 int
 vg_get_current_display_mode(VG_DISPLAY_MODE *current_display, int *bpp)
 {
-    Q_WORD msr_value;
+    Q_WORD msr_value = { 0, 0 };
     unsigned long active, blank, sync;
     unsigned long i, m, n, p;
     unsigned long genlk, irq, temp;
@@ -1676,7 +1676,7 @@ vg_configure_flicker_filter(unsigned long flicker_strength, int flicker_alpha)
 int
 vg_set_clock_frequency(unsigned long frequency, unsigned long pll_flags)
 {
-    Q_WORD msr_value;
+    Q_WORD msr_value = { 0, 0 };
     unsigned long timeout;
     unsigned long index = 0;
     unsigned long unlock, i;
@@ -2327,7 +2327,7 @@ vg_set_display_palette(unsigned long *palette)
 int
 vg_set_compression_enable(int enable)
 {
-    Q_WORD msr_value;
+    Q_WORD msr_value = { 0, 0 };
     unsigned long unlock, gcfg;
     unsigned long temp;
 
@@ -2582,7 +2582,7 @@ vg_test_flip_status(void)
 int
 vg_save_state(VG_SAVE_RESTORE *vg_state)
 {
-    Q_WORD msr_value;
+    Q_WORD msr_value = { 0, 0 };
     unsigned long irqfilt;
     unsigned long offset, i;
     unsigned long lock;
@@ -2968,7 +2968,7 @@ unsigned long
 vg_read_window_crc(int crc_source, unsigned long x, unsigned long y,
                    unsigned long width, unsigned long height)
 {
-    Q_WORD msr_value;
+    Q_WORD msr_value = { 0, 0 };
     unsigned long crc = 0;
     unsigned long hactive, hblankstart;
     unsigned long htotal, hblankend;

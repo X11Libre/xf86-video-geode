@@ -277,7 +277,7 @@ gfx_detect_cpu(void)
     value = gfx_pci_config_read(0x80000800);
 
     if (value == PCI_VENDOR_DEVICE_REDCLOUD) {
-        Q_WORD msr_value;
+        Q_WORD msr_value = { 0, 0 };
         int valid, i;
 
         /* CHECK FOR SOFT VG */

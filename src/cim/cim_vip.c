@@ -750,7 +750,7 @@ vip_set_genlock_enable(int enable)
 int
 vip_set_power_characteristics(VIPPOWERBUFFER *buffer)
 {
-    Q_WORD q_word;
+    Q_WORD q_word = { 0, 0 };
 
     if (!buffer)
         return CIM_STATUS_INVALIDPARAMS;
@@ -783,7 +783,7 @@ vip_set_power_characteristics(VIPPOWERBUFFER *buffer)
 int
 vip_set_priority_characteristics(VIPPRIORITYBUFFER *buffer)
 {
-    Q_WORD q_word;
+    Q_WORD q_word = { 0, 0 };
 
     if (!buffer)
         return CIM_STATUS_INVALIDPARAMS;
@@ -812,7 +812,7 @@ vip_set_priority_characteristics(VIPPRIORITYBUFFER *buffer)
 int
 vip_set_debug_characteristics(VIPDEBUGBUFFER *buffer)
 {
-    Q_WORD q_word;
+    Q_WORD q_word = { 0, 0 };
 
     if (!buffer)
         return CIM_STATUS_INVALIDPARAMS;
@@ -1556,7 +1556,7 @@ vip_enable_fifo_access(int enable)
 int
 vip_get_power_characteristics(VIPPOWERBUFFER *buffer)
 {
-    Q_WORD q_word;
+    Q_WORD q_word = { 0, 0 };
 
     if (!buffer)
         return CIM_STATUS_INVALIDPARAMS;
@@ -1583,7 +1583,7 @@ vip_get_power_characteristics(VIPPOWERBUFFER *buffer)
 int
 vip_get_priority_characteristics(VIPPRIORITYBUFFER *buffer)
 {
-    Q_WORD q_word;
+    Q_WORD q_word = { 0, 0 };
 
     if (!buffer)
         return CIM_STATUS_INVALIDPARAMS;
@@ -1612,7 +1612,7 @@ vip_get_priority_characteristics(VIPPRIORITYBUFFER *buffer)
 int
 vip_get_capability_characteristics(VIPCAPABILITIESBUFFER *buffer)
 {
-    Q_WORD q_word;
+    Q_WORD q_word = { 0, 0 };
 
     if (!buffer)
         return CIM_STATUS_INVALIDPARAMS;

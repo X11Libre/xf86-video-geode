@@ -50,7 +50,7 @@ init_detect_cpu(unsigned long *cpu_revision, unsigned long *companion_revision)
     unsigned long address, data;
     unsigned long num_bars, function;
     int cpu_found, sb_found;
-    Q_WORD msr_value;
+    Q_WORD msr_value = { 0, 0 };
 
     /* SEARCH THROUGH PCI BUS                                          */
     /* We search the PCI bus for the Geode LX or Geode GX northbridge. */
