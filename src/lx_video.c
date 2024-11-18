@@ -295,12 +295,12 @@ LXCopyPacked(ScrnInfoPtr pScrni, int id, unsigned char *buf,
     GeodeRec *pGeode = GEODEPTR(pScrni);
     unsigned int dstPitch, srcPitch;
     unsigned int srcOffset, dstOffset;
-    unsigned int lines, top, left, pixels;
+    unsigned int top, left, pixels;
 
     dstPitch = ((width << 1) + 3) & ~3;
     srcPitch = (width << 1);
 
-    lines = ((dstPitch * height) + pGeode->Pitch - 1) / pGeode->Pitch;
+    /* lines = ((dstPitch * height) + pGeode->Pitch - 1) / pGeode->Pitch; */
 
     if (LXAllocateVidMem(pScrni, pPriv, dstPitch * height) == FALSE) {
         ErrorF("Error allocating an offscreen Packed region.\n");
