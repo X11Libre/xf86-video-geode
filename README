@@ -1,21 +1,25 @@
 xf86-video-geode -- AMD Geode GX and LX graphics driver for X.org
 =================================================================
-README last updated: 2024-06-18
+README last updated: 2025-02-18 version 2.18.1
 
 1.INTRODUCTION
 
 This is the X graphics driver for the AMD Geode GX and LX processors.
-The GX component supports both XAA and EXA for graphics acceleration.
-The LX component supports EXA, including compositing. Both support Xv 
-overlay and dynamic rotation with XRandR. Additionally, a V4L2 driver
-for the LX's video input port (VIP) feature is provided as "ztv".
+
+Since version 2.18.1, the GX component no longer has XAA acceleration.
+Only EXA support remains.
+
+The LX component supports EXA, including compositing. Additionally, a
+V4L2 driver for the LX's video input port (VIP) is provided as "ztv".
+
+Both components support Xv overlay and dynamic rotation with XRandR.
 
 2.DEPENDENCIES
 
-Since version 2.9.0, this driver depends on X server 1.3 or greater,
-because it utilizes the new common DDC probing libraries from X.Org.
+Since version 2.9.0, this driver depends on Xserver 1.3 or greater,
+because it utilizes the new common DDC probing libraries from Xorg.
 
-Since version 2.18.1, this driver depends on X server 1.18 or greater.
+Since version 2.18.1, this driver depends on Xserver 1.18 or greater.
 
 3.ROADMAP
 
@@ -76,7 +80,7 @@ SWCursor: Enable software cursors (essentially disabling HW cursor support)
 
 5.2.GX-SPECIFIC OPTIONS
 
-AccelMethod: "XAA" (default) or "EXA"
+AccelMethod: Since version 2.18.1, this option is ignored, since XAA is gone.
 PanelGeometry: Specify the geometry of the attached panel ("<width>x<height>")
 OSMImageBuffers: Set the number of image buffers (XAA only)
 OSMColorExpBuffers: Set the number of color expansion buffers (XAA only)
