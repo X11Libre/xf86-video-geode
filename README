@@ -1,6 +1,6 @@
 xf86-video-geode -- AMD Geode GX and LX graphics driver for X.org
 =================================================================
-README last updated: 2025-02-18 version 2.18.1
+README last updated: 2025-03-01 version 2.18.1
 
 1.INTRODUCTION
 
@@ -195,7 +195,15 @@ A: See https://www.x.org/wiki/Development/Documentation/SubmittingPatches
    and submit the patches to the Geode X.org mailing list or to gitlab
    in the xf86-video-geode project.
 
-7.PROJECT CONTACTS
+7.LINUX KMS DRIVER
+
+On LX hardware, an alternative is to use the Linux KMS driver for Geode LX:
+
+https://github.com/fbrausse/geode-lx
+
+The codebase has yet to be merged into the Linux kernel tree. Help is welcome.
+
+8.PROJECT CONTACTS
 
 Project homepage:
 https://www.x.org/wiki/GeodeDriver

@@ -1,16 +1,16 @@
-Geode 2.18.1 (2025-02-18)
+Geode 2.18.1 (2025-03-01)
 =========================
-Extensive driver cleanup by Enrico Weigelt:
-
- * Conditionals that enabled building against older X server versions
-   were removed. The minimal X server version is 1.18 hereafter. This
-   Geode driver's version was bumped to 2.18.x to reflect this.
-
 Extensive driver cleanup by Connor Behan:
 
  * A configure option to disable the GX component was added.
  * Remaining XAA support in the GX component was removed.
  * Compiler warnings were cleaned up.
+
+Extensive driver cleanup by Enrico Weigelt:
+
+ * Conditionals that enabled building against older X server versions
+   were removed. The minimal Xserver version thereafter is 1.18. This
+   Geode driver's version was bumped to 2.18.x to reflect this.
 
 Geode 2.11.16 (2014-07-17)
 ==========================
