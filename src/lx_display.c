@@ -396,11 +396,19 @@ lx_create_bo_pixmap(ScreenPtr pScreen,
                                          depth, bpp, pitch, pPixData)) {
         /* ModifyPixmapHeader failed, so we can't use it as scratch pixmap
          */
-        dixDestroyPixmap(pixmap, 0);
+        (*pScreen->DestroyPixmap) (pixmap);
         return NULL;
     }
 
     return pixmap;
+}
+
+static void
+lx_destory_bo_pixmap(PixmapPtr pixmap)
+{
+    ScreenPtr pScreen = pixmap->drawable.pScreen;
+
+    (*pScreen->DestroyPixmap) (pixmap);
 }
 
     /* Allocates shadow memory, and allocating a new space for Rotation.
@@ -487,7 +495,7 @@ lx_crtc_shadow_destroy(xf86CrtcPtr crtc, PixmapPtr rpixmap, void *data)
     GeodeRec *pGeode = GEODEPTR(pScrni);
 
     if (rpixmap)
-        dixDestroyPixmap(rpixmap, 0);
+        lx_destory_bo_pixmap(rpixmap);
 
     /* Free shadow memory */
     if (data) {
