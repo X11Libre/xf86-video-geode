@@ -181,7 +181,7 @@ Q: How do I test development snapshots from the upstream GIT repository?
 A: Run the following commands from a command line interpreter shell:
    1. git clone https://gitlab.freedesktop.org/xorg/driver/xf86-video-geode.git
    2. Debian/Ubuntu:  apt-get install autoconf automake libtool xutils-dev
-                      apt-get install build-dep xserver-xorg-video-geode
+                      apt-get build-dep xserver-xorg-video-geode
      Fedora/Red Hat:  yum install autoconf automake libtool xorg-x11-util-macros
                       yum-builddep xorg-x11-drv-geode
    3. cd xf86-video-geode
