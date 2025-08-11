@@ -23,7 +23,7 @@
 # Initialize Autoconf
 AC_PREREQ([2.60])
 AC_INIT([xf86-video-geode],
-        [2.18.1],
+        [2.18.2],
         [https://gitlab.freedesktop.org/xorg/driver/xf86-video-geode/-/issues],
         [xf86-video-geode],
         [http://www.x.org/wiki/GeodeDriver])
