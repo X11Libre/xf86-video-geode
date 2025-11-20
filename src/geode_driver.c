@@ -60,7 +60,6 @@
 
 #ifdef DPMSExtension
 #include "globals.h"
-#include "opaque.h"
 #ifdef HAVE_XEXTPROTO_71
 #include <X11/extensions/dpmsconst.h>
 #else
