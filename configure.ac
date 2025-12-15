@@ -136,20 +136,7 @@ XORG_DRIVER_CHECK_EXT(XV, videoproto)
 XORG_DRIVER_CHECK_EXT(DPMSExtension, xextproto)
 
 # Obtain compiler/linker options for the Geode driver dependencies
-PKG_CHECK_MODULES(XORG, [xorg-server >= 1.18 xproto fontsproto xextproto >= 7.0.99.1 $REQUIRED_MODULES])
-
-# Checks for libpciaccess support.
-SAVE_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="$CPPFLAGS $XORG_CFLAGS"
-AC_CHECK_DECL(XSERVER_LIBPCIACCESS,
-              [XSERVER_LIBPCIACCESS=yes],[XSERVER_LIBPCIACCESS=no],
-              [#include "xorg-server.h"])
-CPPFLAGS="$SAVE_CPPFLAGS"
-
-if test "x$XSERVER_LIBPCIACCESS" = xyes; then
-    PKG_CHECK_MODULES([PCIACCESS], [pciaccess >= 0.8.0])
-    XORG_CFLAGS="$XORG_CFLAGS $PCIACCESS_CFLAGS"
-fi
+PKG_CHECK_MODULES(XORG, [xorg-server >= 1.18 xproto fontsproto xextproto >= 7.0.99.1 pciaccess >= 0.8.0 $REQUIRED_MODULES])
 
 AC_CONFIG_FILES([Makefile src/Makefile])
 AC_OUTPUT

@@ -32,9 +32,7 @@
 #include "compiler.h"
 #include "geode.h"
 
-#ifdef XSERVER_LIBPCIACCESS
 #include <pciaccess.h>
-#endif
 
 /* GPIO Register defines from the CS5536 datasheet */
 
@@ -61,7 +59,6 @@
 static unsigned short
 geode_gpio_iobase(void)
 {
-#ifdef XSERVER_LIBPCIACCESS
     struct pci_device *pci;
 
     /* The CS5536 GPIO device is always in the same slot: 00:0f.0 */
@@ -77,21 +74,6 @@ geode_gpio_iobase(void)
 
     /* The GPIO I/O address is in resource 1 */
     return (unsigned short) pci->regions[1].base_addr;
-#else
-    PCITAG Tag;
-
-    Tag = pciFindFirst(CS5536_ISA_DEVICE, 0xFFFFFFFF);
-
-    if (Tag == PCI_NOT_FOUND) {
-        Tag = pciFindFirst(CS5535_ISA_DEVICE, 0xFFFFFFFF);
-
-        if (Tag == PCI_NOT_FOUND)
-            return 0;
-    }
-
-    /* The GPIO I/O address is in resource 1 */
-    return (unsigned short) (pciReadLong(Tag, 0x14) & ~1);
-#endif
 }
 
 static void

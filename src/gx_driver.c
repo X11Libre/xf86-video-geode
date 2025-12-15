@@ -217,7 +217,6 @@ GXSaveScreen(ScreenPtr pScrn, int mode)
 }
 
 /* Common function - used by the LX too */
-#ifdef XSERVER_LIBPCIACCESS
 static inline void *
 map_pci_mem(ScrnInfoPtr pScrni, int vram,
             struct pci_device *dev, int bar, int size)
@@ -242,7 +241,6 @@ unmap_pci_mem(ScrnInfoPtr pScrni, struct pci_device *dev, void *ptr, int size)
 {
     return pci_device_unmap_range(dev, ptr, size);
 }
-#endif
 
 extern unsigned long gfx_gx2_scratch_base;
 
@@ -254,34 +252,13 @@ GXMapMem(ScrnInfoPtr pScrni)
 
     pciVideoPtr pci = xf86GetPciInfoForEntity(pGeode->pEnt->index);
 
-#ifndef XSERVER_LIBPCIACCESS
-    gfx_virt_regptr = (unsigned char *) xf86MapVidMem(index, VIDMEM_MMIO,
-                                                      pci->memBase[2],
-                                                      pci->size[2]);
-
-    gfx_virt_gpptr = (unsigned char *) xf86MapVidMem(index, VIDMEM_MMIO,
-                                                     pci->memBase[1],
-                                                     pci->size[1]);
-
-    gfx_virt_vidptr = (unsigned char *) xf86MapVidMem(index, VIDMEM_MMIO,
-                                                      pci->memBase[3],
-                                                      pci->size[3]);
-
-    gfx_virt_fbptr = (unsigned char *) xf86MapVidMem(index, VIDMEM_FRAMEBUFFER,
-                                                     pci->memBase[0],
-                                                     pGeode->FBAvail);
-#else
     gfx_virt_regptr = map_pci_mem(pScrni, 0, pci, 2, 0);
     gfx_virt_gpptr = map_pci_mem(pScrni, 0, pci, 1, 0);
     gfx_virt_vidptr = map_pci_mem(pScrni, 0, pci, 3, 0);
     gfx_virt_fbptr = map_pci_mem(pScrni, 1, pci, 0, pGeode->FBAvail);
-#endif
 
     gfx_gx2_scratch_base = pGeode->FBAvail - 0x4000;
 
-#ifndef XSERVER_LIBPCIACCESS
-    XpressROMPtr = xf86MapVidMem(index, VIDMEM_FRAMEBUFFER, 0xF0000, 0x10000);
-#else
     {
         int fd = open("/dev/mem", O_RDWR);
 
@@ -294,7 +271,6 @@ GXMapMem(ScrnInfoPtr pScrni)
                  0xF0000);
         close(fd);
     }
-#endif
     pGeode->FBBase = gfx_virt_fbptr;
 
     if ((!gfx_virt_regptr) || (!gfx_virt_gpptr) ||
@@ -317,27 +293,9 @@ GXMapMem(ScrnInfoPtr pScrni)
 static Bool
 GXCheckVGA(ScrnInfoPtr pScrni, EntityInfoPtr pEnt)
 {
-#ifndef XSERVER_LIBPCIACCESS
-    unsigned char *ptr;
-    const char *vgasig = "IBM VGA Compatible";
-    int ret;
-
-    ptr =
-        xf86MapVidMem(pScrni->scrnIndex, VIDMEM_FRAMEBUFFER, 0xC001E,
-                      strlen(vgasig));
-
-    if (ptr == NULL)
-        return FALSE;
-
-    ret = memcmp(ptr, vgasig, strlen(vgasig));
-    xf86UnMapVidMem(pScrni->scrnIndex, (pointer) ptr, strlen(vgasig));
-
-    return ret ? FALSE : TRUE;
-#else
     pciVideoPtr pci = xf86GetPciInfoForEntity(pEnt->index);
 
     return pci_device_is_boot_vga(pci);
-#endif
 }
 
 static Bool
@@ -358,10 +316,6 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
         return FALSE;
 
     pEnt = xf86GetEntityInfo(pScrni->entityList[0]);
-#ifndef XSERVER_LIBPCIACCESS
-    if (pEnt->resources)
-        return FALSE;
-#endif
 
     pGeode = pScrni->driverPrivate = XNFcallocarray(1, sizeof(GeodeRec));
 
@@ -637,13 +591,6 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
         }
     }
 
-#ifndef XSERVER_LIBPCIACCESS
-    if (xf86RegisterResources(pGeode->pEnt->index, NULL, ResExclusive)) {
-        xf86DrvMsg(pScrni->scrnIndex, X_ERROR,
-                   "Couldn't register the resources.\n");
-        return FALSE;
-    }
-#endif
     return TRUE;
 }
 
@@ -667,12 +614,6 @@ GXUnmapMem(ScrnInfoPtr pScrni)
     GeodeRec *pGeode = GEODEPTR(pScrni);
 
     /* unmap all the memory map's */
-#ifndef XSERVER_LIBPCIACCESS
-    xf86UnMapVidMem(pScrni->scrnIndex, gfx_virt_regptr, GX_CPU_REG_SIZE);
-    xf86UnMapVidMem(pScrni->scrnIndex, gfx_virt_gpptr, GX_GP_REG_SIZE);
-    xf86UnMapVidMem(pScrni->scrnIndex, gfx_virt_vidptr, GX_VID_REG_SIZE);
-    xf86UnMapVidMem(pScrni->scrnIndex, gfx_virt_fbptr, pGeode->FBAvail);
-#else
     pciVideoPtr pci = xf86GetPciInfoForEntity(pGeode->pEnt->index);
 
     unmap_pci_mem(pScrni, pci, gfx_virt_regptr, GX_CPU_REG_SIZE);
@@ -681,7 +622,6 @@ GXUnmapMem(ScrnInfoPtr pScrni)
     unmap_pci_mem(pScrni, pci, gfx_virt_fbptr, pGeode->FBAvail);
 
     munmap(XpressROMPtr, 0x10000);
-#endif
     return TRUE;
 }
 

@@ -76,13 +76,8 @@
 static const OptionInfoRec *AmdAvailableOptions(int chipid, int busid);
 static void AmdIdentify(int);
 
-#ifdef XSERVER_LIBPCIACCESS
 static Bool AmdPciProbe(DriverPtr, int, struct pci_device *, intptr_t);
-#else
-static Bool AmdProbe(DriverPtr, int);
-#endif
 
-#ifdef XSERVER_LIBPCIACCESS
 static const struct pci_id_match amdDeviceMatch[] = {
     {PCI_VENDOR_ID_NS, PCI_CHIP_GEODEGX, PCI_MATCH_ANY, PCI_MATCH_ANY, 0, 0,
      0},
@@ -90,7 +85,6 @@ static const struct pci_id_match amdDeviceMatch[] = {
      0},
     {0, 0, 0}
 };
-#endif                          /* XSERVER_LIBPCIACCESS */
 
 /* driver record contains the functions needed by the server after loading
  * the driver module.
@@ -99,38 +93,26 @@ _X_EXPORT DriverRec AMD = {
     GEODE_VERSION,
     "amd",
     AmdIdentify,
-#ifdef XSERVER_LIBPCIACCESS
     NULL,
-#else
-    AmdProbe,
-#endif
     AmdAvailableOptions,
     NULL,
     0,
     NULL,
-#ifdef XSERVER_LIBPCIACCESS
     amdDeviceMatch,
     AmdPciProbe
-#endif
 };
 
 _X_EXPORT DriverRec GEODE = {
     GEODE_VERSION,
     "geode",
     AmdIdentify,
-#ifdef XSERVER_LIBPCIACCESS
     NULL,
-#else
-    AmdProbe,
-#endif
     AmdAvailableOptions,
     NULL,
     0,
     NULL,
-#ifdef XSERVER_LIBPCIACCESS
     amdDeviceMatch,
     AmdPciProbe
-#endif
 };
 
 /* Advanced Micro Devices Chip Models */
@@ -253,9 +235,7 @@ GeodeSetup(pointer Module, pointer Options, int *ErrorMajor, int *ErrorMinor)
     static Bool init = FALSE;
     int flag = 0;
 
-#ifdef XSERVER_LIBPCIACCESS
     flag = HaveDriverFuncs;
-#endif
     if (init) {
         *ErrorMajor = LDR_ONCEONLY;
         return (pointer) NULL;
@@ -275,11 +255,7 @@ AmdSetup(pointer Module, pointer Options, int *ErrorMajor, int *ErrorMinor)
     if (!Initialised) {
         Initialised = TRUE;
         xf86AddDriver(&AMD, Module,
-#ifdef XSERVER_LIBPCIACCESS
                       HaveDriverFuncs
-#else
-                      0
-#endif
             );
 
         return (pointer) TRUE;
@@ -350,8 +326,6 @@ AmdAvailableOptions(int chipid, int busid)
     return no_GeodeOptions;
 }
 
-#ifdef XSERVER_LIBPCIACCESS
-
 static Bool
 AmdPciProbe(DriverPtr driver,
             int entity_num, struct pci_device *device, intptr_t match_data)
@@ -387,127 +361,3 @@ AmdPciProbe(DriverPtr driver,
     }
     return scrn != NULL;
 }
-
-#else                           /* XSERVER_LIBPCIACCESS */
-
-/*----------------------------------------------------------------------------
- * AmdProbe.
- *
- * Description	:This is to find that hardware is claimed by another
- *		 driver if not claim the slot & allocate ScreenInfoRec.
- *
- * Parameters.
- *     drv	:a pointer to the geode driver
- *     flags    :flags may passed to check the config and probe detect
- *
- * Returns	:TRUE on success and FALSE on failure.
- *
- * Comments     :This should be minimal probe and it should under no
- *               circumstances change the state of the hardware.Don't do
- *               any initializations other than the required
- *               ScreenInforec.
-*----------------------------------------------------------------------------
-*/
-
-static Bool
-AmdProbe(DriverPtr drv, int flags)
-{
-    Bool foundScreen = FALSE;
-    int numDevSections, numUsed;
-    GDevPtr *devSections = NULL;
-    int *usedChips = NULL;
-    int i;
-    void (*drvr_setup)(ScrnInfoPtr pScrni) = NULL;
-    int CPUDetected;
-
-    DEBUGMSG(1, (0, X_INFO, "AmdProbe: Probing for supported devices!\n"));
-    /*
-     * * Find the config file Device sections that match this
-     * * driver, and return if there are none.
-     */
-    if ((numDevSections = xf86MatchDevice(GEODE_NAME, &devSections)) <= 0) {
-        DEBUGMSG(1, (0, X_INFO, "AmdProbe: failed 1!\n"));
-        return FALSE;
-    }
-    DEBUGMSG(1, (0, X_INFO, "AmdProbe: Before MatchPciInstances!\n"));
-    /* PCI BUS */
-    if (xf86GetPciVideoInfo()) {
-        numUsed = xf86MatchPciInstances(GEODE_NAME, PCI_VENDOR_ID_NS,
-                                        GeodeChipsets, GeodePCIchipsets,
-                                        devSections, numDevSections, drv,
-                                        &usedChips);
-
-        if (numUsed <= 0)
-            numUsed = xf86MatchPciInstances(GEODE_NAME, PCI_VENDOR_ID_AMD,
-                                            GeodeChipsets, GeodePCIchipsets,
-                                            devSections, numDevSections, drv,
-                                            &usedChips);
-
-        DEBUGMSG(1, (0, X_INFO, "AmdProbe: MatchPCI (%d)!\n", numUsed));
-
-        if (numUsed > 0) {
-            if (flags & PROBE_DETECT)
-                foundScreen = TRUE;
-            else {
-                /* Durango only supports one instance, */
-                /* so take the first one */
-                for (i = 0; i < numUsed; i++) {
-                    /* Allocate a ScrnInfoRec  */
-                    ScrnInfoPtr pScrni = NULL;
-                    EntityInfoPtr pEnt = xf86GetEntityInfo(usedChips[i]);
-                    PciChipsets *p_id;
-
-                    pScrni = xf86ConfigPciEntity(pScrni, 0, usedChips[i],
-                                                 GeodePCIchipsets, NULL, NULL,
-                                                 NULL, NULL, NULL);
-                    for (p_id = GeodePCIchipsets; p_id->numChipset != -1;
-                         p_id++) {
-                        if (pEnt->chipset == p_id->numChipset) {
-                            switch (pEnt->chipset) {
-#ifdef HAVE_LX
-                            case PCI_CHIP_GEODELX:
-                                CPUDetected = LX;
-                                drvr_setup = &LXSetupChipsetFPtr;
-                                break;
-#endif
-#ifdef HAVE_GX
-                            case PCI_CHIP_GEODEGX:
-                                CPUDetected = GX;
-                                drvr_setup = &GXSetupChipsetFPtr;
-                                break;
-#endif
-                            default:
-                                break;
-                            }
-                            break;
-                        }
-                    }
-                    free(pEnt);
-                    if (drvr_setup == NULL)
-                        return FALSE;
-
-                    DEBUGMSG(1, (0, X_INFO, "AmdProbe: CPUDetected %d!\n",
-                                 CPUDetected));
-
-                    pScrni->driverName = GEODE_DRIVER_NAME;
-                    pScrni->driverVersion = GEODE_VERSION;
-                    pScrni->name = GEODE_NAME;
-                    pScrni->Probe = AmdProbe;
-                    drvr_setup(pScrni);
-
-                    foundScreen = TRUE;
-
-                }
-            }
-        }
-    }
-
-    if (usedChips)
-        free(usedChips);
-    if (devSections)
-        free(devSections);
-    DEBUGMSG(1, (0, X_INFO, "AmdProbe: result (%d)!\n", foundScreen));
-    return foundScreen;
-}
-
-#endif                          /* else XSERVER_LIBPCIACCESS */
