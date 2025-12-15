@@ -22,11 +22,10 @@
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([xf86-video-geode],
+AC_INIT([xlibre-xf86-video-geode],
         [2.18.1],
-        [https://gitlab.freedesktop.org/xorg/driver/xf86-video-geode/-/issues],
-        [xf86-video-geode],
-        [http://www.x.org/wiki/GeodeDriver])
+        [https://github.com/X11Libre/xf86-video-geode/issues],
+        [xlibre-xf86-video-geode])
 
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
