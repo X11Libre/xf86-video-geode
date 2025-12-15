@@ -27,21 +27,21 @@ Support for old GX1 Geodes by Cyrix and NSC will be reintroduced soon,
 at which point xf86-video-cyrix and xf86-video-nsc will be retired.
 
 Until then, the current situation for Geode coverage is as follow:
- 
+
 xf86-video-geode
  * Geode LX      (a.k.a. GX3) PCI ID 0x1022:0x2081
  * Geode GX      (a.k.a. GX2) PCI ID 0x100B:0x0030 (re-branded GX2)
 
 xf86-video-nsc
  * Geode GX2     (a.k.a. GX2) PCI ID 0x100B:0x0030 (a.k.a. "Red Cloud")
- * Geode SCx200  (a.k.a. GX1) PCI ID 0x100B:0x0504 
- * Geode SC1400  (a.k.a. GX1) PCI ID 0x100B:0x0104 
+ * Geode SCx200  (a.k.a. GX1) PCI ID 0x100B:0x0504
+ * Geode SC1400  (a.k.a. GX1) PCI ID 0x100B:0x0104
 
 xf86-video-cyrix
- * Geode MediaGX (a.k.a. GX1) PCI ID 0x1078:0x0104 
+ * Geode MediaGX (a.k.a. GX1) PCI ID 0x1078:0x0104
 
 Please note that both NSC and GEODE support GX2. This is indeed correct.
-However, only GEODE has up-to-date code, while NSC is deprecated. 
+However, only GEODE has up-to-date code, while NSC is deprecated.
 
 4.MAXIMUM RESOLUTIONS
 
@@ -61,10 +61,10 @@ such hardware, the resolution must be specified in /etc/X11/xorg.conf.
 You can specify driver options in /etc/X11/xorg.conf in the usual fashion:
 
 Section "Device"
-	Identifier "AMD Geode"
-	Driver "geode"
-	Option "OptionName" "value"
-	...
+    Identifier "AMD Geode"
+    Driver "geode"
+    Option "OptionName" "value"
+    ...
 EndSection
 
 The following options may be added to such a Device section:
@@ -108,8 +108,8 @@ A: Since kernel 4.x Linux has strong memory protection. If the kernel is
 
 Q: Why doesn't the GEODE driver work at WXGA (wide screen) resolutions?
 
-A: Make sure that TFT Panel support is disabled in the BIOS settings, 
-   otherwise resolutions will be restricted to traditional VGA modes. 
+A: Make sure that TFT Panel support is disabled in the BIOS settings,
+   otherwise resolutions will be restricted to traditional VGA modes.
    The GEODE offers a choice between CRT-only, CRT+TFT, TFT-only for
    output device and selecting CRT-only removes the VGA restriction.
 
@@ -121,7 +121,7 @@ A: By adding the desired modes to /etc/X11/xorg.conf as follow:
 
       cvt 1024 600 60
 
-      Where 1024x600 is the resolution and 60 the refresh rate. 
+      Where 1024x600 is the resolution and 60 the refresh rate.
       The resulting modeline using "gtf" is:
 
 Modeline "1024x600" 48.96 1024 1064 1168 1312 600 601 604 622 -hsync +vsync
@@ -139,27 +139,27 @@ Section "Module"
     Load  "ztv"
 EndSection
 Section "Device"
-    Identifier	"card0"
-    Driver	"geode"
-    BusID	"PCI:0:1:1"
-    Option	"PanelMode" "33450 800 840 968 1056 480 490 492 525"
+    Identifier  "card0"
+    Driver      "geode"
+    BusID       "PCI:0:1:1"
+    Option      "PanelMode" "33450 800 840 968 1056 480 490 492 525"
 EndSection
 Section "Monitor"
-    Identifier	"monitor0"
-    Modeline  "1024x768" 64.56 1024 1056 1296 1328 768 783 791 807 -hsync +vsync
-    Modeline  "1024x600" 48.96 1024 1064 1168 1312 600 601 604 622 -hsync +vsync
-    Modeline   "800x480" 33.45  800  840  968 1056 480 490 492 525 -hsync +vsync
-    Option	"dpms"
+    Identifier  "monitor0"
+    Modeline    "1024x768" 64.56 1024 1056 1296 1328 768 783 791 807 -hsync +vsync
+    Modeline    "1024x600" 48.96 1024 1064 1168 1312 600 601 604 622 -hsync +vsync
+    Modeline    "800x480" 33.45  800  840  968 1056 480 490 492 525 -hsync +vsync
+    Option      "dpms"
 EndSection
 Section "Screen"
-    Identifier	"Default Screen"
-    Monitor	"monitor0"
-    Device	"card0"
+    Identifier  "Default Screen"
+    Monitor     "monitor0"
+    Device      "card0"
     DefaultDepth 24
     Subsection "Display"
         Depth 24
         Modes "1024x600" "1024x768" "800x480"
-    EndSubsection        
+    EndSubsection
 EndSection
 ### EOF ###
 
@@ -205,17 +205,11 @@ The codebase has yet to be merged into the Linux kernel tree. Help is welcome.
 
 8.PROJECT CONTACTS
 
-Project homepage:
-https://www.x.org/wiki/GeodeDriver
-
-Mailing list:
-https://lists.x.org/mailman/listinfo/xorg-driver-geode
-
 Bug reports:
-https://gitlab.freedesktop.org/xorg/driver/xf86-video-geode/issues
+https://github.com/X11Libre/xf86-video-geode/issues
 
 Code repository:
-https://gitlab.freedesktop.org/xorg/driver/xf86-video-geode
+https://github.com/X11Libre/xf86-video-geode
 
 IRC channel:
 #geode on the Freenode network.
