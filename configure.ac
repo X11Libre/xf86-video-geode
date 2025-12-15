@@ -41,7 +41,7 @@ AC_DISABLE_STATIC
 AC_PROG_LIBTOOL
 
 # Require xorg-macros: XORG_DEFAULT_OPTIONS
-m4_ifndef([XORG_MACROS_VERSION], 
+m4_ifndef([XORG_MACROS_VERSION],
           [m4_fatal([must install xorg-macros 1.4 or later before running autoconf/autogen])])
 XORG_MACROS_VERSION(1.4)
 XORG_DEFAULT_OPTIONS
@@ -52,9 +52,6 @@ AC_PROG_LIBTOOL
 
 AH_TOP([#include "xorg-server.h"])
 
-# -----------------------------------------------------------------------------
-#			Configuration options
-# -----------------------------------------------------------------------------
 # Define a configure option for an alternate input module directory
 PKG_PROG_PKG_CONFIG([0.25])
 AC_ARG_WITH(xorg-module-dir,
@@ -65,19 +62,19 @@ AC_ARG_WITH(xorg-module-dir,
 AC_SUBST([moduledir])
 
 # Define a configure option to enable/disable lcd panel support
-AC_ARG_ENABLE(geodegx-panel, 
-	      AS_HELP_STRING([--disable-geodegx-panel],
-	      	             [Disable support for flatpanels with the Geode GX]),
-	      [ ], 
-	      [ PANEL_CPPFLAGS=-DPNL_SUP ])
+AC_ARG_ENABLE(geodegx-panel,
+          AS_HELP_STRING([--disable-geodegx-panel],
+                         [Disable support for flatpanels with the Geode GX]),
+          [ ],
+          [ PANEL_CPPFLAGS=-DPNL_SUP ])
 AC_SUBST(PANEL_CPPFLAGS)
 
 # Define a configure option to disable GX altogether
 AC_ARG_ENABLE(geodegx,
-	      AS_HELP_STRING([--disable-geodegx],
-	                     [Disable support for the Geode GX and only build LX]),
-	      [geodegx=no],
-	      [geodegx=yes])
+          AS_HELP_STRING([--disable-geodegx],
+                         [Disable support for the Geode GX and only build LX]),
+          [geodegx=no],
+          [geodegx=yes])
 
 if test "x$geodegx" != "xno" ; then
     BUILD_GX=yes
@@ -88,21 +85,21 @@ AC_SUBST(DEVICE_CPPFLAGS)
 
 # Define a configure option to enable/disable ztv
 AC_ARG_ENABLE(ztv,
-	AS_HELP_STRING([--enable-ztv],
-	    [Enable Video For Linux based ZTV driver (default: auto-detected)]),
-	    [ztv=$enableval],
-	    [ztv=auto])
+    AS_HELP_STRING([--enable-ztv],
+        [Enable Video For Linux based ZTV driver (default: auto-detected)]),
+        [ztv=$enableval],
+        [ztv=auto])
 
 # Check for Video4Linux Version 2 (V4L2) availability
 AC_CHECK_HEADERS([linux/videodev2.h],[v4l2=yes],[v4l2=no])
 if test "x$ztv" != "xno" ; then
     if test "x$v4l2" = "xno" ; then
-	if test "x$ztv" = "xyes" ; then
-	    # User really wants ztv but V4L2 is not found
-	    AC_MSG_ERROR([ZTV driver requested, but videodev2.h not found.])
-	fi
+        if test "x$ztv" = "xyes" ; then
+            # User really wants ztv but V4L2 is not found
+            AC_MSG_ERROR([ZTV driver requested, but videodev2.h not found.])
+        fi
     else
-	BUILD_ZTV=yes
+        BUILD_ZTV=yes
     fi
 fi
 AM_CONDITIONAL(BUILD_ZTV, [test "x$BUILD_ZTV" = xyes])
@@ -110,24 +107,25 @@ AM_CONDITIONAL(BUILD_ZTV, [test "x$BUILD_ZTV" = xyes])
 # Check if GCC supports compiling in 32 bit mode for 64 bit computers
 case $host_cpu in
     x86_64*|amd64*)
-	if  test "x$GCC" = xyes ; then
-	    SAVE_CFLAGS="$CFLAGS"
-	    CFLAGS="$CFLAGS -m32"
-	    AC_MSG_CHECKING([if $CC supports the -m32 Intel/AMD option])
-	    AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
+    if  test "x$GCC" = xyes ; then
+        SAVE_CFLAGS="$CFLAGS"
+        CFLAGS="$CFLAGS -m32"
+        AC_MSG_CHECKING([if $CC supports the -m32 Intel/AMD option])
+        AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
 #include <unistd.h>
 int
 main ()
 {
   ;
   return 0;
-}]])],
-		[m32_support=yes; M32_CFLAGS=-m32],
-		[m32_support=no])
-	    AC_MSG_RESULT([$m32_support])
-	    CFLAGS="$SAVE_CFLAGS"
-	fi
-	;;
+}
+                        ]])],
+                        [m32_support=yes; M32_CFLAGS=-m32],
+                        [m32_support=no])
+        AC_MSG_RESULT([$m32_support])
+        CFLAGS="$SAVE_CFLAGS"
+    fi
+    ;;
 esac
 AC_SUBST([M32_CFLAGS])
 
@@ -156,8 +154,5 @@ if test "x$XSERVER_LIBPCIACCESS" = xyes; then
     XORG_CFLAGS="$XORG_CFLAGS $PCIACCESS_CFLAGS"
 fi
 
-AC_CONFIG_FILES([
-	Makefile
-	src/Makefile
-])
+AC_CONFIG_FILES([Makefile src/Makefile])
 AC_OUTPUT
