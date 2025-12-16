@@ -16,10 +16,7 @@ Both components support Xv overlay and dynamic rotation with XRandR.
 
 2.DEPENDENCIES
 
-Since version 2.9.0, this driver depends on Xserver 1.3 or greater,
-because it utilizes the new common DDC probing libraries from Xorg.
-
-Since version 2.18.1, this driver depends on Xserver 1.18 or greater.
+This driver depends on XLibre Xserver >= 25.0
 
 3.ROADMAP
 
@@ -173,27 +170,7 @@ A: Make sure that a sufficient amount of video RAM is reserved in the BIOS,
 
 Q: How do I produce useful information whenever submitting a bug report?
 
-A: See https://www.x.org/wiki/Development/Documentation/ServerDebugging
-   and follow the instructions found there.
-
-Q: How do I test development snapshots from the upstream GIT repository?
-
-A: Run the following commands from a command line interpreter shell:
-   1. git clone https://gitlab.freedesktop.org/xorg/driver/xf86-video-geode.git
-   2. Debian/Ubuntu:  apt-get install autoconf automake libtool xutils-dev
-                      apt-get build-dep xserver-xorg-video-geode
-     Fedora/Red Hat:  yum install autoconf automake libtool xorg-x11-util-macros
-                      yum-builddep xorg-x11-drv-geode
-   3. cd xf86-video-geode
-   4. ./autogen.sh
-   5. make distcheck
-   ...then install the driver manually.
-
-Q: What is the preferred method for submitting patches to this driver?
-
-A: See https://www.x.org/wiki/Development/Documentation/SubmittingPatches
-   and submit the patches to the Geode X.org mailing list or to gitlab
-   in the xf86-video-geode project.
+A: See https://github.com/X11Libre/xf86-video-geode/issues
 
 7.LINUX KMS DRIVER
 
