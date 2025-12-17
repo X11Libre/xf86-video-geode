@@ -33,9 +33,7 @@
 /* #undef OPT_ACCEL */
 
 /* Xfree86 header files */
-#ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
 
 #include "vgaHW.h"
 #include "xf86.h"

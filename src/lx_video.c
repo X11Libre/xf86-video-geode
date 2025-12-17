@@ -28,10 +28,7 @@
    Add back in double buffering?
 
 */
-
-#ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
 
 #include <stdlib.h>
 #include <string.h>
