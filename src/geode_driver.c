@@ -194,8 +194,6 @@ OptionInfoRec no_GeodeOptions[] = {
     {-1, NULL, OPTV_NONE, {0}, FALSE}
 };
 
-#ifdef XFree86LOADER
-
 /* Module loader interface */
 
 static MODULESETUPPROTO(AmdSetup);
@@ -267,8 +265,6 @@ AmdSetup(pointer Module, pointer Options, int *ErrorMajor, int *ErrorMinor)
 _X_EXPORT XF86ModuleData amdModuleData = { &AmdVersionRec, AmdSetup, NULL };
 _X_EXPORT XF86ModuleData geodeModuleData =
     { &GeodeVersionRec, GeodeSetup, NULL };
-
-#endif                          /*End of XFree86Loader */
 
 /*-------------------------------------------------------------------------
  * AmdIdentify.
