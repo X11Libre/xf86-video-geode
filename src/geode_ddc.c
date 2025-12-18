@@ -50,9 +50,6 @@
 #define DDC_CLK_HIGH     DDC_SCL_PIN
 #define DDC_CLK_LOW      (DDC_SCL_PIN << 16)
 
-#define CS5536_ISA_DEVICE 0x20901022
-#define CS5535_ISA_DEVICE 0x002b100b
-
 static unsigned short
 geode_gpio_iobase(void)
 {
