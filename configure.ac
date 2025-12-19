@@ -136,7 +136,7 @@ XORG_DRIVER_CHECK_EXT(XV, videoproto)
 XORG_DRIVER_CHECK_EXT(DPMSExtension, xextproto)
 
 # Obtain compiler/linker options for the Geode driver dependencies
-PKG_CHECK_MODULES(XORG, [xorg-server >= 1.18 xproto fontsproto xextproto >= 7.0.99.1 pciaccess >= 0.8.0 $REQUIRED_MODULES])
+PKG_CHECK_MODULES(XORG, [xorg-server >= 25.0.0 xproto fontsproto xextproto >= 7.0.99.1 pciaccess >= 0.8.0 $REQUIRED_MODULES])
 
 AC_CONFIG_FILES([Makefile src/Makefile])
 AC_OUTPUT
