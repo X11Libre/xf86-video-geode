@@ -636,14 +636,14 @@ LXResetVideo(ScrnInfoPtr pScrni)
 }
 
 static void
-LXVidBlockHandler(BLOCKHANDLER_ARGS_DECL)
+LXVidBlockHandler(ScreenPtr pScreen, pointer pTimeout)
 {
     ScrnInfoPtr pScrni = xf86ScreenToScrn(pScreen);
     GeodeRec *pGeode = GEODEPTR(pScrni);
     GeodePortPrivRec *pPriv = GET_PORT_PRIVATE(pScrni);
 
     pScreen->BlockHandler = pGeode->BlockHandler;
-    (*pScreen->BlockHandler) (BLOCKHANDLER_ARGS);
+    pScreen->BlockHandler(pScreen, pTimeout);
     pScreen->BlockHandler = LXVidBlockHandler;
 
     if (pPriv->videoStatus & TIMER_MASK) {

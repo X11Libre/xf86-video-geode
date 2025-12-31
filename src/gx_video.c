@@ -97,7 +97,7 @@ static int GXPutImage(ScrnInfoPtr, short, short, short, short, short, short,
                       short, short, int, unsigned char *, short, short, Bool,
                       RegionPtr, pointer, DrawablePtr pDraw);
 
-static void GXBlockHandler(BLOCKHANDLER_ARGS_DECL);
+static void GXBlockHandler(ScreenPtr pScreen, pointer pTimeout);
 void GXSetVideoPosition(int x, int y, int width, int height,
                         short src_w, short src_h, short drw_w,
                         short drw_h, int id, int offset, ScrnInfoPtr pScrni);
@@ -1308,14 +1308,14 @@ GeodeQueryImageAttributes(ScrnInfoPtr pScrni,
 }
 
 static void
-GXBlockHandler(BLOCKHANDLER_ARGS_DECL)
+GXBlockHandler(ScreenPtr pScreen, pointer pTimeout)
 {
     ScrnInfoPtr pScrni = xf86ScreenToScrn(pScreen);
     GeodeRec *pGeode = GEODEPTR(pScrni);
     GeodePortPrivRec *pPriv = GET_PORT_PRIVATE(pScrni);
 
     pScreen->BlockHandler = pGeode->BlockHandler;
-    (*pScreen->BlockHandler) (BLOCKHANDLER_ARGS);
+    pScreen->BlockHandler(pScreen, pTimeout);
     pScreen->BlockHandler = GXBlockHandler;
 
     if (pPriv->videoStatus & TIMER_MASK) {
