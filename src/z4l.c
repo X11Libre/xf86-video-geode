@@ -44,8 +44,6 @@
 #include "xf86xv.h"
 #include "fourcc.h"
 
-#include "compat-api.h"
-
 #define __s64 __s_64
 typedef long long __s64;
 

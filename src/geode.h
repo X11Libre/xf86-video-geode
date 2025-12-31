@@ -40,8 +40,6 @@
 
 #include "xf86xv.h"
 
-#include "compat-api.h"
-
 /* We only support EXA version >=2 */
 
 #if (EXA_VERSION_MAJOR >= 2)
