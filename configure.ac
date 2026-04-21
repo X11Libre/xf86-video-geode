@@ -37,17 +37,13 @@ AM_INIT_AUTOMAKE([foreign dist-xz])
 
 # Initialize libtool
 AC_DISABLE_STATIC
-AC_PROG_LIBTOOL
+LT_INIT
 
 # Require xorg-macros: XORG_DEFAULT_OPTIONS
 m4_ifndef([XORG_MACROS_VERSION],
           [m4_fatal([must install xorg-macros 1.4 or later before running autoconf/autogen])])
 XORG_MACROS_VERSION(1.4)
 XORG_DEFAULT_OPTIONS
-
-# Checks for programs.
-AC_DISABLE_STATIC
-AC_PROG_LIBTOOL
 
 AH_TOP([#include "xorg-server.h"])
 
