@@ -268,11 +268,14 @@ LXCopyPlanar(ScrnInfoPtr pScrni, int id, unsigned char *buf,
                   pPriv->vidmem->offset + YDstOffset, YDstPitch, YSrcPitch,
                   lines, pixels);
 
-    /* Copy U + V at the same time */
+    /* Copy U and V */
 
     LXCopyFromSys(pGeode, buf + USrcOffset,
                   pPriv->vidmem->offset + UDstOffset, UVDstPitch, UVSrcPitch,
-                  lines, pixels >> 1);
+                  lines >> 1, pixels >> 1);
+    LXCopyFromSys(pGeode, buf + VSrcOffset,
+                  pPriv->vidmem->offset + VDstOffset, UVDstPitch, UVSrcPitch,
+                  lines >> 1, pixels >> 1);
 
     videoScratch.dstOffset = pPriv->vidmem->offset + YDstOffset;
     videoScratch.dstPitch = YDstPitch;
