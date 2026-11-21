@@ -180,14 +180,6 @@ unsigned char *cim_vid_ptr = (unsigned char *) 0;
 unsigned char *cim_vip_ptr = (unsigned char *) 0;
 unsigned char *cim_vg_ptr = (unsigned char *) 0;
 
-/* Define hooks for reading and writing MSRs - this is a major hack
- * to share the MSR code with the GX code */
-
-#ifdef CIMARRON_MSR_HOOKS
-void (*cim_rdmsr)(uint32_t, uint32_t *, uint32_t *);
-void (*cim_wrmsr)(uint32_t, uint32_t, uint32_t);
-#endif
-
 /*----------------------------------------------------------------------*/
 /* INCLUDE RELEVANT CIMARRON HEADERS                                    */
 /*----------------------------------------------------------------------*/
@@ -199,6 +191,14 @@ void (*cim_wrmsr)(uint32_t, uint32_t, uint32_t);
 /* HARDWARE ACCESS MACROS */
 
 #include "cim_defs.h"
+
+/* Define hooks for reading and writing MSRs - this is a major hack
+ * to share the MSR code with the GX code */
+
+#ifdef CIMARRON_MSR_HOOKS
+void (*cim_rdmsr)(uint32_t, uint32_t *, uint32_t *);
+void (*cim_wrmsr)(uint32_t, uint32_t, uint32_t);
+#endif
 
 /*----------------------------------------------------------------------*/
 /* CIMARRON MODULES                                                     */
