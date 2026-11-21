@@ -1689,15 +1689,26 @@ _X_EXPORT DriverRec Z4l = {
 
 static MODULESETUPPROTO(z4lSetup);
 
+/* ztv is a module of its own, so it doesn't see geode_driver.c's defines */
+#define GEODE_VERSION_MAJOR PACKAGE_VERSION_MAJOR
+#define GEODE_VERSION_MINOR PACKAGE_VERSION_MINOR
+#define GEODE_VERSION_PATCH PACKAGE_VERSION_PATCHLEVEL
+#define GEODE_VERSION_SUFFIX PACKAGE_VERSION_SUFFIX
+
 static XF86ModuleVersionInfo z4lVersionRec = {
     "ztv",
     MODULEVENDORSTRING, MODINFOSTRING1, MODINFOSTRING2,
-    XORG_VERSION_CURRENT, 0, 0, 1,
+    XORG_VERSION_CURRENT,
+    GEODE_VERSION_MAJOR, GEODE_VERSION_MINOR, GEODE_VERSION_PATCH,
     ABI_CLASS_VIDEODRV, ABI_VIDEODRV_VERSION, MOD_CLASS_NONE,
     {0, 0, 0, 0}
 };
 
 _X_EXPORT XF86ModuleData ztvModuleData = { &z4lVersionRec, z4lSetup, NULL };
+
+#ifdef XF86_MODULE_VERSION_SUFFIX
+XF86_MODULE_VERSION_SUFFIX(ztv, GEODE_VERSION_SUFFIX);
+#endif
 
 static pointer
 z4lSetup(pointer module, pointer opts, int *errmaj, int *errmin)
