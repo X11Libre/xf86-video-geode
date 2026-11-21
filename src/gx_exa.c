@@ -83,8 +83,8 @@ static unsigned int BPP;
 static unsigned int BLT_MODE;
 static unsigned int ACCEL_STRIDE;
 
-#define GU2_WAIT_PENDING while(READ_GP32(MGP_BLT_STATUS) & MGP_BS_BLT_PENDING)
-#define GU2_WAIT_BUSY    while(READ_GP32(MGP_BLT_STATUS) & MGP_BS_BLT_BUSY)
+#define GU2_WAIT_PENDING while(READ_GP32(MGP_BLT_STATUS) & MGP_BS_BLT_PENDING) { ; }
+#define GU2_WAIT_BUSY    while(READ_GP32(MGP_BLT_STATUS) & MGP_BS_BLT_BUSY) { ; }
 #endif
 
 #define HOOK(fn) localRecPtr->fn = GX##fn
