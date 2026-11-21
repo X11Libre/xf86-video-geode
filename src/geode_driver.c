@@ -68,6 +68,7 @@
 #define GEODE_VERSION_MAJOR PACKAGE_VERSION_MAJOR
 #define GEODE_VERSION_MINOR PACKAGE_VERSION_MINOR
 #define GEODE_VERSION_PATCH PACKAGE_VERSION_PATCHLEVEL
+#define GEODE_VERSION_SUFFIX PACKAGE_VERSION_SUFFIX
 
 /* Forward definitions */
 static const OptionInfoRec *AmdAvailableOptions(int chipid, int busid);
@@ -265,6 +266,11 @@ AmdSetup(pointer Module, pointer Options, int *ErrorMajor, int *ErrorMinor)
 _X_EXPORT XF86ModuleData amdModuleData = { &AmdVersionRec, AmdSetup, NULL };
 _X_EXPORT XF86ModuleData geodeModuleData =
     { &GeodeVersionRec, GeodeSetup, NULL };
+
+#ifdef XF86_MODULE_VERSION_SUFFIX
+XF86_MODULE_VERSION_SUFFIX(amd, GEODE_VERSION_SUFFIX);
+XF86_MODULE_VERSION_SUFFIX(geode, GEODE_VERSION_SUFFIX);
+#endif
 
 /*-------------------------------------------------------------------------
  * AmdIdentify.
