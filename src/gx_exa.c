@@ -65,12 +65,6 @@ typedef unsigned short ushort;
 #undef uchar
 typedef unsigned char uchar;
 
-#define CALC_FBOFFSET(x, y) \
-	        (((ulong)(y) * gu2_pitch + ((ulong)(x) << gu2_xshift)))
-
-#define FBADDR(x,y)				\
-		((unsigned char *)pGeode->FBBase + CALC_FBOFFSET(x, y))
-
 #define OS_UDELAY 0
 #if OS_UDELAY > 0
 #define OS_USLEEP(usec) usleep(usec);
@@ -79,12 +73,10 @@ typedef unsigned char uchar;
 #endif
 
 #ifdef OPT_ACCEL
-static unsigned int BPP;
 static unsigned int BLT_MODE;
-static unsigned int ACCEL_STRIDE;
 
-#define GU2_WAIT_PENDING while(READ_GP32(MGP_BLT_STATUS) & MGP_BS_BLT_PENDING)
-#define GU2_WAIT_BUSY    while(READ_GP32(MGP_BLT_STATUS) & MGP_BS_BLT_BUSY)
+#define GU2_WAIT_PENDING while(READ_GP32(MGP_BLT_STATUS) & MGP_BS_BLT_PENDING) { ; }
+#define GU2_WAIT_BUSY    while(READ_GP32(MGP_BLT_STATUS) & MGP_BS_BLT_BUSY) { ; }
 #endif
 
 #define HOOK(fn) localRecPtr->fn = GX##fn
@@ -99,9 +91,6 @@ typedef struct sGBltBox {
     ulong color;
     int bpp, transparent;
 } GBltBox;
-
-static unsigned int gu2_xshift, gu2_yshift;
-static unsigned int gu2_pitch;
 
 /* pat  0xF0 */
 /* src  0xCC */
@@ -605,32 +594,6 @@ GXAccelInit(ScreenPtr pScrn)
 
 #if XF86EXA
     ExaDriverPtr pExa = pGeode->pExa;
-#endif
-
-    gu2_xshift = pScrni->bitsPerPixel >> 4;
-
-    /* XXX - fixme - this will change - we'll need to update it */
-
-    gu2_pitch = pGeode->Pitch;
-
-    switch (pGeode->Pitch) {
-    case 1024:
-        gu2_yshift = 10;
-        break;
-    case 2048:
-        gu2_yshift = 11;
-        break;
-    case 4096:
-        gu2_yshift = 12;
-        break;
-    default:
-        gu2_yshift = 13;
-        break;
-    }
-
-#ifdef OPT_ACCEL
-    ACCEL_STRIDE = (pGeode->Pitch << 16) | pGeode->Pitch;
-    BPP = amd_gx_BppToRasterMode(pScrni->bitsPerPixel);
 #endif
 
 #if XF86EXA

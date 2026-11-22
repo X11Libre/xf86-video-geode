@@ -43,9 +43,9 @@
 #include "gfx_regs.h"
 
 #define GU2_WAIT_PENDING	\
-		while(READ_GP32(MGP_BLT_STATUS) & MGP_BS_BLT_PENDING)
+		while(READ_GP32(MGP_BLT_STATUS) & MGP_BS_BLT_PENDING) { ; }
 #define GU2_WAIT_HALF_EMPTY \
-		while(!(READ_GP32(MGP_BLT_STATUS) & MGP_BS_HALF_EMPTY))
+		while(!(READ_GP32(MGP_BLT_STATUS) & MGP_BS_HALF_EMPTY)) { ; }
 
 extern unsigned long gu2_pitch;
 extern unsigned long gu2_xshift;

@@ -130,12 +130,11 @@ gu2_vga_seq_blanking(void)
 int
 gu2_vga_attr_ctrl(int reset)
 {
-    int tmp;
-
-    tmp = gfx_inb(0x3DA);
+    /* reading input status 1 resets the attribute controller flip-flop */
+    (void) gfx_inb(0x3DA);
     gfx_outb(0x3C0, (unsigned char) (reset ? 0x00 : 0x20));
     if (reset)
-        tmp = gfx_inb(0x3DA);
+        (void) gfx_inb(0x3DA);
 
     return (GFX_STATUS_OK);
 }
@@ -154,7 +153,6 @@ gu2_vga_to_gfx(void)
 void
 gu2_gfx_to_vga(int vga_mode)
 {
-    int tmp;
     char sequencer;
 
     gu2_vga_extcrtc(0x40, vga_mode);
@@ -172,9 +170,9 @@ gu2_gfx_to_vga(int vga_mode)
     gfx_outw(0x3C4, 0x300);
 
     /* turn on the attribute controller */
-    tmp = gfx_inb(0x3DA);
+    (void) gfx_inb(0x3DA);
     gfx_outb(0x3C0, 0x20);
-    tmp = gfx_inb(0x3DA);
+    (void) gfx_inb(0x3DA);
 
     gu2_vga_extcrtc(0x3F, 0);
 }
